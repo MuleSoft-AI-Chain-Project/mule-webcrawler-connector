@@ -14,6 +14,13 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// import okhttp3 library for google search operation
+import okhttp3.RequestBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -22,7 +29,8 @@ import java.util.*;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 
 /**
- * This class is a container for operations, every public method in this class will be taken as an extension operation.
+ * This class is a container for operations, every public method in this class
+ * will be taken as an extension operation.
  */
 public class MulechainwebcrawlerOperations {
 
@@ -34,46 +42,49 @@ public class MulechainwebcrawlerOperations {
   private static final Logger LOGGER = LoggerFactory.getLogger(MulechainwebcrawlerOperations.class);
 
   /**
-   * Crawl a website at a specified depth and fetch contents. Specify tags and classes in the configuration to fetch contents from those elements only.
+   * Crawl a website at a specified depth and fetch contents. Specify tags and
+   * classes in the configuration to fetch contents from those elements only.
    *
    * @throws IOException
    */
 
-  /* JSoup limitiations / web crawl challenges
-   - some sites prevent robots - use of User-Agent may be required but not always guaranteed to work
-   - JavaScript generated content is not read by jsoup
-   - some sites require cookies or sessions to be present
+  /*
+   * JSoup limitiations / web crawl challenges
+   * - some sites prevent robots - use of User-Agent may be required but not
+   * always guaranteed to work
+   * - JavaScript generated content is not read by jsoup
+   * - some sites require cookies or sessions to be present
    */
   @MediaType(value = ANY, strict = false)
   @Alias("Crawl-website")
   public String crawlWebsite(@Config MulechainwebcrawlerConfiguration configuration,
-                             @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-                             @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
-                             @DisplayName("Retrieve Meta Tags") @Placement(order = 3) @Example("Yes") boolean getMetaTags,
-                             @DisplayName("Download Images") @Placement(order = 4) @Example("Yes") boolean downloadImages,
-                             @DisplayName("Download Location") @Placement(order = 5) @Example("/users/mulesoft/downloads") String downloadPath) throws IOException {
+      @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
+      @DisplayName("Retrieve Meta Tags") @Placement(order = 3) @Example("Yes") boolean getMetaTags,
+      @DisplayName("Download Images") @Placement(order = 4) @Example("Yes") boolean downloadImages,
+      @DisplayName("Download Location") @Placement(order = 5) @Example("/users/mulesoft/downloads") String downloadPath)
+      throws IOException {
     LOGGER.info("Website crawl action");
-
 
     // initialise variables
     Set<String> visitedLinksGlobal = new HashSet<>();
     Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
     List<String> specificTags = configuration.getTags();
 
-    SiteMapNode root = startCrawling(url, 0, maxDepth, visitedLinksByDepth, visitedLinksGlobal, downloadImages, downloadPath, specificTags, getMetaTags, CrawlType.CONTENT);
-
+    SiteMapNode root = startCrawling(url, 0, maxDepth, visitedLinksByDepth, visitedLinksGlobal, downloadImages,
+        downloadPath, specificTags, getMetaTags, CrawlType.CONTENT);
 
     return crawlingHelper.convertToJSON(root);
   }
 
-
   /**
-  * Fetch the meta tags from a web page.
-  */
+   * Fetch the meta tags from a web page.
+   */
   @MediaType(value = ANY, strict = false)
   @Alias("Get-page-meta-tags")
-  public String getMetaTags (
-                            @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) throws IOException {
+  public String getMetaTags(
+      @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
+      throws IOException {
     LOGGER.info("Get meta tags");
 
     Document document = crawlingHelper.getDocument(url);
@@ -86,28 +97,31 @@ public class MulechainwebcrawlerOperations {
    */
   @MediaType(value = ANY, strict = false)
   @Alias("Generate-sitemap")
-  public String getSiteMap (
-          @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth) throws IOException {
+  public String getSiteMap(
+      @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth) throws IOException {
     LOGGER.info("Generate sitemap");
 
     // initialise variables
     Set<String> visitedLinksGlobal = new HashSet<>();
     Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
 
-    SiteMapNode root = startCrawling(url, 0, maxDepth, visitedLinksByDepth, visitedLinksGlobal, false, null, null, false, CrawlType.LINK);
+    SiteMapNode root = startCrawling(url, 0, maxDepth, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
+        false, CrawlType.LINK);
 
     return crawlingHelper.convertToJSON(root);
   }
 
   /**
-   * Download all images from a web page, or download a single image at the specified link.
+   * Download all images from a web page, or download a single image at the
+   * specified link.
    */
   @MediaType(value = ANY, strict = false)
   @Alias("Download-image")
-  public String downloadWebsiteImages (
-                             @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-                             @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) throws IOException {
+  public String downloadWebsiteImages(
+      @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath)
+      throws IOException {
 
     String result = "";
 
@@ -115,8 +129,7 @@ public class MulechainwebcrawlerOperations {
       // url provided is a website url, so download all images from this document
       Document document = crawlingHelper.getDocument(url);
       result = crawlingHelper.convertToJSON(downloadWebsiteImages(document, downloadPath));
-    }
-    catch (UnsupportedMimeTypeException e) {
+    } catch (UnsupportedMimeTypeException e) {
       // url provided is direct link to image, so download single image
 
       Map<String, String> linkFileMap = new HashMap<>();
@@ -126,22 +139,24 @@ public class MulechainwebcrawlerOperations {
     return result;
   }
 
-
   /**
-   * Get insights from a web page including links, word count, number of occurrences of elements. Restrict insights to specific elements in the configuration.
+   * Get insights from a web page including links, word count, number of
+   * occurrences of elements. Restrict insights to specific elements in the
+   * configuration.
    */
   @MediaType(value = ANY, strict = false)
   @Alias("Get-page-insights")
   public String getPageInsights(
-          @Config MulechainwebcrawlerConfiguration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) throws IOException {
+      @Config MulechainwebcrawlerConfiguration configuration,
+      @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
+      throws IOException {
     LOGGER.info("Analyze page");
 
     Document document = crawlingHelper.getDocument(url);
 
-    return crawlingHelper.convertToJSON(crawlingHelper.getPageInsights(document, configuration.getTags(), crawlingHelper.PageInsightType.ALL));
+    return crawlingHelper.convertToJSON(
+        crawlingHelper.getPageInsights(document, configuration.getTags(), crawlingHelper.PageInsightType.ALL));
   }
-
 
   /**
    * Get contents of a web page. Content is returned in the resulting payload.
@@ -149,8 +164,9 @@ public class MulechainwebcrawlerOperations {
   @MediaType(value = ANY, strict = false)
   @Alias("Get-page-content")
   public String getPageContent(
-          @Config MulechainwebcrawlerConfiguration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) throws IOException {
+      @Config MulechainwebcrawlerConfiguration configuration,
+      @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
+      throws IOException {
     LOGGER.info("Get page content");
 
     Map<String, String> contents = new HashMap<String, String>();
@@ -164,7 +180,6 @@ public class MulechainwebcrawlerOperations {
     return crawlingHelper.convertToJSON(contents);
   }
 
-
   private String savePageContents(Object results, String downloadPath, String title) throws IOException {
 
     String pageContents = crawlingHelper.convertToJSON(results);
@@ -173,7 +188,6 @@ public class MulechainwebcrawlerOperations {
 
     // Generate a unique filename using the current timestamp
     String timestamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-
 
     // Create a unique filename based on the sanitized title
     fileName = crawlingHelper.getSanitizedFilename(title) + "_" + timestamp + ".json";
@@ -195,9 +209,12 @@ public class MulechainwebcrawlerOperations {
     return (file != null) ? file.getName() : "File is null";
   }
 
-
-  //private String startCrawling(String url, int depth, int maxDepth, Set<String> visitedLinks, boolean downloadImages, String downloadPath, List<String> tags) {
-  private SiteMapNode startCrawling(String url, int depth, int maxDepth, Map<Integer, Set<String>> visitedLinksByDepth, Set<String> visitedLinksGlobal, boolean downloadImages, String downloadPath, List<String> contentTags, boolean getMetaTags, CrawlType crawlType ) {
+  // private String startCrawling(String url, int depth, int maxDepth, Set<String>
+  // visitedLinks, boolean downloadImages, String downloadPath, List<String> tags)
+  // {
+  private SiteMapNode startCrawling(String url, int depth, int maxDepth, Map<Integer, Set<String>> visitedLinksByDepth,
+      Set<String> visitedLinksGlobal, boolean downloadImages, String downloadPath, List<String> contentTags,
+      boolean getMetaTags, CrawlType crawlType) {
 
     // return if maxDepth reached
     if (depth > maxDepth) {
@@ -223,16 +240,18 @@ public class MulechainwebcrawlerOperations {
       // get page as a html document
       Document document = crawlingHelper.getDocument(url);
 
-
-      // check if url contents have been downloaded before ie applied globally (at all depths). Note, we don't want to do this globally for CrawlType.LINK because we want a link to be unique only at the depth level and not globally (at all depths)
+      // check if url contents have been downloaded before ie applied globally (at all
+      // depths). Note, we don't want to do this globally for CrawlType.LINK because
+      // we want a link to be unique only at the depth level and not globally (at all
+      // depths)
       if (!visitedLinksGlobal.contains(url) && crawlType == CrawlType.CONTENT) {
 
         // add url to urlContentFetched to indicate content has been fetched.
         visitedLinksGlobal.add(url);
 
-        // Create Map to hold all data for the current page - this will be serialized to JSON and saved to file
+        // Create Map to hold all data for the current page - this will be serialized to
+        // JSON and saved to file
         Map<String, Object> pageData = new HashMap<>();
-
 
         LOGGER.info("Fetching content for : " + url);
 
@@ -241,13 +260,11 @@ public class MulechainwebcrawlerOperations {
         pageData.put("url", url);
         pageData.put("title", title);
 
-
         // check if need to download images in the current page
         if (downloadImages) {
           LOGGER.info("Downloading images for : " + url);
           pageData.put("imageFiles", downloadWebsiteImages(document, downloadPath));
         }
-
 
         // get all meta tags from the document
         if (getMetaTags) {
@@ -257,44 +274,40 @@ public class MulechainwebcrawlerOperations {
           }
         }
 
-
         // get page contents
         pageData.put("content", crawlingHelper.getPageContent(document, contentTags));
-
 
         // save gathered data of page to file
         String filename = savePageContents(pageData, downloadPath, title);
 
-
         // Create a new node for this URL
         node = new CrawlResult(url, filename);
 
-      }
-      else if (crawlType == CrawlType.LINK) {
+      } else if (crawlType == CrawlType.LINK) {
         node = new SiteMapNode(url);
         LOGGER.info("Found url : " + url);
-      }
-      else {
+      } else {
         // content previously downloaded, so setting file name as such
         node = new CrawlResult(url, "Duplicate.");
       }
-
 
       // If not at max depth, find and crawl the links on the page
       if (depth <= maxDepth) {
         // get all links on the current page
         Set<String> links = new HashSet<>();
 
-        Map<String, Object> linksMap  = (Map<String, Object>)  crawlingHelper.getPageInsights(document, null, crawlingHelper.PageInsightType.INTERNALLINKS).get("links");
+        Map<String, Object> linksMap = (Map<String, Object>) crawlingHelper
+            .getPageInsights(document, null, crawlingHelper.PageInsightType.INTERNALLINKS).get("links");
         if (linksMap != null) {
-          links = (Set<String>) linksMap.get("internal");  // Cast to Set<String>
+          links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
         }
 
         if (links != null) {
           for (String nextUrl : links) {
 
             // Recursively crawl the link and add as a child
-            SiteMapNode childNode = startCrawling(nextUrl, depth + 1, maxDepth, visitedLinksByDepth, visitedLinksGlobal, downloadImages, downloadPath, contentTags, getMetaTags, crawlType);
+            SiteMapNode childNode = startCrawling(nextUrl, depth + 1, maxDepth, visitedLinksByDepth, visitedLinksGlobal,
+                downloadImages, downloadPath, contentTags, getMetaTags, crawlType);
             if (childNode != null) {
               node.addChild(childNode);
             }
@@ -314,9 +327,10 @@ public class MulechainwebcrawlerOperations {
 
     Map<String, String> linkFileMap = new HashMap<>();
 
-    Map<String, Object> linksMap  = (Map<String, Object>)  crawlingHelper.getPageInsights(document, null, crawlingHelper.PageInsightType.IMAGELINKS).get("links");
+    Map<String, Object> linksMap = (Map<String, Object>) crawlingHelper
+        .getPageInsights(document, null, crawlingHelper.PageInsightType.IMAGELINKS).get("links");
     if (linksMap != null) {
-      imageUrls = (Set<String>) linksMap.get("images");  // Cast to Set<String>
+      imageUrls = (Set<String>) linksMap.get("images"); // Cast to Set<String>
     }
 
     if (imageUrls != null) {
@@ -330,7 +344,7 @@ public class MulechainwebcrawlerOperations {
     return linkFileMap;
   }
 
-  private String downloadSingleImage(String imageUrl, String saveDirectory) throws IOException{
+  private String downloadSingleImage(String imageUrl, String saveDirectory) throws IOException {
     LOGGER.info("Found image : " + imageUrl);
     File file;
     try {
@@ -385,7 +399,7 @@ public class MulechainwebcrawlerOperations {
         // Extract the filename from the decoded URL
         String fileName = crawlingHelper.extractFileNameFromUrl(decodedUrl);
 
-        //String fileName = decodedUrl.substring(imageUrl.lastIndexOf("/") + 1);
+        // String fileName = decodedUrl.substring(imageUrl.lastIndexOf("/") + 1);
         file = new File(saveDirectory, fileName);
 
         // Ensure the directory exists
@@ -393,7 +407,7 @@ public class MulechainwebcrawlerOperations {
 
         // Download and save the image
         try (InputStream in = url.openStream();
-             FileOutputStream out = new FileOutputStream(file)) {
+            FileOutputStream out = new FileOutputStream(file)) {
 
           byte[] buffer = new byte[1024];
           int bytesRead;
@@ -411,5 +425,37 @@ public class MulechainwebcrawlerOperations {
 
     return (file != null) ? file.getName() : "File is null";
   }
-}
 
+  /**
+   * Perform a Google search using the SERP API.
+   *
+   * @throws IOException
+   */
+  @MediaType(value = MediaType.APPLICATION_JSON, strict = false)
+  @Alias("Google-search")
+  public String googleSearch(
+      @DisplayName("Search Query") @Placement(order = 1) @Example("apple inc") String query,
+      @DisplayName("API Key") @Placement(order = 2) @Example("your_api_key_here") String apiKey) throws IOException {
+    LOGGER.info("Performing Google search for query: " + query);
+
+    OkHttpClient client = new OkHttpClient().newBuilder().build();
+    okhttp3.MediaType mediaType = okhttp3.MediaType.parse("application/json");
+    RequestBody body = RequestBody.create("{\"q\":\"" + query + "\"}", mediaType);
+    Request request = new Request.Builder()
+        .url("https://google.serper.dev/search")
+        .method("POST", body)
+        .addHeader("X-API-KEY", apiKey)
+        .addHeader("Content-Type", "application/json")
+        .build();
+    Response response = client.newCall(request).execute();
+
+    if (!response.isSuccessful()) {
+      throw new IOException("Unexpected code " + response);
+    }
+
+    String responseBody = response.body().string();
+    JSONObject jsonResponse = new JSONObject(responseBody);
+
+    return jsonResponse.toString(4); // Pretty print with an indentation of 4 spaces
+  }
+}
