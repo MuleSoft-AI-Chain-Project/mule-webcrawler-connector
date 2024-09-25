@@ -1,14 +1,14 @@
 {
   "name": "MAC WebCrawler",
   "description": "This is the main class of an extension, is the entry point from which configurations, connection providers, operations and sources are going to be declared.",
-  "version": "0.2.0-SNAPSHOT",
+  "version": "0.1.20-SNAPSHOT",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "xmlDsl": {
     "prefix": "mac-web-crawler",
     "namespace": "http://www.mulesoft.org/schema/mule/mac-web-crawler",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/mac-web-crawler/current/mule-mac-web-crawler.xsd",
-    "schemaVersion": "0.2.0-SNAPSHOT",
+    "schemaVersion": "0.1.20-SNAPSHOT",
     "xsdFileName": "mule-mac-web-crawler.xsd"
   },
   "resources": [],
