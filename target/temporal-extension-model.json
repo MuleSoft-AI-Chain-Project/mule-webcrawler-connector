@@ -1,14 +1,14 @@
 {
   "name": "MAC WebCrawler",
   "description": "This is the main class of an extension, is the entry point from which configurations, connection providers, operations and sources are going to be declared.",
-  "version": "0.1.20-SNAPSHOT",
+  "version": "0.1.21-SNAPSHOT",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "xmlDsl": {
     "prefix": "mac-web-crawler",
     "namespace": "http://www.mulesoft.org/schema/mule/mac-web-crawler",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/mac-web-crawler/current/mule-mac-web-crawler.xsd",
-    "schemaVersion": "0.1.20-SNAPSHOT",
+    "schemaVersion": "0.1.21-SNAPSHOT",
     "xsdFileName": "mule-mac-web-crawler.xsd"
   },
   "resources": [],
@@ -111,9 +111,7 @@
                           "isAbstract": false,
                           "isFinal": true,
                           "implementedInterfaces": [
-                            "java.lang.Comparable",
-                            "java.lang.constant.Constable",
-                            "java.lang.constant.ConstantDesc"
+                            "java.lang.Comparable"
                           ],
                           "parent": "java.lang.Number",
                           "genericTypes": [],
