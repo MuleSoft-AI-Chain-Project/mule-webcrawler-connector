@@ -59,10 +59,12 @@ public class MulechainwebcrawlerOperations {
   @Alias("Crawl-website")
   public String crawlWebsite(@Config MulechainwebcrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
-      @DisplayName("Retrieve Meta Tags") @Placement(order = 3) @Example("Yes") boolean getMetaTags,
-      @DisplayName("Download Images") @Placement(order = 4) @Example("Yes") boolean downloadImages,
-      @DisplayName("Download Location") @Placement(order = 5) @Example("/users/mulesoft/downloads") String downloadPath)
+      @DisplayName("Restrict Crawl under URL") @Placement(order = 2) @Example("False") boolean restrictToPath,
+      @DisplayName("Maximum Depth") @Placement(order = 3) @Example("2") int maxDepth,
+      @DisplayName("Delay (millisecs)") @Placement(order = 4) @Example("0") int delayMillis,
+      @DisplayName("Retrieve Meta Tags") @Placement(order = 5) @Example("False") boolean getMetaTags,
+      @DisplayName("Download Images") @Placement(order = 6) @Example("False") boolean downloadImages,
+      @DisplayName("Download Location") @Placement(order = 7) @Example("/users/mulesoft/downloads") String downloadPath)
       throws IOException {
     LOGGER.info("Website crawl action");
 
@@ -71,7 +73,8 @@ public class MulechainwebcrawlerOperations {
     Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
     List<String> specificTags = configuration.getTags();
 
-    SiteMapNode root = startCrawling(url, 0, maxDepth, visitedLinksByDepth, visitedLinksGlobal, downloadImages,
+    String originalUrl = url;
+    SiteMapNode root = startCrawling(url, originalUrl, 0, maxDepth, restrictToPath, delayMillis, visitedLinksByDepth, visitedLinksGlobal, downloadImages,
         downloadPath, specificTags, getMetaTags, CrawlType.CONTENT);
 
     return crawlingHelper.convertToJSON(root);
@@ -99,14 +102,16 @@ public class MulechainwebcrawlerOperations {
   @Alias("Generate-sitemap")
   public String getSiteMap(
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth) throws IOException {
+      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
+      @DisplayName("Delay (millisecs)") @Placement(order = 3) @Example("0") int delayMillis) throws IOException {
     LOGGER.info("Generate sitemap");
 
     // initialise variables
     Set<String> visitedLinksGlobal = new HashSet<>();
     Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
 
-    SiteMapNode root = startCrawling(url, 0, maxDepth, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
+    String originalUrl = url;
+    SiteMapNode root = startCrawling(url, originalUrl,0, maxDepth, false, delayMillis, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
         false, CrawlType.LINK);
 
     return crawlingHelper.convertToJSON(root);
@@ -212,13 +217,21 @@ public class MulechainwebcrawlerOperations {
   // private String startCrawling(String url, int depth, int maxDepth, Set<String>
   // visitedLinks, boolean downloadImages, String downloadPath, List<String> tags)
   // {
-  private SiteMapNode startCrawling(String url, int depth, int maxDepth, Map<Integer, Set<String>> visitedLinksByDepth,
+  private SiteMapNode startCrawling(String url, String originalUrl, int depth, int maxDepth, boolean restrictToPath, int delayMillis, Map<Integer, Set<String>> visitedLinksByDepth,
       Set<String> visitedLinksGlobal, boolean downloadImages, String downloadPath, List<String> contentTags,
       boolean getMetaTags, CrawlType crawlType) {
 
     // return if maxDepth reached
     if (depth > maxDepth) {
       return null;
+    }
+
+    if (restrictToPath) {
+      // Restrict crawling to URLs under the original URL only
+      if (!url.startsWith(originalUrl)) {
+        LOGGER.info("SKIPPING due to strict crawling: " + url);
+        return null;
+      }
     }
 
     // Initialize the set for the current depth if not already present
@@ -231,6 +244,9 @@ public class MulechainwebcrawlerOperations {
 
     // crawl & extract current page
     try {
+
+      // add delay
+      crawlingHelper.addDelay(delayMillis);
 
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(depth).add(url);
@@ -306,7 +322,7 @@ public class MulechainwebcrawlerOperations {
           for (String nextUrl : links) {
 
             // Recursively crawl the link and add as a child
-            SiteMapNode childNode = startCrawling(nextUrl, depth + 1, maxDepth, visitedLinksByDepth, visitedLinksGlobal,
+            SiteMapNode childNode = startCrawling(nextUrl, originalUrl, depth + 1, maxDepth, restrictToPath, delayMillis, visitedLinksByDepth, visitedLinksGlobal,
                 downloadImages, downloadPath, contentTags, getMetaTags, crawlType);
             if (childNode != null) {
               node.addChild(childNode);

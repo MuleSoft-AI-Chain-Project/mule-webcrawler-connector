@@ -1,14 +1,14 @@
 {
   "name": "MAC WebCrawler",
   "description": "This is the main class of an extension, is the entry point from which configurations, connection providers, operations and sources are going to be declared.",
-  "version": "0.1.21-SNAPSHOT",
+  "version": "0.1.22-SNAPSHOT",
   "vendor": "Mulesoft",
   "category": "COMMUNITY",
   "xmlDsl": {
     "prefix": "mac-web-crawler",
     "namespace": "http://www.mulesoft.org/schema/mule/mac-web-crawler",
     "schemaLocation": "http://www.mulesoft.org/schema/mule/mac-web-crawler/current/mule-mac-web-crawler.xsd",
-    "schemaVersion": "0.1.21-SNAPSHOT",
+    "schemaVersion": "0.1.22-SNAPSHOT",
     "xsdFileName": "mule-mac-web-crawler.xsd"
   },
   "resources": [],
@@ -279,6 +279,41 @@
                 {
                   "type": {
                     "format": "java",
+                    "type": "Boolean",
+                    "annotations": {
+                      "typeId": "boolean"
+                    }
+                  },
+                  "hasDynamicType": false,
+                  "required": false,
+                  "isConfigOverride": false,
+                  "expressionSupport": "SUPPORTED",
+                  "defaultValue": "false",
+                  "role": "BEHAVIOUR",
+                  "dslConfiguration": {
+                    "allowsInlineDefinition": true,
+                    "allowsReferences": true,
+                    "allowTopLevelDefinition": false
+                  },
+                  "layoutModel": {
+                    "password": false,
+                    "text": false,
+                    "query": false,
+                    "order": 2,
+                    "tabName": "General"
+                  },
+                  "allowedStereotypeModels": [],
+                  "name": "restrictToPath",
+                  "displayModel": {
+                    "displayName": "Restrict Crawl under URL",
+                    "example": "False"
+                  },
+                  "description": "",
+                  "modelProperties": {}
+                },
+                {
+                  "type": {
+                    "format": "java",
                     "type": "Number",
                     "annotations": {
                       "classInformation": {
@@ -310,7 +345,7 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 2,
+                    "order": 3,
                     "tabName": "General"
                   },
                   "allowedStereotypeModels": [],
@@ -325,16 +360,27 @@
                 {
                   "type": {
                     "format": "java",
-                    "type": "Boolean",
+                    "type": "Number",
                     "annotations": {
-                      "typeId": "boolean"
+                      "classInformation": {
+                        "classname": "int",
+                        "hasDefaultConstructor": false,
+                        "isInterface": false,
+                        "isInstantiable": false,
+                        "isAbstract": true,
+                        "isFinal": true,
+                        "implementedInterfaces": [],
+                        "parent": "",
+                        "genericTypes": [],
+                        "isMap": false
+                      },
+                      "int": {}
                     }
                   },
                   "hasDynamicType": false,
-                  "required": false,
+                  "required": true,
                   "isConfigOverride": false,
                   "expressionSupport": "SUPPORTED",
-                  "defaultValue": "false",
                   "role": "BEHAVIOUR",
                   "dslConfiguration": {
                     "allowsInlineDefinition": true,
@@ -345,14 +391,14 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 3,
+                    "order": 4,
                     "tabName": "General"
                   },
                   "allowedStereotypeModels": [],
-                  "name": "getMetaTags",
+                  "name": "delayMillis",
                   "displayModel": {
-                    "displayName": "Retrieve Meta Tags",
-                    "example": "Yes"
+                    "displayName": "Delay (millisecs)",
+                    "example": "0"
                   },
                   "description": "",
                   "modelProperties": {}
@@ -380,14 +426,49 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 4,
+                    "order": 5,
+                    "tabName": "General"
+                  },
+                  "allowedStereotypeModels": [],
+                  "name": "getMetaTags",
+                  "displayModel": {
+                    "displayName": "Retrieve Meta Tags",
+                    "example": "False"
+                  },
+                  "description": "",
+                  "modelProperties": {}
+                },
+                {
+                  "type": {
+                    "format": "java",
+                    "type": "Boolean",
+                    "annotations": {
+                      "typeId": "boolean"
+                    }
+                  },
+                  "hasDynamicType": false,
+                  "required": false,
+                  "isConfigOverride": false,
+                  "expressionSupport": "SUPPORTED",
+                  "defaultValue": "false",
+                  "role": "BEHAVIOUR",
+                  "dslConfiguration": {
+                    "allowsInlineDefinition": true,
+                    "allowsReferences": true,
+                    "allowTopLevelDefinition": false
+                  },
+                  "layoutModel": {
+                    "password": false,
+                    "text": false,
+                    "query": false,
+                    "order": 6,
                     "tabName": "General"
                   },
                   "allowedStereotypeModels": [],
                   "name": "downloadImages",
                   "displayModel": {
                     "displayName": "Download Images",
-                    "example": "Yes"
+                    "example": "False"
                   },
                   "description": "",
                   "modelProperties": {}
@@ -411,7 +492,7 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 5,
+                    "order": 7,
                     "tabName": "General"
                   },
                   "allowedStereotypeModels": [],
@@ -442,7 +523,7 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 6,
+                    "order": 8,
                     "tabName": "Advanced"
                   },
                   "allowedStereotypeModels": [],
@@ -484,7 +565,7 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 7,
+                    "order": 9,
                     "tabName": "Advanced"
                   },
                   "allowedStereotypeModels": [],
@@ -515,7 +596,7 @@
                     "password": false,
                     "text": false,
                     "query": false,
-                    "order": 8,
+                    "order": 10,
                     "tabName": "Advanced"
                   },
                   "allowedStereotypeModels": [],
@@ -1260,6 +1341,52 @@
             {
               "type": {
                 "format": "java",
+                "type": "Number",
+                "annotations": {
+                  "classInformation": {
+                    "classname": "int",
+                    "hasDefaultConstructor": false,
+                    "isInterface": false,
+                    "isInstantiable": false,
+                    "isAbstract": true,
+                    "isFinal": true,
+                    "implementedInterfaces": [],
+                    "parent": "",
+                    "genericTypes": [],
+                    "isMap": false
+                  },
+                  "int": {}
+                }
+              },
+              "hasDynamicType": false,
+              "required": true,
+              "isConfigOverride": false,
+              "expressionSupport": "SUPPORTED",
+              "role": "BEHAVIOUR",
+              "dslConfiguration": {
+                "allowsInlineDefinition": true,
+                "allowsReferences": true,
+                "allowTopLevelDefinition": false
+              },
+              "layoutModel": {
+                "password": false,
+                "text": false,
+                "query": false,
+                "order": 3,
+                "tabName": "General"
+              },
+              "allowedStereotypeModels": [],
+              "name": "delayMillis",
+              "displayModel": {
+                "displayName": "Delay (millisecs)",
+                "example": "0"
+              },
+              "description": "",
+              "modelProperties": {}
+            },
+            {
+              "type": {
+                "format": "java",
                 "type": "String"
               },
               "hasDynamicType": false,
@@ -1276,7 +1403,7 @@
                 "password": false,
                 "text": false,
                 "query": false,
-                "order": 3,
+                "order": 4,
                 "tabName": "Advanced"
               },
               "allowedStereotypeModels": [],
@@ -1318,7 +1445,7 @@
                 "password": false,
                 "text": false,
                 "query": false,
-                "order": 4,
+                "order": 5,
                 "tabName": "Advanced"
               },
               "allowedStereotypeModels": [],
@@ -1349,7 +1476,7 @@
                 "password": false,
                 "text": false,
                 "query": false,
-                "order": 5,
+                "order": 6,
                 "tabName": "Advanced"
               },
               "allowedStereotypeModels": [],
