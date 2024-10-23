@@ -8,6 +8,11 @@
     </remote-repository>
     <remote-repository>
       <option name="id" value="central" />
+      <option name="name" value="central" />
+      <option name="url" value="https://repo.maven.apache.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
       <option name="name" value="Central Repository" />
       <option name="url" value="https://repo.maven.apache.org/maven2" />
     </remote-repository>
@@ -15,6 +20,11 @@
       <option name="id" value="anypoint-exchange-v3" />
       <option name="name" value="Anypoint Exchange V3" />
       <option name="url" value="https://maven.eu1.anypoint.mulesoft.com/api/v3/maven" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="mulesoft-releases" />
+      <option name="name" value="mulesoft-releases" />
+      <option name="url" value="https://repository.mulesoft.org/releases/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="anypoint-exchange-v2" />
@@ -35,6 +45,11 @@
       <option name="id" value="mulesoft-releases" />
       <option name="name" value="MuleSoft Releases Repository" />
       <option name="url" value="https://repository.mulesoft.org/releases/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="mulesoft-snapshots" />
+      <option name="name" value="mulesoft-snapshots" />
+      <option name="url" value="https://repository.mulesoft.org/snapshots/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="mule" />

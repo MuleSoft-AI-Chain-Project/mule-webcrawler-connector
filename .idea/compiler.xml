@@ -6,9 +6,8 @@
         <sourceOutputDir name="target/classes/META-INF" />
         <sourceTestOutputDir name="target/generated-sources/apt-test" />
         <outputRelativeToContentRoot value="true" />
-        <option name="extension.version" value="0.0.0-SNAPSHOT" />
+        <option name="extension.version" value="0.1.20-SNAPSHOT" />
         <processor name="org.mule.runtime.ast.internal.extension.loader.ASTExtensionResourcesGeneratorAnnotationProcessor" />
-        <module name="mulechain-web-crawler" />
         <module name="mac-web-crawler" />
       </profile>
     </annotationProcessing>
