@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mule.mulechain</groupId>
     <artifactId>mac-web-crawler</artifactId>
-    <version>0.1.22-SNAPSHOT</version>
+    <version>0.1.24-SNAPSHOT</version>
     <packaging>mule-extension</packaging>
     <name>mac-web-crawler Extension</name>
 
@@ -15,7 +15,28 @@
         <artifactId>mule-modules-parent</artifactId>
         <version>1.1.3</version>
     </parent>
+
+	<properties>
+        <muleJavaEeBomVersion>4.6.0</muleJavaEeBomVersion>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.mule</groupId>
+                <artifactId>mule-javaee-runtime-bom</artifactId>
+                <version>${muleJavaEeBomVersion}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>	
     <dependencies>
+	    <dependency>
+            <groupId>org.mule.sdk</groupId>
+            <artifactId>mule-sdk-api</artifactId>
+            <version>0.9.0-rc1</version>
+        </dependency>    
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
