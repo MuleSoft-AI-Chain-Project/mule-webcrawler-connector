@@ -266,4 +266,19 @@ public class crawlingHelper {
         return !linkToCheck.contains(baseDomain);
 
     }
+
+
+    public static void addDelay(int delayMillis) {
+        // add a delay if specified delay is >0 millisecs
+        if (delayMillis > 0) {
+            // Add delay before fetching the next URL
+            try {
+                LOGGER.info("Adding delay of " + delayMillis + " ms before fetching contents for the next URL.");
+                Thread.sleep(delayMillis);
+            } catch (InterruptedException e) {
+                LOGGER.error("Thread interrupted during delay: " + e.getMessage());
+                Thread.currentThread().interrupt(); // Ensure thread interruption status is reset
+            }
+        }
+    }
 }
