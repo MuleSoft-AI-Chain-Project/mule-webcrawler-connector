@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mule.mulechain</groupId>
     <artifactId>mac-web-crawler</artifactId>
-    <version>0.1.22-SNAPSHOT</version>
+    <version>0.1.24-SNAPSHOT</version>
     <packaging>mule-extension</packaging>
     <name>mac-web-crawler Extension</name>
 
