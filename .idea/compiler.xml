@@ -6,19 +6,8 @@
         <sourceOutputDir name="target/classes/META-INF" />
         <sourceTestOutputDir name="target/generated-sources/apt-test" />
         <outputRelativeToContentRoot value="true" />
-        <option name="extension.version" value="0.1.20-SNAPSHOT" />
+        <option name="extension.version" value="0.1.24-SNAPSHOT" />
         <processor name="org.mule.runtime.ast.internal.extension.loader.ASTExtensionResourcesGeneratorAnnotationProcessor" />
-<<<<<<< HEAD
-=======
-        <module name="mulechain-web-crawler" />
-      </profile>
-      <profile name="Annotation profile for mac-web-crawler" enabled="true">
-        <sourceOutputDir name="target/classes/META-INF" />
-        <sourceTestOutputDir name="target/generated-sources/apt-test" />
-        <outputRelativeToContentRoot value="true" />
-        <option name="extension.version" value="0.1.21-SNAPSHOT" />
-        <processor name="org.mule.runtime.ast.internal.extension.loader.ASTExtensionResourcesGeneratorAnnotationProcessor" />
->>>>>>> develop
         <module name="mac-web-crawler" />
       </profile>
     </annotationProcessing>
@@ -26,7 +15,6 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="mac-web-crawler" options="-parameters" />
-      <module name="mulechain-web-crawler" options="-parameters" />
     </option>
   </component>
 </project>

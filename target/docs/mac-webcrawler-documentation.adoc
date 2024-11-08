@@ -57,12 +57,17 @@ Crawl a website at a specified depth and fetch contents. Specify tags and classe
 | Configuration | String | The name of the configuration to use. | | *x*{nbsp}
 | Website URL a| String |  |  | *x*{nbsp}
 | Restrict Crawl under URL a| Boolean |  |  +++false+++ | {nbsp}
+| Dynamic Content Retrieval a| Boolean |  |  +++false+++ | {nbsp}
 | Maximum Depth a| Number |  |  | *x*{nbsp}
 | Delay (millisecs) a| Number |  |  | *x*{nbsp}
 | Retrieve Meta Tags a| Boolean |  |  +++false+++ | {nbsp}
 | Download Images a| Boolean |  |  +++false+++ | {nbsp}
 | Download Location a| String |  |  | *x*{nbsp}
 | Output Mime Type a| String |  +++The mime type of the payload that this operation outputs.+++ |  | {nbsp}
+| Output Encoding a| String |  +++The encoding of the payload that this operation outputs.+++ |  | {nbsp}
+| Streaming Strategy a| * <<repeatable-in-memory-stream>>
+* <<repeatable-file-store-stream>>
+* <<non-repeatable-stream>> |  +++Configure if repeatable streams should be used and their behaviour+++ |  | {nbsp}
 | Target Variable a| String |  +++The name of a variable on which the operation's output will be placed+++ |  | {nbsp}
 | Target Value a| String |  +++An expression that will be evaluated against the operation's output and the outcome of that expression will be stored in the target variable+++ |  +++#[payload]+++ | {nbsp}
 |======================
@@ -70,7 +75,7 @@ Crawl a website at a specified depth and fetch contents. Specify tags and classe
 ==== Output
 [cols=".^50%,.^50%"]
 |======================
-| *Type* a| String
+| *Type* a| Binary
 |======================
 
 ==== For Configurations.
@@ -93,6 +98,10 @@ Get contents of a web page. Content is returned in the resulting payload.
 | Configuration | String | The name of the configuration to use. | | *x*{nbsp}
 | Page Url a| String |  |  | *x*{nbsp}
 | Output Mime Type a| String |  +++The mime type of the payload that this operation outputs.+++ |  | {nbsp}
+| Output Encoding a| String |  +++The encoding of the payload that this operation outputs.+++ |  | {nbsp}
+| Streaming Strategy a| * <<repeatable-in-memory-stream>>
+* <<repeatable-file-store-stream>>
+* <<non-repeatable-stream>> |  +++Configure if repeatable streams should be used and their behaviour+++ |  | {nbsp}
 | Target Variable a| String |  +++The name of a variable on which the operation's output will be placed+++ |  | {nbsp}
 | Target Value a| String |  +++An expression that will be evaluated against the operation's output and the outcome of that expression will be stored in the target variable+++ |  +++#[payload]+++ | {nbsp}
 |======================
@@ -100,7 +109,7 @@ Get contents of a web page. Content is returned in the resulting payload.
 ==== Output
 [cols=".^50%,.^50%"]
 |======================
-| *Type* a| String
+| *Type* a| Binary
 |======================
 
 ==== For Configurations.
@@ -123,6 +132,10 @@ Get insights from a web page including links, word count, number of occurrences 
 | Configuration | String | The name of the configuration to use. | | *x*{nbsp}
 | Page Url a| String |  |  | *x*{nbsp}
 | Output Mime Type a| String |  +++The mime type of the payload that this operation outputs.+++ |  | {nbsp}
+| Output Encoding a| String |  +++The encoding of the payload that this operation outputs.+++ |  | {nbsp}
+| Streaming Strategy a| * <<repeatable-in-memory-stream>>
+* <<repeatable-file-store-stream>>
+* <<non-repeatable-stream>> |  +++Configure if repeatable streams should be used and their behaviour+++ |  | {nbsp}
 | Target Variable a| String |  +++The name of a variable on which the operation's output will be placed+++ |  | {nbsp}
 | Target Value a| String |  +++An expression that will be evaluated against the operation's output and the outcome of that expression will be stored in the target variable+++ |  +++#[payload]+++ | {nbsp}
 |======================
@@ -130,7 +143,7 @@ Get insights from a web page including links, word count, number of occurrences 
 ==== Output
 [cols=".^50%,.^50%"]
 |======================
-| *Type* a| String
+| *Type* a| Binary
 |======================
 
 ==== For Configurations.
@@ -153,6 +166,10 @@ Download all images from a web page, or download a single image at the specified
 | Page Or Image URL a| String |  |  | *x*{nbsp}
 | Download Location a| String |  |  | *x*{nbsp}
 | Output Mime Type a| String |  +++The mime type of the payload that this operation outputs.+++ |  | {nbsp}
+| Output Encoding a| String |  +++The encoding of the payload that this operation outputs.+++ |  | {nbsp}
+| Streaming Strategy a| * <<repeatable-in-memory-stream>>
+* <<repeatable-file-store-stream>>
+* <<non-repeatable-stream>> |  +++Configure if repeatable streams should be used and their behaviour+++ |  | {nbsp}
 | Target Variable a| String |  +++The name of a variable on which the operation's output will be placed+++ |  | {nbsp}
 | Target Value a| String |  +++An expression that will be evaluated against the operation's output and the outcome of that expression will be stored in the target variable+++ |  +++#[payload]+++ | {nbsp}
 |======================
@@ -160,7 +177,7 @@ Download all images from a web page, or download a single image at the specified
 ==== Output
 [cols=".^50%,.^50%"]
 |======================
-| *Type* a| String
+| *Type* a| Binary
 |======================
 
 
@@ -182,6 +199,10 @@ Retrieve internal links as a site map from the specified url and depth.
 | Maximum Depth a| Number |  |  | *x*{nbsp}
 | Delay (millisecs) a| Number |  |  | *x*{nbsp}
 | Output Mime Type a| String |  +++The mime type of the payload that this operation outputs.+++ |  | {nbsp}
+| Output Encoding a| String |  +++The encoding of the payload that this operation outputs.+++ |  | {nbsp}
+| Streaming Strategy a| * <<repeatable-in-memory-stream>>
+* <<repeatable-file-store-stream>>
+* <<non-repeatable-stream>> |  +++Configure if repeatable streams should be used and their behaviour+++ |  | {nbsp}
 | Target Variable a| String |  +++The name of a variable on which the operation's output will be placed+++ |  | {nbsp}
 | Target Value a| String |  +++An expression that will be evaluated against the operation's output and the outcome of that expression will be stored in the target variable+++ |  +++#[payload]+++ | {nbsp}
 |======================
@@ -189,7 +210,7 @@ Retrieve internal links as a site map from the specified url and depth.
 ==== Output
 [cols=".^50%,.^50%"]
 |======================
-| *Type* a| String
+| *Type* a| Binary
 |======================
 
 
@@ -209,6 +230,10 @@ Fetch the meta tags from a web page.
 | Name | Type | Description | Default Value | Required
 | Page URL a| String |  |  | *x*{nbsp}
 | Output Mime Type a| String |  +++The mime type of the payload that this operation outputs.+++ |  | {nbsp}
+| Output Encoding a| String |  +++The encoding of the payload that this operation outputs.+++ |  | {nbsp}
+| Streaming Strategy a| * <<repeatable-in-memory-stream>>
+* <<repeatable-file-store-stream>>
+* <<non-repeatable-stream>> |  +++Configure if repeatable streams should be used and their behaviour+++ |  | {nbsp}
 | Target Variable a| String |  +++The name of a variable on which the operation's output will be placed+++ |  | {nbsp}
 | Target Value a| String |  +++An expression that will be evaluated against the operation's output and the outcome of that expression will be stored in the target variable+++ |  +++#[payload]+++ | {nbsp}
 |======================
@@ -216,7 +241,7 @@ Fetch the meta tags from a web page.
 ==== Output
 [cols=".^50%,.^50%"]
 |======================
-| *Type* a| String
+| *Type* a| Binary
 |======================
 
 
@@ -268,5 +293,37 @@ Perform a Google search using the SERP API.
 ** MINUTES
 ** HOURS
 ** DAYS | A time unit that qualifies the maxIdleTime attribute |  | 
+|======================
+
+[[repeatable-in-memory-stream]]
+=== Repeatable In Memory Stream
+
+[cols=".^20%,.^25%,.^30%,.^15%,.^10%", options="header"]
+|======================
+| Field | Type | Description | Default Value | Required
+| Initial Buffer Size a| Number | This is the amount of memory that will be allocated in order to consume the stream and provide random access to it. If the stream contains more data than can be fit into this buffer, then it will be expanded by according to the bufferSizeIncrement attribute, with an upper limit of maxInMemorySize. |  | 
+| Buffer Size Increment a| Number | This is by how much will be buffer size by expanded if it exceeds its initial size. Setting a value of zero or lower will mean that the buffer should not expand, meaning that a STREAM_MAXIMUM_SIZE_EXCEEDED error will be raised when the buffer gets full. |  | 
+| Max Buffer Size a| Number | This is the maximum amount of memory that will be used. If more than that is used then a STREAM_MAXIMUM_SIZE_EXCEEDED error will be raised. A value lower or equal to zero means no limit. |  | 
+| Buffer Unit a| Enumeration, one of:
+
+** BYTE
+** KB
+** MB
+** GB | The unit in which all these attributes are expressed |  | 
+|======================
+
+[[repeatable-file-store-stream]]
+=== Repeatable File Store Stream
+
+[cols=".^20%,.^25%,.^30%,.^15%,.^10%", options="header"]
+|======================
+| Field | Type | Description | Default Value | Required
+| In Memory Size a| Number | Defines the maximum memory that the stream should use to keep data in memory. If more than that is consumed then it will start to buffer the content on disk. |  | 
+| Buffer Unit a| Enumeration, one of:
+
+** BYTE
+** KB
+** MB
+** GB | The unit in which maxInMemorySize is expressed |  | 
 |======================
 
