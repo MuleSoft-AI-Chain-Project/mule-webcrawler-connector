@@ -6,6 +6,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +38,39 @@ public class crawlingHelper {
                 //.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
                 //.referrer("http://www.google.com")  // to prevent "HTTP error fetching URL. Status=403" error
                 .get();
+
+        return document;
+    }
+
+    public static Document getDocumentDynamic(String url) throws Exception {
+
+        Document document = null;
+        // Set ChromeOptions to enable headless mode
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless"); // Run in headless mode
+        options.addArguments("--disable-gpu"); // Disable GPU acceleration (optional)
+        options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
+        options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
+        options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
+        // Initialize WebDriver
+        WebDriver driver = new ChromeDriver(options);
+
+
+        try {
+
+            // Load the dynamic page
+            driver.get(url);
+            // Retrieve the page source and parse with Jsoup
+            String pageSource = driver.getPageSource();
+            document = Jsoup.parse(pageSource, url);
+        }
+        catch (Exception e) {
+            LOGGER.error("Error in loading dynamic content: " + e.toString());
+            throw e;
+        }
+        finally {
+            driver.quit();
+        }
 
         return document;
     }
@@ -131,11 +167,14 @@ public class crawlingHelper {
 
         String baseUrl = document.baseUri();
 
+
         if (insight == PageInsightType.ALL || insight == PageInsightType.INTERNALLINKS || insight == PageInsightType.REFERENCELINKS || insight == PageInsightType.EXTERNALLINKS) {
             // Select all anchor tags with href attributes
             Elements links = document.select("a[href]");
+
             for (Element link : links) {
                 String href = link.absUrl("href"); // get absolute URLs
+
                 if (isExternalLink(baseUrl, href)) {
                     externalLinks.add(href);
                 } else if (isReferenceLink(baseUrl, href)) {
@@ -265,5 +304,20 @@ public class crawlingHelper {
 
         return !linkToCheck.contains(baseDomain);
 
+    }
+
+
+    public static void addDelay(int delayMillis) {
+        // add a delay if specified delay is >0 millisecs
+        if (delayMillis > 0) {
+            // Add delay before fetching the next URL
+            try {
+                LOGGER.info("Adding delay of " + delayMillis + " ms before fetching contents for the next URL.");
+                Thread.sleep(delayMillis);
+            } catch (InterruptedException e) {
+                LOGGER.error("Thread interrupted during delay: " + e.getMessage());
+                Thread.currentThread().interrupt(); // Ensure thread interruption status is reset
+            }
+        }
     }
 }
