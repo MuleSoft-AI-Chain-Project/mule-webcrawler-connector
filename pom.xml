@@ -9,6 +9,31 @@
     <version>0.1.25-SNAPSHOT</version>
     <packaging>mule-extension</packaging>
     <name>mac-web-crawler Extension</name>
+	<description>The MAC WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
+	<url>https://mac-project.ai/docs/mac-webcrawler/connector-overview</url>
+	<developers>
+		<developer>
+			<name>Yogesh Mudaliar</name>
+		</developer>
+		<developer>
+			<name>Amir Khan</name>
+			<email>amir.khan@mulesoft.com</email>
+			<organization>Salesforce</organization>
+			<organizationUrl>https://www.mulesoft.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Mihael Bosnjak</name>
+			<email>mbosnjak@salesforce.com</email>
+			<organization>Salesforce</organization>
+			<organizationUrl>https://www.mulesoft.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Ryan Hoegg</name>
+			<email>ryan@hoegg.software</email>
+			<organization>Hoegg Software, Co.</organization>
+			<organizationUrl>https://hoegg.software</organizationUrl>
+		</developer>
+	</developers>
 
     <parent>
         <groupId>org.mule.extensions</groupId>
