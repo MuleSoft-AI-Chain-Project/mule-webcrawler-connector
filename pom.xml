@@ -8,18 +8,49 @@
     <artifactId>mac-web-crawler</artifactId>
     <version>0.1.0</version>
     <packaging>mule-extension</packaging>
-    <name>mac-web-crawler Extension</name>
+    <name>MAC WebCrawler Connector</name>
+	<description>The MAC WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
+	<url>https://mac-project.ai/docs/mac-webcrawler/connector-overview</url>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://www.opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Yogesh Mudaliar</name>
+		</developer>
+		<developer>
+			<name>Amir Khan</name>
+			<email>amir.khan@mulesoft.com</email>
+			<organization>Salesforce</organization>
+			<organizationUrl>https://www.mulesoft.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Mihael Bosnjak</name>
+			<email>mbosnjak@salesforce.com</email>
+			<organization>Salesforce</organization>
+			<organizationUrl>https://www.mulesoft.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Ryan Hoegg</name>
+			<email>ryan@hoegg.software</email>
+			<organization>Hoegg Software, Co.</organization>
+			<organizationUrl>https://hoegg.software</organizationUrl>
+		</developer>
+	</developers>
 
     <parent>
         <groupId>org.mule.extensions</groupId>
         <artifactId>mule-modules-parent</artifactId>
-        <version>1.1.3</version>
+        <version>1.3.2</version>
     </parent>
     <dependencies>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.17.2</version>
+            <version>1.14.3</version>
         </dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -27,37 +58,4 @@
 			<version>2.15.2</version>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>anypoint-exchange-v3</id>
-			<name>Anypoint Exchange V3</name>
-			<url>https://maven.eu1.anypoint.mulesoft.com/api/v3/maven</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>mulesoft-releases</id>
-			<name>mulesoft release repository</name>
-			<layout>default</layout>
-			<url>https://repository.mulesoft.org/releases/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
-	<distributionManagement>
-		<snapshotRepository>
-			<id>exchange-repository</id>
-			<name>Exchange Repository</name>
-			<url>https://maven.anypoint.mulesoft.com/api/v1/organizations/9c7c42b3-1b21-4ec1-9183-047ec0921663/maven</url>
-			<layout>default</layout>
-		</snapshotRepository>
-		<repository>
-			<id>exchange-repository</id>
-			<name>Exchange Repository</name>
-			<url>https://maven.anypoint.mulesoft.com/api/v1/organizations/9c7c42b3-1b21-4ec1-9183-047ec0921663/maven</url>
-			<layout>default</layout>
-		</repository>
-	</distributionManagement>
 </project>
