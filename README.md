@@ -1,16 +1,25 @@
-### MAC Web Crawler
-![Maven Central](https://img.shields.io/maven-central/v/cloud.anypoint/mule-web-crawler-connector)
+# <img src="icon/icon.svg" width="6%" alt="banner"> MuleSoft  WebCrawler Connector
 
-**MAC Web Crawler** is a MuleSoft custom connector to provide web crawling capabilities to extract data from web pages subsequently based on the structure of the website.
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector)](https://central.sonatype.com/artifact/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector/overview)
 
+## <img src="https://raw.githubusercontent.com/MuleSoft-AI-Chain-Project/.github/main/profile/assets/mulechain-project-logo.png" width="6%" alt="banner">   [MuleSoft AI Chain (MAC) Project](https://mac-project.ai/docs/)
 
-### Installation (using Cloud.Anypoint Dependency)
+### <img src="icon/icon.svg" width="6%" alt="banner"> MAC Web Crawler
+
+**MuleSoft WebCrawler** provides web crawling capabilities to extract data from web pages subsequently based on the structure of the website.
+
+### Requirements
+
+- The maximum supported version for Java SDK is JDK 17. You can use JDK 17 only for running your application.
+- Compilation with Java SDK must be done with JDK 11.
+
+### Installation (using maven central dependency)
 
 ```xml
 <dependency>
-   <groupId>cloud.anypoint</groupId>
-   <artifactId>mule-web-crawler-connector</artifactId>
-   <version>0.1.0</version>
+   <groupId>io.github.mulesoft-ai-chain-project</groupId>
+   <artifactId>mule4-webcrawler-connector</artifactId>
+   <version>0.1.25</version>
    <classifier>mule-plugin</classifier>
 </dependency>
 ```
@@ -23,9 +32,9 @@ Then add the following dependency to your application's `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.mule.mulechain</groupId>
-    <artifactId>mac-web-crawler</artifactId>
-    <version>0.1.0</version>
+    <groupId>com.mulesoft.connectors</groupId>
+    <artifactId>mule4-webcrawler-connector</artifactId>
+    <version>0.1.25</version>
     <classifier>mule-plugin</classifier>
 </dependency>
 ```
