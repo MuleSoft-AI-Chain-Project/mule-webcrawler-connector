@@ -4,22 +4,37 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.mule.mulechain</groupId>
-    <artifactId>mac-web-crawler</artifactId>
-    <version>0.1.25-SNAPSHOT</version>
+    <groupId>com.mulesoft.connectors</groupId>
+    <artifactId>mule4-webcrawler-connector</artifactId>
+    <version>0.1.25</version>
     <packaging>mule-extension</packaging>
-    <name>mac-web-crawler Extension</name>
+    <name>MuleSoft WebCrawler Connector - Mule 4</name>
 	<description>The MAC WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
 	<url>https://mac-project.ai/docs/mac-webcrawler/connector-overview</url>
+	<scm>
+		<connection>scm:git:git://github.com/MuleSoft-AI-Chain-Project/mule-web-crawler-connector.git</connection>
+		<developerConnection>scm:git:ssh://github.com:MuleSoft-AI-Chain-Project/mule-web-crawler-connector.git</developerConnection>
+		<url>https://github.com/MuleSoft-AI-Chain-Project/mule-web-crawler-connector/tree/master</url>
+	</scm>
+
 	<developers>
 		<developer>
 			<name>Yogesh Mudaliar</name>
+			<email>ymudaliar@salesforce.com</email>
+			<organization>Salesforce</organization>
+			<organizationUrl>https://www.salesforce.com</organizationUrl>
 		</developer>
 		<developer>
 			<name>Amir Khan</name>
 			<email>amir.khan@mulesoft.com</email>
 			<organization>Salesforce</organization>
 			<organizationUrl>https://www.mulesoft.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Tommaso Bolis</name>
+			<email>tbolis-at-salesforce-dot-com</email>
+			<organization>Salesforce</organization>
+			<organizationUrl>https://www.salesforce.com</organizationUrl>
 		</developer>
 		<developer>
 			<name>Mihael Bosnjak</name>
@@ -48,6 +63,31 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>0.6.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>central</publishingServerId>
+					<checksums>all</checksums>
+					<deploymentName>MuleSoft WebCrawler Connector Mule 4 Deployment</deploymentName>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>com.mulesoft.munit</groupId>
 				<artifactId>munit-extensions-maven-plugin</artifactId>
