@@ -17,6 +17,13 @@
 		<url>https://github.com/MuleSoft-AI-Chain-Project/mule-web-crawler-connector/tree/master</url>
 	</scm>
 
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://www.opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
+
 	<developers>
 		<developer>
 			<name>Yogesh Mudaliar</name>
