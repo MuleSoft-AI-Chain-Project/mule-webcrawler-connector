@@ -26,7 +26,7 @@
 
 ### Installation (building locally)
 
-To use this connector, first [build and install](https://mac-project.ai/docs/mulechain-ai/getting-started) the connector into your local maven repository.
+To use this connector, first [build and install](https://mac-project.ai/docs/mac-webcrawler/getting-started) the connector into your local maven repository.
 Then add the following dependency to your application's `pom.xml`:
 
 
