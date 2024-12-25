@@ -1,4 +1,4 @@
-package com.mule.mulechain.crawler.internal.helpers;
+package org.mule.extension.webcrawler.internal.helpers;
 
 public class CrawlResult extends SiteMapNode {
     private String fileName;

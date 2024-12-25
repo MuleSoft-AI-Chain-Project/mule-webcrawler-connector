@@ -1,4 +1,4 @@
-package com.mule.mulechain.crawler.internal.helpers;
+package org.mule.extension.webcrawler.internal.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -18,19 +19,9 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class crawlingHelper {
+public class CrawlingHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(crawlingHelper.class);
-
-    public enum PageInsightType {
-        ALL,
-        INTERNALLINKS,
-        EXTERNALLINKS,
-        REFERENCELINKS,
-        IMAGELINKS,
-        ELEMENTCOUNTSTATS
-    }
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlingHelper.class);
 
     public static Document getDocument(String url) throws IOException {
         // use jsoup to fetch the current page elements
@@ -145,7 +136,7 @@ public class crawlingHelper {
         return metaTagData;
     }
 
-    public static Map<String, Object> getPageInsights(Document document, List<String> tags, PageInsightType insight) throws MalformedURLException{
+    public static Map<String, Object> getPageInsights(Document document, List<String> tags, Constants.PageInsightType insight) throws MalformedURLException{
         // Map to store page analysis
         Map<String, Object> pageInsightData = new HashMap<>();
 
@@ -168,7 +159,11 @@ public class crawlingHelper {
         String baseUrl = document.baseUri();
 
 
-        if (insight == PageInsightType.ALL || insight == PageInsightType.INTERNALLINKS || insight == PageInsightType.REFERENCELINKS || insight == PageInsightType.EXTERNALLINKS) {
+        if (insight == Constants.PageInsightType.ALL ||
+            insight == Constants.PageInsightType.INTERNALLINKS ||
+            insight == Constants.PageInsightType.REFERENCELINKS ||
+            insight == Constants.PageInsightType.EXTERNALLINKS) {
+
             // Select all anchor tags with href attributes
             Elements links = document.select("a[href]");
 
@@ -184,16 +179,16 @@ public class crawlingHelper {
                 }
             }
 
-            if (insight == PageInsightType.ALL || insight == PageInsightType.INTERNALLINKS)
+            if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.INTERNALLINKS)
                 linksMap.put("internal", internalLinks);
-            if (insight == PageInsightType.ALL || insight == PageInsightType.EXTERNALLINKS)
+            if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.EXTERNALLINKS)
                 linksMap.put("external", externalLinks);
-            if (insight == PageInsightType.ALL || insight == PageInsightType.REFERENCELINKS)
+            if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.REFERENCELINKS)
                 linksMap.put("reference", referenceLinks);
         }
 
 
-        if (insight == PageInsightType.ALL || insight == PageInsightType.IMAGELINKS) {
+        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.IMAGELINKS) {
                 // images
 
             Elements images = document.select("img[src]");
@@ -206,7 +201,9 @@ public class crawlingHelper {
 
         }
 
-        if (insight == PageInsightType.ALL || insight == PageInsightType.ELEMENTCOUNTSTATS) {
+        if (insight == Constants.PageInsightType.ALL ||
+            insight == Constants.PageInsightType.ELEMENTCOUNTSTATS) {
+
             String[] elementsToCount = {"div", "p", "h1", "h2", "h3", "h4", "h5"}; // default list of elements to retrieve stats for. Used if no specific tags provided
 
             if (tags != null && !tags.isEmpty()) {
@@ -232,7 +229,12 @@ public class crawlingHelper {
         pageInsightData.put("title", document.title());
 
         // only add links if any of the types in condition has been requested
-        if (insight == PageInsightType.ALL || insight == PageInsightType.INTERNALLINKS || insight == PageInsightType.REFERENCELINKS || insight == PageInsightType.EXTERNALLINKS || insight == PageInsightType.IMAGELINKS)
+        if (insight == Constants.PageInsightType.ALL ||
+            insight == Constants.PageInsightType.INTERNALLINKS ||
+            insight == Constants.PageInsightType.REFERENCELINKS ||
+            insight == Constants.PageInsightType.EXTERNALLINKS ||
+            insight == Constants.PageInsightType.IMAGELINKS)
+
             pageInsightData.put("links", linksMap);
 
         return pageInsightData;

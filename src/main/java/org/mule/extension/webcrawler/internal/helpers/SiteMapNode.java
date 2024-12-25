@@ -1,9 +1,10 @@
-package com.mule.mulechain.crawler.internal.helpers;
+package org.mule.extension.webcrawler.internal.helpers;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SiteMapNode {
+
     private String url;
     private List<SiteMapNode> children;
 

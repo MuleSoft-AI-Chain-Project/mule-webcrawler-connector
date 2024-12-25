@@ -1,5 +1,6 @@
-package com.mule.mulechain.crawler.internal;
+package org.mule.extension.webcrawler.internal.extension;
 
+import org.mule.extension.webcrawler.internal.config.Configuration;
 import org.mule.runtime.extension.api.annotation.Configurations;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.dsl.xml.Xml;
@@ -14,8 +15,8 @@ import static org.mule.sdk.api.meta.JavaVersion.JAVA_17;
  */
 @Xml(prefix = "mac-web-crawler")
 @Extension(name = "MAC WebCrawler")
-@Configurations(MulechainwebcrawlerConfiguration.class)
+@Configurations(Configuration.class)
 @JavaVersionSupport({JAVA_11, JAVA_17})
-public class MulechainwebcrawlerExtension {
+public class Connector {
 
 }
