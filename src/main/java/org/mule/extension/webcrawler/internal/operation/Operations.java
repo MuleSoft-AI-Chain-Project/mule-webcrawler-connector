@@ -1,15 +1,16 @@
 package org.mule.extension.webcrawler.internal.operation;
 
+import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.Configuration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.helpers.CrawlResult;
+import org.mule.extension.webcrawler.internal.helpers.ResponseHelper;
 import org.mule.extension.webcrawler.internal.helpers.SiteMapNode;
 import org.mule.extension.webcrawler.internal.helpers.CrawlingHelper;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
@@ -24,11 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.APPLICATION_JSON;
 
 /**
@@ -55,16 +54,17 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Crawl-website")
-  public InputStream crawlWebsite(@Config Configuration configuration,
-      @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Restrict Crawl under URL") @Placement(order = 2) @Example("False") boolean restrictToPath,
-      @DisplayName("Dynamic Content Retrieval") @Placement(order = 3) @Example("False") boolean dynamicContent,
-      @DisplayName("Maximum Depth") @Placement(order = 4) @Example("2") int maxDepth,
-      @DisplayName("Delay (millisecs)") @Placement(order = 5) @Example("0") int delayMillis,
-      @DisplayName("Retrieve Meta Tags") @Placement(order = 6) @Example("False") boolean getMetaTags,
-      @DisplayName("Download Images") @Placement(order = 7) @Example("False") boolean downloadImages,
-      @DisplayName("Download Location") @Placement(order = 8) @Example("/users/mulesoft/downloads") String downloadPath)
-      throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      crawlWebsite(@Config Configuration configuration,
+          @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @DisplayName("Restrict Crawl under URL") @Placement(order = 2) @Example("False") boolean restrictToPath,
+          @DisplayName("Dynamic Content Retrieval") @Placement(order = 3) @Example("False") boolean dynamicContent,
+          @DisplayName("Maximum Depth") @Placement(order = 4) @Example("2") int maxDepth,
+          @DisplayName("Delay (millisecs)") @Placement(order = 5) @Example("0") int delayMillis,
+          @DisplayName("Retrieve Meta Tags") @Placement(order = 6) @Example("False") boolean getMetaTags,
+          @DisplayName("Download Images") @Placement(order = 7) @Example("False") boolean downloadImages,
+          @DisplayName("Download Location") @Placement(order = 8) @Example("/users/mulesoft/downloads") String downloadPath)
+          throws IOException {
 
     LOGGER.info("Website crawl action");
 
@@ -75,10 +75,28 @@ public class Operations {
 
     String originalUrl = url;
     SiteMapNode
-        root = startCrawling(url, originalUrl, 0, maxDepth, restrictToPath, dynamicContent, delayMillis, visitedLinksByDepth, visitedLinksGlobal, downloadImages,
-                             downloadPath, specificTags, getMetaTags, Constants.CrawlType.CONTENT);
+        root = startCrawling(
+            url,
+            originalUrl,
+            0,
+            maxDepth,
+            restrictToPath,
+            dynamicContent,
+            delayMillis,
+            visitedLinksByDepth,
+            visitedLinksGlobal,
+            downloadImages,
+            downloadPath,
+            specificTags,
+            getMetaTags,
+            Constants.CrawlType.CONTENT);
 
-    return IOUtils.toInputStream(CrawlingHelper.convertToJSON(root), StandardCharsets.UTF_8);
+    return ResponseHelper.createResponse(
+        CrawlingHelper.convertToJSON(root),
+        new HashMap<String, Object>() {{
+          put("url", originalUrl);
+        }}
+    );
   }
 
   /**
@@ -86,15 +104,21 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Get-page-meta-tags")
-  public InputStream getMetaTags(
-      @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
-      throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      getMetaTags(
+          @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
+          throws IOException {
+
     LOGGER.info("Get meta tags");
 
     Document document = CrawlingHelper.getDocument(url);
 
-    //return crawlingHelper.convertToJSON(crawlingHelper.getPageMetaTags(document));
-    return toInputStream(CrawlingHelper.convertToJSON(CrawlingHelper.getPageMetaTags(document)), StandardCharsets.UTF_8) ;
+    return ResponseHelper.createResponse(
+        CrawlingHelper.convertToJSON(CrawlingHelper.getPageMetaTags(document)),
+        new HashMap<String, Object>() {{
+          put("url", url);
+        }}
+    );
   }
 
   /**
@@ -102,10 +126,12 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Generate-sitemap")
-  public InputStream getSiteMap(
-      @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
-      @DisplayName("Delay (millisecs)") @Placement(order = 3) @Example("0") int delayMillis) throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      getSiteMap(
+          @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
+          @DisplayName("Delay (millisecs)") @Placement(order = 3) @Example("0") int delayMillis) throws IOException {
+
     LOGGER.info("Generate sitemap");
 
     // initialise variables
@@ -116,7 +142,12 @@ public class Operations {
     SiteMapNode root = startCrawling(url, originalUrl, 0, maxDepth, false, false, delayMillis, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
                                      false, Constants.CrawlType.LINK);
 
-    return toInputStream(CrawlingHelper.convertToJSON(root), StandardCharsets.UTF_8) ;
+    return ResponseHelper.createResponse(
+        CrawlingHelper.convertToJSON(root),
+        new HashMap<String, Object>() {{
+          put("url", originalUrl);
+        }}
+    );
   }
 
   /**
@@ -125,10 +156,11 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Download-image")
-  public InputStream downloadWebsiteImages(
-      @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath)
-      throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      downloadWebsiteImages(
+          @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath)
+          throws IOException {
 
     String result = "";
 
@@ -143,7 +175,13 @@ public class Operations {
       linkFileMap.put(url, downloadSingleImage(url, downloadPath));
       result = CrawlingHelper.convertToJSON(linkFileMap);
     }
-    return toInputStream(result,StandardCharsets.UTF_8) ;
+
+    return ResponseHelper.createResponse(
+        result,
+        new HashMap<String, Object>() {{
+          put("url", url);
+        }}
+    );
   }
 
   /**
@@ -153,16 +191,24 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Get-page-insights")
-  public InputStream getPageInsights(
-      @Config Configuration configuration,
-      @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
-      throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      getPageInsights(
+          @Config Configuration configuration,
+          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
+          throws IOException {
+
     LOGGER.info("Analyze page");
 
     Document document = CrawlingHelper.getDocument(url);
 
-    return toInputStream(CrawlingHelper.convertToJSON(
-        CrawlingHelper.getPageInsights(document, configuration.getTags(), Constants.PageInsightType.ALL)), StandardCharsets.UTF_8) ;
+    return ResponseHelper.createResponse(
+        CrawlingHelper.convertToJSON(
+            CrawlingHelper.getPageInsights(document, configuration.getTags(), Constants.PageInsightType.ALL)
+        ),
+        new HashMap<String, Object>() {{
+          put("url", url);
+        }}
+    );
   }
 
   /**
@@ -170,10 +216,12 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Get-page-content")
-  public InputStream getPageContent(
-      @Config Configuration configuration,
-      @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
-      throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      getPageContent(
+          @Config Configuration configuration,
+          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
+          throws IOException {
+
     LOGGER.info("Get page content");
 
     Map<String, String> contents = new HashMap<String, String>();
@@ -184,7 +232,12 @@ public class Operations {
     contents.put("title", document.title());
     contents.put("content", CrawlingHelper.getPageContent(document, configuration.getTags()));
 
-    return toInputStream(CrawlingHelper.convertToJSON(contents), StandardCharsets.UTF_8) ;
+    return ResponseHelper.createResponse(
+        CrawlingHelper.convertToJSON(contents),
+        new HashMap<String, Object>() {{
+          put("url", url);
+        }}
+    );
   }
 
   private String savePageContents(Object results, String downloadPath, String title) throws IOException {
@@ -460,9 +513,11 @@ public class Operations {
    */
   @MediaType(value = MediaType.APPLICATION_JSON, strict = false)
   @Alias("Google-search")
-  public String googleSearch(
-      @DisplayName("Search Query") @Placement(order = 1) @Example("apple inc") String query,
-      @DisplayName("API Key") @Placement(order = 2) @Example("your_api_key_here") String apiKey) throws IOException {
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+      googleSearch(
+          @DisplayName("Search Query") @Placement(order = 1) @Example("apple inc") String query,
+          @DisplayName("API Key") @Placement(order = 2) @Example("your_api_key_here") String apiKey) throws IOException {
+
     LOGGER.info("Performing Google search for query: " + query);
 
     OkHttpClient client = new OkHttpClient().newBuilder().build();
@@ -483,6 +538,11 @@ public class Operations {
     String responseBody = response.body().string();
     JSONObject jsonResponse = new JSONObject(responseBody);
 
-    return jsonResponse.toString(4); // Pretty print with an indentation of 4 spaces
+    return ResponseHelper.createResponse(
+        jsonResponse.toString(),
+        new HashMap<String, Object>() {{
+          put("query", query);
+        }}
+    );
   }
 }
