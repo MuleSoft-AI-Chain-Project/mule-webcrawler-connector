@@ -3,6 +3,8 @@ package org.mule.extension.webcrawler.internal.operation;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.Configuration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
+import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helpers.CrawlResult;
 import org.mule.extension.webcrawler.internal.helpers.ResponseHelper;
 import org.mule.extension.webcrawler.internal.helpers.SiteMapNode;
@@ -15,11 +17,14 @@ import org.json.JSONObject;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.mule.runtime.extension.api.annotation.Alias;
+import org.mule.runtime.extension.api.annotation.error.Throws;
+import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +59,8 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Crawl-website")
+  @DisplayName("[Crawl] Website")
+  @Throws(WebCrawlerErrorTypeProvider.class)
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       crawlWebsite(@Config Configuration configuration,
           @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
@@ -63,40 +70,51 @@ public class Operations {
           @DisplayName("Delay (millisecs)") @Placement(order = 5) @Example("0") int delayMillis,
           @DisplayName("Retrieve Meta Tags") @Placement(order = 6) @Example("False") boolean getMetaTags,
           @DisplayName("Download Images") @Placement(order = 7) @Example("False") boolean downloadImages,
-          @DisplayName("Download Location") @Placement(order = 8) @Example("/users/mulesoft/downloads") String downloadPath)
-          throws IOException {
+          @DisplayName("Download Location") @Placement(order = 8) @Example("/users/mulesoft/downloads") String downloadPath) {
 
-    LOGGER.info("Website crawl action");
+    try {
 
-    // initialise variables
-    Set<String> visitedLinksGlobal = new HashSet<>();
-    Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
-    List<String> specificTags = configuration.getTags();
+      LOGGER.info("Website crawl action");
 
-    String originalUrl = url;
-    SiteMapNode
-        root = startCrawling(
-            url,
-            originalUrl,
-            0,
-            maxDepth,
-            restrictToPath,
-            dynamicContent,
-            delayMillis,
-            visitedLinksByDepth,
-            visitedLinksGlobal,
-            downloadImages,
-            downloadPath,
-            specificTags,
-            getMetaTags,
-            Constants.CrawlType.CONTENT);
+      // initialise variables
+      Set<String> visitedLinksGlobal = new HashSet<>();
+      Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
+      List<String> specificTags = configuration.getTags();
 
-    return ResponseHelper.createResponse(
-        CrawlingHelper.convertToJSON(root),
-        new HashMap<String, Object>() {{
-          put("url", originalUrl);
-        }}
-    );
+      String originalUrl = url;
+      SiteMapNode
+          root = startCrawling(
+              url,
+              originalUrl,
+              0,
+              maxDepth,
+              restrictToPath,
+              dynamicContent,
+              delayMillis,
+              visitedLinksByDepth,
+              visitedLinksGlobal,
+              downloadImages,
+              downloadPath,
+              specificTags,
+              getMetaTags,
+              Constants.CrawlType.CONTENT);
+
+      return ResponseHelper.createResponse(
+          CrawlingHelper.convertToJSON(root),
+          new HashMap<String, Object>() {{
+            put("url", originalUrl);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while crawling website '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
   }
 
   /**
@@ -104,21 +122,34 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Get-page-meta-tags")
+  @DisplayName("[Page] Get meta tags")
+  @Throws(WebCrawlerErrorTypeProvider.class)
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
-          @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
-          throws IOException {
+          @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
-    LOGGER.info("Get meta tags");
+    try {
 
-    Document document = CrawlingHelper.getDocument(url);
+      LOGGER.info("Get meta tags");
 
-    return ResponseHelper.createResponse(
-        CrawlingHelper.convertToJSON(CrawlingHelper.getPageMetaTags(document)),
-        new HashMap<String, Object>() {{
-          put("url", url);
-        }}
-    );
+      Document document = CrawlingHelper.getDocument(url);
+
+      return ResponseHelper.createResponse(
+          CrawlingHelper.convertToJSON(CrawlingHelper.getPageMetaTags(document)),
+          new HashMap<String, Object>() {{
+            put("url", url);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while getting page meta tags from '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
   }
 
   /**
@@ -126,28 +157,42 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Generate-sitemap")
+  @DisplayName("[Page] Get links as sitemap")
+  @Throws(WebCrawlerErrorTypeProvider.class)
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getSiteMap(
           @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
-          @DisplayName("Delay (millisecs)") @Placement(order = 3) @Example("0") int delayMillis) throws IOException {
+          @DisplayName("Delay (millisecs)") @Placement(order = 3) @Example("0") int delayMillis) {
 
-    LOGGER.info("Generate sitemap");
+    try{
 
-    // initialise variables
-    Set<String> visitedLinksGlobal = new HashSet<>();
-    Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
+      LOGGER.info("Generate sitemap");
 
-    String originalUrl = url;
-    SiteMapNode root = startCrawling(url, originalUrl, 0, maxDepth, false, false, delayMillis, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
-                                     false, Constants.CrawlType.LINK);
+      // initialise variables
+      Set<String> visitedLinksGlobal = new HashSet<>();
+      Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
 
-    return ResponseHelper.createResponse(
-        CrawlingHelper.convertToJSON(root),
-        new HashMap<String, Object>() {{
-          put("url", originalUrl);
-        }}
-    );
+      String originalUrl = url;
+      SiteMapNode root = startCrawling(url, originalUrl, 0, maxDepth, false, false, delayMillis, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
+                                       false, Constants.CrawlType.LINK);
+
+      return ResponseHelper.createResponse(
+          CrawlingHelper.convertToJSON(root),
+          new HashMap<String, Object>() {{
+            put("url", originalUrl);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while generating sitemap for '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
   }
 
   /**
@@ -156,32 +201,45 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Download-image")
+  @DisplayName("[Page] Download image")
+  @Throws(WebCrawlerErrorTypeProvider.class)
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
           @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath)
-          throws IOException {
-
-    String result = "";
+          @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
 
     try {
-      // url provided is a website url, so download all images from this document
-      Document document = CrawlingHelper.getDocument(url);
-      result = CrawlingHelper.convertToJSON(downloadWebsiteImages(document, downloadPath));
-    } catch (UnsupportedMimeTypeException e) {
-      // url provided is direct link to image, so download single image
 
-      Map<String, String> linkFileMap = new HashMap<>();
-      linkFileMap.put(url, downloadSingleImage(url, downloadPath));
-      result = CrawlingHelper.convertToJSON(linkFileMap);
+      String result = "";
+
+      try {
+        // url provided is a website url, so download all images from this document
+        Document document = CrawlingHelper.getDocument(url);
+        result = CrawlingHelper.convertToJSON(downloadWebsiteImages(document, downloadPath));
+      } catch (UnsupportedMimeTypeException e) {
+        // url provided is direct link to image, so download single image
+
+        Map<String, String> linkFileMap = new HashMap<>();
+        linkFileMap.put(url, downloadSingleImage(url, downloadPath));
+        result = CrawlingHelper.convertToJSON(linkFileMap);
+      }
+
+      return ResponseHelper.createResponse(
+          result,
+          new HashMap<String, Object>() {{
+            put("url", url);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while downloading image from '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
     }
-
-    return ResponseHelper.createResponse(
-        result,
-        new HashMap<String, Object>() {{
-          put("url", url);
-        }}
-    );
   }
 
   /**
@@ -191,24 +249,37 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Get-page-insights")
+  @DisplayName("[Page] Get insights")
+  @Throws(WebCrawlerErrorTypeProvider.class)
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
           @Config Configuration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
-          throws IOException {
+          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
-    LOGGER.info("Analyze page");
+    try {
 
-    Document document = CrawlingHelper.getDocument(url);
+      LOGGER.info("Analyze page");
 
-    return ResponseHelper.createResponse(
-        CrawlingHelper.convertToJSON(
-            CrawlingHelper.getPageInsights(document, configuration.getTags(), Constants.PageInsightType.ALL)
-        ),
-        new HashMap<String, Object>() {{
-          put("url", url);
-        }}
-    );
+      Document document = CrawlingHelper.getDocument(url);
+
+      return ResponseHelper.createResponse(
+          CrawlingHelper.convertToJSON(
+              CrawlingHelper.getPageInsights(document, configuration.getTags(), Constants.PageInsightType.ALL)
+          ),
+          new HashMap<String, Object>() {{
+            put("url", url);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while getting page insights from '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
   }
 
   /**
@@ -216,28 +287,42 @@ public class Operations {
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
   @Alias("Get-page-content")
+  @DisplayName("[Page] Get content")
+  @Throws(WebCrawlerErrorTypeProvider.class)
+  @OutputJsonType(schema = "api/metadata/PageGetContent.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
           @Config Configuration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url)
-          throws IOException {
+          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
-    LOGGER.info("Get page content");
+    try {
 
-    Map<String, String> contents = new HashMap<String, String>();
+      LOGGER.info("Get page content");
 
-    Document document = CrawlingHelper.getDocument(url);
+      Map<String, String> contents = new HashMap<String, String>();
 
-    contents.put("url", document.baseUri());
-    contents.put("title", document.title());
-    contents.put("content", CrawlingHelper.getPageContent(document, configuration.getTags()));
+      Document document = CrawlingHelper.getDocument(url);
 
-    return ResponseHelper.createResponse(
-        CrawlingHelper.convertToJSON(contents),
-        new HashMap<String, Object>() {{
-          put("url", url);
-        }}
-    );
+      contents.put("url", document.baseUri());
+      contents.put("title", document.title());
+      contents.put("content", CrawlingHelper.getPageContent(document, configuration.getTags()));
+
+      return ResponseHelper.createResponse(
+          CrawlingHelper.convertToJSON(contents),
+          new HashMap<String, Object>() {{
+            put("url", url);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while getting page content from '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
   }
 
   private String savePageContents(Object results, String downloadPath, String title) throws IOException {
@@ -513,36 +598,52 @@ public class Operations {
    */
   @MediaType(value = MediaType.APPLICATION_JSON, strict = false)
   @Alias("Google-search")
+  @DisplayName("[Search] Google")
+  @Throws(WebCrawlerErrorTypeProvider.class)
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       googleSearch(
           @DisplayName("Search Query") @Placement(order = 1) @Example("apple inc") String query,
           @DisplayName("API Key") @Placement(order = 2) @Example("your_api_key_here") String apiKey) throws IOException {
 
-    LOGGER.info("Performing Google search for query: " + query);
+    try {
 
-    OkHttpClient client = new OkHttpClient().newBuilder().build();
-    okhttp3.MediaType mediaType = okhttp3.MediaType.parse("application/json");
-    RequestBody body = RequestBody.create("{\"q\":\"" + query + "\"}", mediaType);
-    Request request = new Request.Builder()
-        .url("https://google.serper.dev/search")
-        .method("POST", body)
-        .addHeader("X-API-KEY", apiKey)
-        .addHeader("Content-Type", "application/json")
-        .build();
-    Response response = client.newCall(request).execute();
+      LOGGER.info("Performing Google search for query: " + query);
 
-    if (!response.isSuccessful()) {
-      throw new IOException("Unexpected code " + response);
+      OkHttpClient client = new OkHttpClient().newBuilder().build();
+      okhttp3.MediaType mediaType = okhttp3.MediaType.parse("application/json");
+      RequestBody body = RequestBody.create("{\"q\":\"" + query + "\"}", mediaType);
+      Request request = new Request.Builder()
+          .url("https://google.serper.dev/search")
+          .method("POST", body)
+          .addHeader("X-API-KEY", apiKey)
+          .addHeader("Content-Type", "application/json")
+          .build();
+      Response response = client.newCall(request).execute();
+
+      if (!response.isSuccessful()) {
+        throw new IOException("Unexpected code " + response);
+      }
+
+      String responseBody = response.body().string();
+      JSONObject jsonResponse = new JSONObject(responseBody);
+
+      return ResponseHelper.createResponse(
+          jsonResponse.toString(),
+          new HashMap<String, Object>() {{
+            put("query", query);
+          }}
+      );
+
+    } catch (ModuleException me) {
+
+      throw me;
+
+    } catch (Exception e) {
+
+      throw new ModuleException(
+          String.format("Error while searching '%s'.", query),
+          WebCrawlerErrorType.SEARCH_OPERATIONS_FAILURE,
+          e);
     }
-
-    String responseBody = response.body().string();
-    JSONObject jsonResponse = new JSONObject(responseBody);
-
-    return ResponseHelper.createResponse(
-        jsonResponse.toString(),
-        new HashMap<String, Object>() {{
-          put("query", query);
-        }}
-    );
   }
 }

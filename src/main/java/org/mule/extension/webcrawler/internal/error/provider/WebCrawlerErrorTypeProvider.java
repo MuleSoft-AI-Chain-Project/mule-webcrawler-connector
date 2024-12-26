@@ -8,8 +8,7 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
-import static org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType.INVALID_PARAMETERS_ERROR;
-import static org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE;
+import static org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType.*;
 
 public class WebCrawlerErrorTypeProvider implements ErrorTypeProvider {
 
@@ -18,7 +17,10 @@ public class WebCrawlerErrorTypeProvider implements ErrorTypeProvider {
   public Set<ErrorTypeDefinition> getErrorTypes() {
     return unmodifiableSet(new HashSet<>(asList(
         INVALID_PARAMETERS_ERROR,
-        WEBCRAWLER_OPERATIONS_FAILURE
+        WEBCRAWLER_OPERATIONS_FAILURE,
+        SEARCH_OPERATIONS_FAILURE,
+        PAGE_OPERATIONS_FAILURE,
+        CRAWL_OPERATIONS_FAILURE
     )));
   }
 }
