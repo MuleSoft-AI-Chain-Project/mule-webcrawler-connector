@@ -16,7 +16,7 @@ public class CrawlerHelper {
 
     public static SiteMapNode crawl(String url, String originalUrl, int depth, int maxDepth, boolean restrictToPath,
                                     boolean dynamicContent, int delayMillis, Map<Integer, Set<String>> visitedLinksByDepth,
-                                    Set<String> visitedLinksGlobal, boolean downloadImages, String downloadPath,
+                                    Set<String> visitedLinksGlobal, boolean downloadImages, boolean downloadDocuments, String downloadPath,
                                     List<String> contentTags, boolean getMetaTags, Constants.CrawlType crawlType) {
 
         // return if maxDepth reached
@@ -86,6 +86,11 @@ public class CrawlerHelper {
                     pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath));
                 }
 
+                if (downloadDocuments) {
+                    LOGGER.debug("Downloading documents for : " + url);
+                    pageData.put("imageFiles", PageHelper.downloadFiles(document, downloadPath));
+                }
+
                 // get all meta tags from the document
                 if (getMetaTags) {
                     // Iterating over each entry in the map
@@ -128,7 +133,7 @@ public class CrawlerHelper {
 
                         // Recursively crawl the link and add as a child
                         SiteMapNode childNode = crawl(nextUrl, originalUrl, depth + 1, maxDepth, restrictToPath, dynamicContent, delayMillis, visitedLinksByDepth, visitedLinksGlobal,
-                                                      downloadImages, downloadPath, contentTags, getMetaTags, crawlType);
+                                                      downloadImages, downloadDocuments, downloadPath, contentTags, getMetaTags, crawlType);
                         if (childNode != null) {
                             node.addChild(childNode);
                         }

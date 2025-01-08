@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -361,5 +362,85 @@ public class PageHelper {
     }
 
     return (file != null) ? file.getName() : "File is null";
+  }
+
+  public static Map<String, String> downloadFiles(Document document, String saveDir) throws IOException {
+    // List to store image URLs
+    Set<String> documentURLs = new HashSet<>();
+
+    Map<String, String> linkFileMap = new HashMap<>();
+
+    Map<String, Object> linksMap = (Map<String, Object>) PageHelper
+        .getPageInsights(document, null, Constants.PageInsightType.DOCUMENTLINKS).get("links");
+
+    if (linksMap != null) {
+      documentURLs = (Set<String>) linksMap.get("documents"); // Cast to Set<String>
+    }
+
+    if (documentURLs != null) {
+
+      // Save all images found on the page
+      LOGGER.debug("Number of img[src] elements found : " + documentURLs.size());
+      for (String documentURL : documentURLs) {
+
+        linkFileMap.put(documentURL, downloadFile(documentURL, saveDir));
+      }
+    }
+    return linkFileMap;
+  }
+
+  public static String downloadFile(String fileURL, String saveDir) {
+
+    HttpURLConnection httpConn = null;
+    String fileName = null;
+    try {
+      // Open connection to the URL
+      URL url = new URL(fileURL);
+      httpConn = (HttpURLConnection) url.openConnection();
+      httpConn.setRequestMethod("GET");
+
+      // Check HTTP response code
+      int responseCode = httpConn.getResponseCode();
+      if (responseCode == HttpURLConnection.HTTP_OK) {
+        String disposition = httpConn.getHeaderField("Content-Disposition");
+
+        if (disposition != null && disposition.contains("filename=")) {
+          // Extracts file name from header field
+          int index = disposition.indexOf("filename=");
+          fileName = disposition.substring(index + 9).replaceAll("\"", "");
+        } else {
+          // Fallback: extract file name from URL without query parameters
+          String urlPath = fileURL.split("\\?")[0]; // Remove query parameters
+          fileName = urlPath.substring(urlPath.lastIndexOf("/") + 1);
+        }
+
+        LOGGER.debug("Downloading file: " + fileName);
+
+        // Open input stream from connection
+        try (InputStream inputStream = new BufferedInputStream(httpConn.getInputStream());
+            FileOutputStream outputStream = new FileOutputStream(saveDir + "/" + fileName)) {
+
+          // Buffer for data transfer
+          byte[] buffer = new byte[4096];
+          int bytesRead;
+
+          // Write data to the file
+          while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+          }
+
+          LOGGER.debug("File downloaded: " + saveDir + "/" + fileName);
+        }
+      } else {
+        LOGGER.debug("No file to download. Server replied HTTP code: " + responseCode);
+      }
+    } catch (IOException e) {
+      LOGGER.error("Error downloading file: " + e.getMessage());
+    } finally {
+      if (httpConn != null) {
+        httpConn.disconnect();
+      }
+    }
+    return fileName;
   }
 }

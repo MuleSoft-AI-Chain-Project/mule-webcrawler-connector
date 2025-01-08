@@ -67,7 +67,8 @@ public class Operations {
           @DisplayName("Delay (millisecs)") @Placement(order = 5) @Example("0") int delayMillis,
           @DisplayName("Retrieve Meta Tags") @Placement(order = 6) @Example("False") boolean getMetaTags,
           @DisplayName("Download Images") @Placement(order = 7) @Example("False") boolean downloadImages,
-          @DisplayName("Download Location") @Placement(order = 8) @Example("/users/mulesoft/downloads") String downloadPath) {
+          @DisplayName("Download Documents") @Placement(order = 8) @Example("False") boolean downloadDocuments,
+          @DisplayName("Download Location") @Placement(order = 9) @Example("/users/mulesoft/downloads") String downloadPath) {
 
     try {
 
@@ -91,6 +92,7 @@ public class Operations {
               visitedLinksByDepth,
               visitedLinksGlobal,
               downloadImages,
+              downloadDocuments,
               downloadPath,
               specificTags,
               getMetaTags,
@@ -171,8 +173,10 @@ public class Operations {
       Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
 
       String originalUrl = url;
-      SiteMapNode root = CrawlerHelper.crawl(url, originalUrl, 0, maxDepth, false, false, delayMillis, visitedLinksByDepth, visitedLinksGlobal, false, null, null,
-                                             false, Constants.CrawlType.LINK);
+      SiteMapNode root = CrawlerHelper.crawl(url, originalUrl, 0, maxDepth, false, false,
+                                             delayMillis, visitedLinksByDepth, visitedLinksGlobal, false,
+                                             false, null, null, false,
+                                             Constants.CrawlType.LINK);
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(root),
