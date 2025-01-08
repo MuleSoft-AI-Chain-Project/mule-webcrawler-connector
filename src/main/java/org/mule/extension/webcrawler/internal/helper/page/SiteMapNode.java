@@ -1,4 +1,4 @@
-package org.mule.extension.webcrawler.internal.helpers;
+package org.mule.extension.webcrawler.internal.helper.page;
 
 import java.util.ArrayList;
 import java.util.List;

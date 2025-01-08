@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "pageStats": {
+      "type": "object",
+      "description": "Statistics about the page structure and content",
+      "properties": {
+        "div": { "type": "integer", "description": "Number of div elements" },
+        "p": { "type": "integer", "description": "Number of paragraph elements" },
+        "reference": { "type": "integer", "description": "Number of reference links" },
+        "internal": { "type": "integer", "description": "Number of internal links" },
+        "external": { "type": "integer", "description": "Number of external links" },
+        "images": { "type": "integer", "description": "Number of images" },
+        "wordCount": { "type": "integer", "description": "Total word count" },
+        "h1": { "type": "integer", "description": "Number of H1 headings" },
+        "h2": { "type": "integer", "description": "Number of H2 headings" },
+        "h3": { "type": "integer", "description": "Number of H3 headings" },
+        "h4": { "type": "integer", "description": "Number of H4 headings" },
+        "h5": { "type": "integer", "description": "Number of H5 headings" }
+      }
+    },
+    "links": {
+      "type": "object",
+      "description": "Links categorized by type",
+      "properties": {
+        "documents": {
+          "type": "array",
+          "description": "List of documents links",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "reference": {
+          "type": "array",
+          "description": "List of reference links",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "internal": {
+          "type": "array",
+          "description": "List of internal links",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "external": {
+          "type": "array",
+          "description": "List of external links",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "images": {
+          "type": "array",
+          "description": "List of image URLs",
+          "items": { "type": "string", "format": "uri" }
+        }
+      }
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the document"
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL of the document",
+      "format": "uri"
+    }
+  },
+  "required": ["pageStats", "links", "title", "url"],
+  "additionalProperties": true
+}

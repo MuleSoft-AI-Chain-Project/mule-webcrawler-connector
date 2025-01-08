@@ -1,4 +1,4 @@
-package org.mule.extension.webcrawler.internal.helpers;
+package org.mule.extension.webcrawler.internal.helper;
 
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.runtime.api.metadata.MediaType;

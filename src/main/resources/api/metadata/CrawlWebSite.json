@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string",
+      "description": "The URL of the document",
+      "format": "uri"
+    },
+    "children": {
+      "type": "array",
+      "description": "An array of child documents with indefinite depth",
+      "items": { "$ref": "#" }
+    },
+    "fileName": {
+      "type": "string",
+      "description": "The filename of the document"
+    }
+  },
+  "required": ["url", "fileName"],
+  "additionalProperties": true
+}
