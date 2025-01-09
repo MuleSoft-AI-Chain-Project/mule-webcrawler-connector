@@ -5,10 +5,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.mule.extension.webcrawler.internal.constant.Constants;
-import org.mule.extension.webcrawler.internal.helper.crawler.CrawlerHelper;
+import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
@@ -25,6 +25,9 @@ import java.util.*;
 public class PageHelper {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PageHelper.class);
+
+  private static final String CRAWLED_IMAGES_FOLDER = "images/";
+  private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
   public static Document getDocument(String url) throws IOException {
     // use jsoup to fetch the current page elements
@@ -94,102 +97,104 @@ public class PageHelper {
     return metaTagData;
   }
 
-  public static Map<String, Object> getPageInsights(Document document, List<String> tags, Constants.PageInsightType insight) throws
-      MalformedURLException {
+  public static HashMap<String, Object> getPageInsights(Document document, List<String> tags, Constants.PageInsightType insight) {
+
     // Map to store page analysis
-    Map<String, Object> pageInsightData = new HashMap<>();
+    HashMap<String, Object> pageInsightData = new HashMap<>();
+
+    try {
+
+      // doc-link set
+      Set<String> documentLinks = new HashSet<>();
+
+      // links set
+      Set<String> internalLinks = new HashSet<>();
+      Set<String> externalLinks = new HashSet<>();
+      Set<String> referenceLinks = new HashSet<>();
+
+      // image-links set
+      Set<String> imageLinks = new HashSet<>();
+
+      // All links Map
+      HashMap<String, Set> linksMap = new HashMap<>();
+
+      // Map to store the element counts
+      Map<String, Integer> elementCounts = new HashMap<>();
 
 
-    // doc-link set
-    Set<String> documentLinks = new HashSet<>();
-
-    // links set
-    Set<String> internalLinks = new HashSet<>();
-    Set<String> externalLinks = new HashSet<>();
-    Set<String> referenceLinks = new HashSet<>();
-
-    // image-links set
-    Set<String> imageLinks = new HashSet<>();
-
-    // All links Map
-    Map<String, Set> linksMap = new HashMap<>();
-
-    // Map to store the element counts
-    Map<String, Integer> elementCounts = new HashMap<>();
+      String baseUrl = document.baseUri();
 
 
-    String baseUrl = document.baseUri();
+      if (insight == Constants.PageInsightType.ALL ||
+          insight == Constants.PageInsightType.DOCUMENTLINKS ||
+          insight == Constants.PageInsightType.INTERNALLINKS ||
+          insight == Constants.PageInsightType.REFERENCELINKS ||
+          insight == Constants.PageInsightType.EXTERNALLINKS) {
 
+        // Select all anchor tags with href attributes
+        Elements links = document.select("a[href]");
 
-    if (insight == Constants.PageInsightType.ALL ||
-        insight == Constants.PageInsightType.DOCUMENTLINKS ||
-        insight == Constants.PageInsightType.INTERNALLINKS ||
-        insight == Constants.PageInsightType.REFERENCELINKS ||
-        insight == Constants.PageInsightType.EXTERNALLINKS) {
+        for (Element link : links) {
+          String href = link.absUrl("href"); // get absolute URLs
 
-      // Select all anchor tags with href attributes
-      Elements links = document.select("a[href]");
-
-      for (Element link : links) {
-        String href = link.absUrl("href"); // get absolute URLs
-
-        if(URLUtils.isDocumentUrl(href)) {
-          documentLinks.add(href);
-        } else if (URLUtils.isExternalLink(baseUrl, href)) {
-          externalLinks.add(href);
-        } else if (URLUtils.isReferenceLink(baseUrl, href)) {
-          referenceLinks.add(href);
-        } else {
-          internalLinks.add(href);
+          if(URLUtils.isDocumentUrl(href)) {
+            documentLinks.add(href);
+          } else if (URLUtils.isExternalLink(baseUrl, href)) {
+            externalLinks.add(href);
+          } else if (URLUtils.isReferenceLink(baseUrl, href)) {
+            referenceLinks.add(href);
+          } else {
+            internalLinks.add(href);
+          }
         }
+
+        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.DOCUMENTLINKS)
+          linksMap.put("documents", documentLinks);
+        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.INTERNALLINKS)
+          linksMap.put("internal", internalLinks);
+        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.EXTERNALLINKS)
+          linksMap.put("external", externalLinks);
+        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.REFERENCELINKS)
+          linksMap.put("reference", referenceLinks);
       }
 
-      if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.DOCUMENTLINKS)
-        linksMap.put("documents", documentLinks);
-      if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.INTERNALLINKS)
-        linksMap.put("internal", internalLinks);
-      if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.EXTERNALLINKS)
-        linksMap.put("external", externalLinks);
-      if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.REFERENCELINKS)
-        linksMap.put("reference", referenceLinks);
-    }
 
+      if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.IMAGELINKS) {
+        // images
 
-    if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.IMAGELINKS) {
-      // images
+        Elements images = document.select("img[src]");
+        for (Element img : images) {
+          String imageUrl = img.absUrl("src");
+          imageLinks.add(imageUrl);
+        }
 
-      Elements images = document.select("img[src]");
-      for (Element img : images) {
-        String imageUrl = img.absUrl("src");
-        imageLinks.add(imageUrl);
+        linksMap.put("images", imageLinks);
+
       }
 
-      linksMap.put("images", imageLinks);
+      if (insight == Constants.PageInsightType.ALL ||
+          insight == Constants.PageInsightType.ELEMENTCOUNTSTATS) {
 
-    }
+        String[] elementsToCount = {"div", "p", "h1", "h2", "h3", "h4", "h5"}; // default list of elements to retrieve stats for. Used if no specific tags provided
 
-    if (insight == Constants.PageInsightType.ALL ||
-        insight == Constants.PageInsightType.ELEMENTCOUNTSTATS) {
+        if (tags != null && !tags.isEmpty()) {
+          elementsToCount = tags.toArray(new String[tags.size()]);
+        }
 
-      String[] elementsToCount = {"div", "p", "h1", "h2", "h3", "h4", "h5"}; // default list of elements to retrieve stats for. Used if no specific tags provided
+        // Loop through each element type and count its occurrences
+        for (String tag : elementsToCount) {
+          Elements elements = document.select(tag);
+          elementCounts.put(tag, elements.size());
+        }
 
-      if (tags != null && !tags.isEmpty()) {
-        elementsToCount = tags.toArray(new String[tags.size()]);
-      }
+        elementCounts.put("internal", internalLinks.size());
+        elementCounts.put("external", externalLinks.size());
+        elementCounts.put("reference", referenceLinks.size());
+        elementCounts.put("images", imageLinks.size());
+        elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags)));
 
-      // Loop through each element type and count its occurrences
-      for (String tag : elementsToCount) {
-        Elements elements = document.select(tag);
-        elementCounts.put(tag, elements.size());
-      }
+        pageInsightData.put("pageStats", elementCounts);
 
-      elementCounts.put("internal", internalLinks.size());
-      elementCounts.put("external", externalLinks.size());
-      elementCounts.put("reference", referenceLinks.size());
-      elementCounts.put("images", imageLinks.size());
-      elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags)));
-
-      pageInsightData.put("pageStats", elementCounts);
     }
 
     pageInsightData.put("url", document.baseUri());
@@ -204,6 +209,14 @@ public class PageHelper {
         insight == Constants.PageInsightType.IMAGELINKS)
 
       pageInsightData.put("links", linksMap);
+
+    } catch (Exception e) {
+
+      throw new ModuleException(
+          String.format("Error while getting page insights for %s.", document.baseUri()),
+          WebCrawlerErrorType.PAGE_OPERATIONS_FAILURE,
+          e);
+    }
 
     return pageInsightData;
   }
@@ -260,6 +273,9 @@ public class PageHelper {
   }
 
   public static Map<String, String> downloadWebsiteImages(Document document, String saveDirectory) throws IOException {
+
+    String imagesSaveDirectory = saveDirectory + "/" + CRAWLED_IMAGES_FOLDER;
+
     // List to store image URLs
     Set<String> imageUrls = new HashSet<>();
 
@@ -276,7 +292,7 @@ public class PageHelper {
       // Save all images found on the page
       LOGGER.info("Number of img[src] elements found : " + imageUrls.size());
       for (String imageUrl : imageUrls) {
-        linkFileMap.put(imageUrl, downloadSingleImage(imageUrl, saveDirectory));
+        linkFileMap.put(imageUrl, CRAWLED_IMAGES_FOLDER + downloadSingleImage(imageUrl, imagesSaveDirectory));
       }
     }
     return linkFileMap;
@@ -353,7 +369,7 @@ public class PageHelper {
             out.write(buffer, 0, bytesRead);
           }
         }
-        LOGGER.info("Image saved: " + file.getAbsolutePath());
+        LOGGER.debug("Image saved: " + file.getAbsolutePath());
 
       }
     } catch (IOException e) {
@@ -365,6 +381,9 @@ public class PageHelper {
   }
 
   public static Map<String, String> downloadFiles(Document document, String saveDir) throws IOException {
+
+    String docsSaveDirectory = saveDir + "/" + CRAWLED_DOCUMENTS_FOLDER;
+
     // List to store image URLs
     Set<String> documentURLs = new HashSet<>();
 
@@ -380,10 +399,10 @@ public class PageHelper {
     if (documentURLs != null) {
 
       // Save all images found on the page
-      LOGGER.debug("Number of img[src] elements found : " + documentURLs.size());
+      LOGGER.debug("Number of documents found : " + documentURLs.size());
       for (String documentURL : documentURLs) {
 
-        linkFileMap.put(documentURL, downloadFile(documentURL, saveDir));
+        linkFileMap.put(documentURL, CRAWLED_DOCUMENTS_FOLDER + downloadFile(documentURL, docsSaveDirectory));
       }
     }
     return linkFileMap;
@@ -414,11 +433,22 @@ public class PageHelper {
           fileName = urlPath.substring(urlPath.lastIndexOf("/") + 1);
         }
 
-        LOGGER.debug("Downloading file: " + fileName);
+        LOGGER.debug(String.format("Downloading file %s at %s",fileName,fileURL));
+
+        // Ensure directory exists
+        File directory = new File(saveDir);
+        if (!directory.exists()) {
+          if (directory.mkdirs()) {
+            LOGGER.debug("Directory created: " + directory.getAbsolutePath());
+          } else {
+            LOGGER.error("Failed to create directory: " + directory.getAbsolutePath());
+            return null;
+          }
+        }
 
         // Open input stream from connection
         try (InputStream inputStream = new BufferedInputStream(httpConn.getInputStream());
-            FileOutputStream outputStream = new FileOutputStream(saveDir + "/" + fileName)) {
+            FileOutputStream outputStream = new FileOutputStream(saveDir + fileName)) {
 
           // Buffer for data transfer
           byte[] buffer = new byte[4096];
@@ -429,7 +459,7 @@ public class PageHelper {
             outputStream.write(buffer, 0, bytesRead);
           }
 
-          LOGGER.debug("File downloaded: " + saveDir + "/" + fileName);
+          LOGGER.debug("File downloaded: " + saveDir + "/docs/" + fileName);
         }
       } else {
         LOGGER.debug("No file to download. Server replied HTTP code: " + responseCode);

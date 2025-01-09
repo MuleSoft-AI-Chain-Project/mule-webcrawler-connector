@@ -3,11 +3,10 @@ package org.mule.extension.webcrawler.internal.operation;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.Configuration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
-import org.mule.extension.webcrawler.internal.helper.page.SiteMapNode;
-import org.mule.extension.webcrawler.internal.helper.crawler.CrawlerHelper;
 import org.json.JSONObject;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
@@ -72,36 +71,29 @@ public class Operations {
 
     try {
 
-      LOGGER.info("Website crawl action");
+      LOGGER.debug("Initialize crawler");
 
-      // initialise variables
-      Set<String> visitedLinksGlobal = new HashSet<>();
-      Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
-      List<String> specificTags = configuration.getTags();
+      Crawler crawler = Crawler.builder()
+          .rootURL(url)
+          .maxDepth(maxDepth)
+          .restrictToPath(restrictToPath)
+          .dynamicContent(dynamicContent)
+          .delayMillis(delayMillis)
+          .downloadImages(downloadImages)
+          .downloadDocuments(downloadDocuments)
+          .downloadPath(downloadPath)
+          .contentTags(configuration.getTags())
+          .getMetaTags(getMetaTags)
+          .build();
 
-      String originalUrl = url;
-      SiteMapNode
-          root = CrawlerHelper.crawl(
-              url,
-              originalUrl,
-              0,
-              maxDepth,
-              restrictToPath,
-              dynamicContent,
-              delayMillis,
-              visitedLinksByDepth,
-              visitedLinksGlobal,
-              downloadImages,
-              downloadDocuments,
-              downloadPath,
-              specificTags,
-              getMetaTags,
-              Constants.CrawlType.CONTENT);
+      LOGGER.debug("Start website crawling");
+
+      Crawler.CrawlNode root = crawler.crawl();
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(root),
           new HashMap<String, Object>() {{
-            put("url", originalUrl);
+            put("url", url);
           }}
       );
 
@@ -168,20 +160,18 @@ public class Operations {
 
       LOGGER.info("Generate sitemap");
 
-      // initialise variables
-      Set<String> visitedLinksGlobal = new HashSet<>();
-      Map<Integer, Set<String>> visitedLinksByDepth = new HashMap<>();
+      Crawler crawler = Crawler.builder()
+          .rootURL(url)
+          .maxDepth(maxDepth)
+          .delayMillis(delayMillis)
+          .build();
 
-      String originalUrl = url;
-      SiteMapNode root = CrawlerHelper.crawl(url, originalUrl, 0, maxDepth, false, false,
-                                             delayMillis, visitedLinksByDepth, visitedLinksGlobal, false,
-                                             false, null, null, false,
-                                             Constants.CrawlType.LINK);
+      Crawler.MapNode root = crawler.map();
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(root),
           new HashMap<String, Object>() {{
-            put("url", originalUrl);
+            put("url", url);
           }}
       );
 
