@@ -151,6 +151,7 @@ public class Operations {
   @Alias("Generate-sitemap")
   @DisplayName("[Page] Get links as sitemap")
   @Throws(WebCrawlerErrorTypeProvider.class)
+  @OutputJsonType(schema = "api/metadata/PageGetLinksAsSitemap.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getSiteMap(
           @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
