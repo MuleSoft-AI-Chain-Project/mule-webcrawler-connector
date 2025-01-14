@@ -8,7 +8,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
-import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.mule.runtime.extension.api.exception.ModuleException;
@@ -27,9 +26,6 @@ import java.util.*;
 public class PageHelper {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PageHelper.class);
-
-  private static final String CRAWLED_IMAGES_FOLDER = "images/";
-  private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
   public static Document getDocument(String url) throws IOException {
     // use jsoup to fetch the current page elements
@@ -283,15 +279,16 @@ public class PageHelper {
     return (file != null) ? file.getName() : "File is null";
   }
 
-  public static Map<String, String> downloadWebsiteImages(Document document, String saveDirectory) throws IOException {
+  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory) throws IOException {
+    return downloadWebsiteImages(document, saveDirectory, "");
+  }
 
-    String imagesSaveDirectory = saveDirectory + "/" + CRAWLED_IMAGES_FOLDER;
+  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory, String imagesSubFolder) throws IOException {
+
+    JSONArray imagesJSONArray = new JSONArray();
 
     // List to store image URLs
     Set<String> imageUrls = new HashSet<>();
-
-    Map<String, String> linkFileMap = new HashMap<>();
-
     Map<String, Object> linksMap = (Map<String, Object>) PageHelper
         .getPageInsights(document, null, Constants.PageInsightType.IMAGELINKS).get("links");
     if (linksMap != null) {
@@ -303,16 +300,33 @@ public class PageHelper {
       // Save all images found on the page
       LOGGER.info("Number of img[src] elements found : " + imageUrls.size());
       for (String imageUrl : imageUrls) {
-        linkFileMap.put(imageUrl, CRAWLED_IMAGES_FOLDER + downloadSingleImage(imageUrl, imagesSaveDirectory));
+        JSONObject imageJSONObject = downloadSingleImage(imageUrl, saveDirectory, imagesSubFolder);
+        if(imageJSONObject != null) imagesJSONArray.put(imageJSONObject);
       }
     }
-    return linkFileMap;
+
+    return imagesJSONArray;
   }
 
-  public static String downloadSingleImage(String imageUrl, String saveDirectory) throws IOException {
-    LOGGER.info("Found image : " + imageUrl);
+  public static JSONObject downloadSingleImage(String imageUrl, String saveDirectory) throws IOException {
+
+    return downloadSingleImage(imageUrl, saveDirectory, "");
+  }
+
+  public static JSONObject downloadSingleImage(String imageUrl, String saveDirectory, String imagesSubFolder) throws IOException {
+
+    LOGGER.info("Processing image: " + imageUrl);
+
+    String imagesSaveDirectory = saveDirectory + "/" + imagesSubFolder;
+
+    JSONObject jsonObject = new JSONObject();
     File file;
+
     try {
+
+      jsonObject.put("url", imageUrl);
+      if(imagesSubFolder.compareTo("") != 0) jsonObject.put("relativePath", imagesSubFolder);
+
       // Check if the URL is a Data URL
       if (imageUrl.startsWith("data:image/")) {
         // Extract base64 data from the Data URL
@@ -320,32 +334,31 @@ public class PageHelper {
 
         if (base64Data.isEmpty()) {
           LOGGER.info("Base64 data is empty for URL: " + imageUrl);
-          return "";
+          return null;
         }
 
         // Decode the base64 data
         byte[] imageBytes;
-
         try {
           imageBytes = Base64.getDecoder().decode(base64Data);
         } catch (IllegalArgumentException e) {
           LOGGER.info("Error decoding base64 data: " + e.getMessage());
-          return "";
+          return null;
         }
 
         if (imageBytes.length == 0) {
           LOGGER.info("Decoded image bytes are empty for URL: " + imageUrl);
-          return "";
+          return null;
         }
 
-        // Determine the file extension from the Data URL
-        String fileType = imageUrl.substring(5, imageUrl.indexOf(";"));
-        String fileExtension = fileType.split("/")[1];
+        // Determine the MIME type and file extension from the Data URL
+        String mimeType = imageUrl.substring(5, imageUrl.indexOf(";"));
+        String fileExtension = mimeType.split("/")[1];
 
         // Generate a unique filename using the current timestamp
         String timestamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
         String fileName = "image_" + timestamp + "." + fileExtension;
-        file = new File(saveDirectory, fileName);
+        file = new File(imagesSaveDirectory, fileName);
 
         // Ensure the directory exists
         file.getParentFile().mkdirs();
@@ -353,8 +366,12 @@ public class PageHelper {
         // Write the decoded bytes to the file
         try (FileOutputStream out = new FileOutputStream(file)) {
           out.write(imageBytes);
-          LOGGER.info("DataImage saved: " + file.getAbsolutePath());
+          LOGGER.info("Data URL image saved: " + file.getAbsolutePath());
         }
+
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("mimeType", mimeType);
+
       } else {
         // Handle standard image URLs
         URL url = new URL(imageUrl);
@@ -363,9 +380,9 @@ public class PageHelper {
         String decodedUrl = URLUtils.extractAndDecodeUrl(imageUrl);
         // Extract the filename from the decoded URL
         String fileName = URLUtils.extractFileNameFromUrl(decodedUrl);
+        String mimeType = URLUtils.detectMimeTypeFromFileName(fileName);
 
-        // String fileName = decodedUrl.substring(imageUrl.lastIndexOf("/") + 1);
-        file = new File(saveDirectory, fileName);
+        file = new File(imagesSaveDirectory, fileName);
 
         // Ensure the directory exists
         file.getParentFile().mkdirs();
@@ -380,20 +397,28 @@ public class PageHelper {
             out.write(buffer, 0, bytesRead);
           }
         }
+
         LOGGER.debug("Image saved: " + file.getAbsolutePath());
 
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("mimeType", mimeType);
       }
     } catch (IOException e) {
-      LOGGER.error("Error saving image: " + imageUrl);
+      LOGGER.error("Error saving image: " + imageUrl, e);
       throw e;
     }
 
-    return (file != null) ? file.getName() : "File is null";
+    return jsonObject;
   }
 
   public static Map<String, String> downloadFiles(Document document, String saveDir) throws IOException {
 
-    String docsSaveDirectory = saveDir + "/" + CRAWLED_DOCUMENTS_FOLDER;
+    return downloadFiles(document, saveDir, "");
+  }
+
+  public static Map<String, String> downloadFiles(Document document, String saveDir, String filesSubFolder) throws IOException {
+
+    String docsSaveDirectory = saveDir + "/" + filesSubFolder;
 
     // List to store image URLs
     Set<String> documentURLs = new HashSet<>();
@@ -413,7 +438,7 @@ public class PageHelper {
       LOGGER.debug("Number of documents found : " + documentURLs.size());
       for (String documentURL : documentURLs) {
 
-        linkFileMap.put(documentURL, CRAWLED_DOCUMENTS_FOLDER + downloadFile(documentURL, docsSaveDirectory));
+        linkFileMap.put(documentURL, filesSubFolder + downloadFile(documentURL, docsSaveDirectory));
       }
     }
     return linkFileMap;

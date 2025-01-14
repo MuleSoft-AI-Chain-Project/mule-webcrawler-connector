@@ -17,6 +17,9 @@ public class MuleCrawler extends Crawler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MuleCrawler.class);
 
+  private static final String CRAWLED_IMAGES_FOLDER = "images/";
+  private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
+
   public MuleCrawler(String originalUrl, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis,
                      boolean downloadImages, boolean downloadDocuments, String downloadPath, List<String> contentTags,
                      boolean getMetaTags) {
@@ -99,13 +102,15 @@ public class MuleCrawler extends Crawler {
 
         // check if need to download images in the current page
         if (downloadImages) {
+
           LOGGER.debug("Downloading images for : " + url);
-          pageData.put("imageFiles", new JSONObject(PageHelper.downloadWebsiteImages(document, downloadPath)));
+          pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath, CRAWLED_IMAGES_FOLDER));
         }
 
         if (downloadDocuments) {
+
           LOGGER.debug("Downloading documents for : " + url);
-          pageData.put("documentFiles", new JSONObject(PageHelper.downloadFiles(document, downloadPath)));
+          pageData.put("documentFiles", new JSONObject(PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER)));
         }
 
         // get all meta tags from the document

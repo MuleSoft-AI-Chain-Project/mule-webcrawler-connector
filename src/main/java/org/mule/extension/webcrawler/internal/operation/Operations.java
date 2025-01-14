@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.operation;
 
+import org.json.JSONArray;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.Configuration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
@@ -196,6 +197,7 @@ public class Operations {
   @Alias("Download-image")
   @DisplayName("[Page] Download image")
   @Throws(WebCrawlerErrorTypeProvider.class)
+  @OutputJsonType(schema = "api/metadata/PageDownloadImage.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
           @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
@@ -203,22 +205,21 @@ public class Operations {
 
     try {
 
-      String result = "";
+      JSONArray imagesJSONArray = new JSONArray();
 
       try {
         // url provided is a website url, so download all images from this document
         Document document = PageHelper.getDocument(url);
-        result = JSONUtils.convertToJSON(PageHelper.downloadWebsiteImages(document, downloadPath));
+        imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath);
+
       } catch (UnsupportedMimeTypeException e) {
         // url provided is direct link to image, so download single image
 
-        Map<String, String> linkFileMap = new HashMap<>();
-        linkFileMap.put(url, PageHelper.downloadSingleImage(url, downloadPath));
-        result = JSONUtils.convertToJSON(linkFileMap);
+        imagesJSONArray.put(PageHelper.downloadSingleImage(url, downloadPath));
       }
 
       return ResponseHelper.createResponse(
-          result,
+          imagesJSONArray.toString(),
           new HashMap<String, Object>() {{
             put("url", url);
           }}

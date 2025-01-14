@@ -7,10 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 
 public class URLUtils {
 
@@ -18,6 +15,7 @@ public class URLUtils {
 
   private static final Set<String> VALID_EXTENSIONS;
   private static final int MAX_EXTENSION_LENGTH = 5; // longest extension is "xlsx"/"pptx"
+  private static final Map<String, String> MIME_TYPES = new HashMap<>();
 
   static {
     Set<String> extensions = new HashSet<>();
@@ -25,6 +23,29 @@ public class URLUtils {
       extensions.add(ext.name().toLowerCase(Locale.ENGLISH));
     }
     VALID_EXTENSIONS = Collections.unmodifiableSet(extensions);
+  }
+
+  static {
+    // Common file extension to MIME type mappings
+    MIME_TYPES.put("jpg", "image/jpeg");
+    MIME_TYPES.put("jpeg", "image/jpeg");
+    MIME_TYPES.put("png", "image/png");
+    MIME_TYPES.put("gif", "image/gif");
+    MIME_TYPES.put("bmp", "image/bmp");
+    MIME_TYPES.put("webp", "image/webp");
+    MIME_TYPES.put("svg", "image/svg+xml");
+    MIME_TYPES.put("pdf", "application/pdf");
+    MIME_TYPES.put("txt", "text/plain");
+    MIME_TYPES.put("html", "text/html");
+    MIME_TYPES.put("xml", "application/xml");
+    MIME_TYPES.put("json", "application/json");
+    MIME_TYPES.put("mp4", "video/mp4");
+    MIME_TYPES.put("mp3", "audio/mpeg");
+    MIME_TYPES.put("wav", "audio/wav");
+    MIME_TYPES.put("zip", "application/zip");
+    MIME_TYPES.put("rar", "application/vnd.rar");
+    MIME_TYPES.put("7z", "application/x-7z-compressed");
+    // Add more mappings as needed
   }
 
   /**
@@ -134,5 +155,31 @@ public class URLUtils {
 
     // if no extension for image found, then use .jpg as default
     return fileName.contains(".") ? fileName : fileName + ".jpg";
+  }
+
+  /**
+   * Detects the MIME type of a file from its URL based on the file extension.
+   *
+   * @param fileName the filename from the URL path
+   * @return The MIME type as a string (e.g., "image/jpeg"), or "application/octet-stream" if undetectable.
+   */
+  public static String detectMimeTypeFromFileName(String fileName) {
+
+    String extension = getFileExtension(fileName);
+    return MIME_TYPES.getOrDefault(extension.toLowerCase(), "application/octet-stream");
+  }
+
+  /**
+   * Extracts the file extension from a URL path.
+   *
+   * @param path The URL path.
+   * @return The file extension (e.g., "jpg"), or an empty string if no extension is found.
+   */
+  private static String getFileExtension(String path) {
+    int lastDotIndex = path.lastIndexOf('.');
+    if (lastDotIndex != -1 && lastDotIndex < path.length() - 1) {
+      return path.substring(lastDotIndex + 1);
+    }
+    return "";
   }
 }
