@@ -1,5 +1,7 @@
 package org.mule.extension.webcrawler.internal.helper.page;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -72,29 +74,38 @@ public class PageHelper {
     return document;
   }
 
-  public static Map<String, String> getPageMetaTags(Document document) {
-    // Map to store meta tag data
-    Map<String, String> metaTagData = new HashMap<>();
+  public static JSONArray getPageMetaTags(Document document) {
+    // Create a JSONArray to hold the structured meta tags
+    JSONArray metaTagArray = new JSONArray();
 
     // Select all meta tags
     Elements metaTags = document.select("meta");
 
     // Iterate through each meta tag
     for (Element metaTag : metaTags) {
-      // Extract the 'name' or 'property' attribute and 'content' attribute
+      // Extract the 'name', 'property', and 'content' attributes
       String name = metaTag.attr("name");
-      if (name.isEmpty()) {
-        // If 'name' is not present, check for 'property' (e.g., Open Graph meta tags)
-        name = metaTag.attr("property");
-      }
+      String property = metaTag.attr("property");
       String content = metaTag.attr("content");
 
-      // Only add to map if 'name' or 'property' and 'content' are present
-      if (!name.isEmpty() && !content.isEmpty()) {
-        metaTagData.put(name, content);
+      // Only add to the array if 'name' or 'property' and 'content' are present
+      if ((!name.isEmpty() || !property.isEmpty()) && !content.isEmpty()) {
+        // Create a JSONObject for each meta tag
+        JSONObject metaTagObject = new JSONObject();
+        if (!property.isEmpty()) {
+          metaTagObject.put("property", property);
+        } else {
+          metaTagObject.put("name", name);
+        }
+        metaTagObject.put("content", content);
+
+        // Add the meta tag object to the array
+        metaTagArray.put(metaTagObject);
       }
     }
-    return metaTagData;
+
+    // Return the array directly
+    return metaTagArray;
   }
 
   public static HashMap<String, Object> getPageInsights(Document document, List<String> tags, Constants.PageInsightType insight) {
@@ -243,9 +254,9 @@ public class PageHelper {
     return collectedText.toString().trim();
   }
 
-  public static String savePageContents(Object results, String downloadPath, String title) throws IOException {
+  public static String savePageContents(JSONObject results, String downloadPath, String title) throws IOException {
 
-    String pageContents = JSONUtils.convertToJSON(results);
+    String pageContents = results.toString();
 
     String fileName = "";
 

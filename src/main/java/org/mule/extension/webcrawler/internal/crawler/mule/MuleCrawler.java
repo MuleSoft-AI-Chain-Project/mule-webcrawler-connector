@@ -1,9 +1,12 @@
 package org.mule.extension.webcrawler.internal.crawler.mule;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
+import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +88,7 @@ public class MuleCrawler extends Crawler {
 
         // Create Map to hold all data for the current page - this will be serialized to
         // JSON and saved to file
-        Map<String, Object> pageData = new HashMap<>();
+        JSONObject pageData = new JSONObject();
 
         LOGGER.debug("Fetching content for : " + url);
 
@@ -97,20 +100,19 @@ public class MuleCrawler extends Crawler {
         // check if need to download images in the current page
         if (downloadImages) {
           LOGGER.debug("Downloading images for : " + url);
-          pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath));
+          pageData.put("imageFiles", new JSONObject(PageHelper.downloadWebsiteImages(document, downloadPath)));
         }
 
         if (downloadDocuments) {
           LOGGER.debug("Downloading documents for : " + url);
-          pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath));
+          pageData.put("documentFiles", new JSONObject(PageHelper.downloadFiles(document, downloadPath)));
         }
 
         // get all meta tags from the document
         if (getMetaTags) {
-          // Iterating over each entry in the map
-          for (Map.Entry<String, String> entry : PageHelper.getPageMetaTags(document).entrySet()) {
-            pageData.put(entry.getKey(), entry.getValue());
-          }
+
+          JSONArray pageMetaTags = PageHelper.getPageMetaTags(document);
+          pageData.put("metaTags", pageMetaTags);
         }
 
         // get page contents

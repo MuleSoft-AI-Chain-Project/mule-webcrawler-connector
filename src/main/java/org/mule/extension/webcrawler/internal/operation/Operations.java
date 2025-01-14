@@ -88,10 +88,10 @@ public class Operations {
 
       LOGGER.debug("Start website crawling");
 
-      Crawler.CrawlNode root = crawler.crawl();
+      Crawler.CrawlNode rootNode = crawler.crawl();
 
       return ResponseHelper.createResponse(
-          JSONUtils.convertToJSON(root),
+          JSONUtils.convertToJSON(rootNode),
           new HashMap<String, Object>() {{
             put("url", url);
           }}
@@ -115,6 +115,7 @@ public class Operations {
   @Alias("Get-page-meta-tags")
   @DisplayName("[Page] Get meta tags")
   @Throws(WebCrawlerErrorTypeProvider.class)
+  @OutputJsonType(schema = "api/metadata/PageGetMetaTags.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
@@ -126,7 +127,7 @@ public class Operations {
       Document document = PageHelper.getDocument(url);
 
       return ResponseHelper.createResponse(
-          JSONUtils.convertToJSON(PageHelper.getPageMetaTags(document)),
+          PageHelper.getPageMetaTags(document).toString(),
           new HashMap<String, Object>() {{
             put("url", url);
           }}
