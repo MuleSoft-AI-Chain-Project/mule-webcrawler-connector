@@ -19,7 +19,7 @@
 <dependency>
    <groupId>io.github.mulesoft-ai-chain-project</groupId>
    <artifactId>mule4-webcrawler-connector</artifactId>
-   <version>0.1.25</version>
+   <version>{version}</version>
    <classifier>mule-plugin</classifier>
 </dependency>
 ```
@@ -34,7 +34,7 @@ Then add the following dependency to your application's `pom.xml`:
 <dependency>
     <groupId>com.mulesoft.connectors</groupId>
     <artifactId>mule4-webcrawler-connector</artifactId>
-    <version>0.1.25</version>
+    <version>{version}</version>
     <classifier>mule-plugin</classifier>
 </dependency>
 ```
