@@ -376,6 +376,7 @@ public class Operations {
   @Alias("Google-search")
   @DisplayName("[Search] Google")
   @Throws(WebCrawlerErrorTypeProvider.class)
+  @OutputJsonType(schema = "api/metadata/SearchGoogle.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       googleSearch(
           @DisplayName("Search Query") @Placement(order = 1) @Example("apple inc") String query,
