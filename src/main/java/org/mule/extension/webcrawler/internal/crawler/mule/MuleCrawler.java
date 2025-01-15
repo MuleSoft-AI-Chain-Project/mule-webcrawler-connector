@@ -110,7 +110,7 @@ public class MuleCrawler extends Crawler {
         if (downloadDocuments) {
 
           LOGGER.debug("Downloading documents for : " + url);
-          pageData.put("documentFiles", new JSONObject(PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER)));
+          pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER));
         }
 
         // get all meta tags from the document

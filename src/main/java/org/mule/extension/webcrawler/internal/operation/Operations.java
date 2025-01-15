@@ -237,6 +237,53 @@ public class Operations {
   }
 
   /**
+   * Download all documents from a web page, or download a single document at the
+   * specified link.
+   */
+  @MediaType(value = APPLICATION_JSON, strict = false)
+  @Alias("Download-document")
+  @DisplayName("[Page] Download document")
+  @Throws(WebCrawlerErrorTypeProvider.class)
+  @OutputJsonType(schema = "api/metadata/PageDownloadDocument.json")
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  downloadWebsiteDocuments(
+      @DisplayName("Page Or Document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
+
+    try {
+
+      JSONArray documentsJSONArray = new JSONArray();
+
+      try {
+        // url provided is a website url, so download all images from this document
+        Document document = PageHelper.getDocument(url);
+        documentsJSONArray = PageHelper.downloadFiles(document, downloadPath);
+
+      } catch (UnsupportedMimeTypeException e) {
+        // url provided is direct link to image, so download single image
+
+        documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
+      }
+
+      return ResponseHelper.createResponse(
+          documentsJSONArray.toString(),
+          new HashMap<String, Object>() {{
+            put("url", url);
+          }}
+      );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while downloading document from '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
+  }
+
+  /**
    * Get insights from a web page including links, word count, number of
    * occurrences of elements. Restrict insights to specific elements in the
    * configuration.

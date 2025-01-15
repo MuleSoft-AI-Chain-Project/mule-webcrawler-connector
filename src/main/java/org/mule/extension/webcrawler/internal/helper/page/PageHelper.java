@@ -19,9 +19,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.nio.charset.StandardCharsets;
 
 public class PageHelper {
 
@@ -411,23 +413,21 @@ public class PageHelper {
     return jsonObject;
   }
 
-  public static Map<String, String> downloadFiles(Document document, String saveDir) throws IOException {
+  public static JSONArray downloadFiles(Document document, String saveDir) throws IOException {
 
     return downloadFiles(document, saveDir, "");
   }
 
-  public static Map<String, String> downloadFiles(Document document, String saveDir, String filesSubFolder) throws IOException {
+  public static JSONArray downloadFiles(Document document, String saveDir, String filesSubFolder) throws IOException {
 
-    String docsSaveDirectory = saveDir + "/" + filesSubFolder;
+    JSONArray documentsJSONArray = new JSONArray();
 
     // List to store image URLs
     Set<String> documentURLs = new HashSet<>();
 
     Map<String, String> linkFileMap = new HashMap<>();
-
     Map<String, Object> linksMap = (Map<String, Object>) PageHelper
         .getPageInsights(document, null, Constants.PageInsightType.DOCUMENTLINKS).get("links");
-
     if (linksMap != null) {
       documentURLs = (Set<String>) linksMap.get("documents"); // Cast to Set<String>
     }
@@ -438,17 +438,29 @@ public class PageHelper {
       LOGGER.debug("Number of documents found : " + documentURLs.size());
       for (String documentURL : documentURLs) {
 
-        linkFileMap.put(documentURL, filesSubFolder + downloadFile(documentURL, docsSaveDirectory));
+        JSONObject documentJSONObject = downloadFile(documentURL, saveDir, filesSubFolder);
+        if(documentJSONObject != null) documentsJSONArray.put(documentJSONObject);
       }
     }
-    return linkFileMap;
+    return documentsJSONArray;
   }
 
-  public static String downloadFile(String fileURL, String saveDir) {
+  public static JSONObject downloadFile(String fileURL, String saveDir) {
 
+    return downloadFile(fileURL, saveDir, "");
+  }
+
+  public static JSONObject downloadFile(String fileURL, String saveDir, String filesSubFolder) {
+    String docsSaveDirectory = saveDir + "/" + filesSubFolder;
     HttpURLConnection httpConn = null;
     String fileName = null;
+    JSONObject jsonObject = new JSONObject();
+
     try {
+
+      jsonObject.put("url", fileURL);
+      if(filesSubFolder.compareTo("") != 0) jsonObject.put("relativePath", filesSubFolder);
+
       // Open connection to the URL
       URL url = new URL(fileURL);
       httpConn = (HttpURLConnection) url.openConnection();
@@ -469,10 +481,13 @@ public class PageHelper {
           fileName = urlPath.substring(urlPath.lastIndexOf("/") + 1);
         }
 
-        LOGGER.debug(String.format("Downloading file %s at %s",fileName,fileURL));
+        // Decode the file name
+        fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+
+        LOGGER.debug(String.format("Downloading file %s at %s", fileName, fileURL));
 
         // Ensure directory exists
-        File directory = new File(saveDir);
+        File directory = new File(docsSaveDirectory);
         if (!directory.exists()) {
           if (directory.mkdirs()) {
             LOGGER.debug("Directory created: " + directory.getAbsolutePath());
@@ -484,7 +499,7 @@ public class PageHelper {
 
         // Open input stream from connection
         try (InputStream inputStream = new BufferedInputStream(httpConn.getInputStream());
-            FileOutputStream outputStream = new FileOutputStream(saveDir + fileName)) {
+            FileOutputStream outputStream = new FileOutputStream(docsSaveDirectory + fileName)) {
 
           // Buffer for data transfer
           byte[] buffer = new byte[4096];
@@ -495,11 +510,12 @@ public class PageHelper {
             outputStream.write(buffer, 0, bytesRead);
           }
 
-          LOGGER.debug("File downloaded: " + saveDir + "/docs/" + fileName);
+          LOGGER.debug("File downloaded: " + docsSaveDirectory + fileName);
         }
       } else {
         LOGGER.debug("No file to download. Server replied HTTP code: " + responseCode);
       }
+
     } catch (IOException e) {
       LOGGER.error("Error downloading file: " + e.getMessage());
     } finally {
@@ -507,6 +523,18 @@ public class PageHelper {
         httpConn.disconnect();
       }
     }
-    return fileName;
+
+    // Prepare and return the result as JSONObject
+    if (fileName != null) {
+
+      jsonObject.put("fileName", fileName);
+      String mimeType = URLUtils.detectMimeTypeFromFileName(fileName);
+      jsonObject.put("mimeType", mimeType);
+
+    } else {
+      return null;
+    }
+
+    return jsonObject;
   }
 }
