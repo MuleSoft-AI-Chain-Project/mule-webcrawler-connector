@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The title of the document"
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL where the document is located",
+      "format": "uri"
+    },
+    "content": {
+      "type": "string",
+      "description": "The main content of the document"
+    }
+  },
+  "required": ["title", "url", "content"],
+  "additionalProperties": true,
+  "examples": [
+    {
+      "title": "Getting Started",
+      "url": "https://mac-project.ai/docs/mac-webcrawler/getting-started",
+      "content": "Getting Started DocsDocsAboutAbout GitHubGitHub..."
+    }
+  ]
+}

@@ -46,3 +46,5 @@ generated-test-sources/
 *.bak
 *.tmp
 *.sh
+
+.java-version

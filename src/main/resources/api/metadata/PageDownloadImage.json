@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "fileName": {
+        "type": "string",
+        "description": "The name of the file, including its extension."
+      },
+      "mimeType": {
+        "type": "string",
+        "description": "The MIME type of the file, indicating its format."
+      },
+      "url": {
+        "type": "string",
+        "format": "uri",
+        "description": "The URL of the file."
+      }
+    },
+    "required": ["fileName", "mimeType", "url"],
+    "additionalProperties": false
+  }
+}

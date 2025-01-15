@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "description": "An array of meta tag objects extracted from a document",
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name attribute of the meta tag",
+        "minLength": 1
+      },
+      "property": {
+        "type": "string",
+        "description": "The property attribute of the meta tag",
+        "minLength": 1
+      },
+      "content": {
+        "type": "string",
+        "description": "The content attribute of the meta tag",
+        "minLength": 1
+      }
+    },
+    "oneOf": [
+      { "required": ["name", "content"] },
+      { "required": ["property", "content"] }
+    ],
+    "additionalProperties": false
+  }
+}

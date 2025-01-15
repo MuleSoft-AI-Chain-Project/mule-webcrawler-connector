@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "knowledgeGraph": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["title", "type"]
+    },
+    "peopleAlsoAsk": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "snippet": { "type": "string" },
+          "question": { "type": "string" },
+          "link": { "type": "string", "format": "uri" },
+          "title": { "type": "string" }
+        },
+        "required": ["snippet", "question", "link", "title"]
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "imageUrl": { "type": "string", "format": "uri" },
+          "link": { "type": "string", "format": "uri" },
+          "title": { "type": "string" }
+        },
+        "required": ["imageUrl", "link", "title"]
+      }
+    },
+    "credits": { "type": "integer" },
+    "searchParameters": {
+      "type": "object",
+      "properties": {
+        "q": { "type": "string" },
+        "engine": { "type": "string" },
+        "type": { "type": "string" }
+      },
+      "required": ["q", "engine", "type"]
+    },
+    "organic": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "snippet": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "link": { "type": "string", "format": "uri" },
+          "sitelinks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "link": { "type": "string", "format": "uri" },
+                "title": { "type": "string" }
+              },
+              "required": ["link", "title"]
+            }
+          },
+          "position": { "type": "integer" },
+          "title": { "type": "string" },
+          "rating": { "type": "number" },
+          "ratingCount": { "type": "integer" }
+        },
+        "required": ["snippet", "link", "position", "title"]
+      }
+    }
+  },
+  "required": ["knowledgeGraph", "peopleAlsoAsk", "images", "credits", "searchParameters", "organic"]
+}

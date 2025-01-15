@@ -1,4 +1,4 @@
-package com.mule.mulechain.crawler;
+package org.mule.extension.webcrawler;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

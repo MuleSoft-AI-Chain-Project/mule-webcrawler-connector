@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "The URL of the resource"
+    },
+    "children": {
+      "type": "array",
+      "description": "A list of child objects, each with its own URL and potential children",
+      "items": {
+        "$ref": "#"
+      }
+    }
+  },
+  "required": ["url", "children"],
+  "additionalProperties": false
+}
