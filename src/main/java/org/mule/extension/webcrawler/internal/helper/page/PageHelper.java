@@ -407,7 +407,7 @@ public class PageHelper {
       }
     } catch (IOException e) {
       LOGGER.error("Error saving image: " + imageUrl, e);
-      throw e;
+      return null;
     }
 
     return jsonObject;
