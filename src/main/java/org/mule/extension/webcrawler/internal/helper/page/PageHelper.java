@@ -2,6 +2,7 @@ package org.mule.extension.webcrawler.internal.helper.page;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -29,13 +30,13 @@ public class PageHelper {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PageHelper.class);
 
-  public static Document getDocument(String url) throws IOException {
-    // use jsoup to fetch the current page elements
-    Document document = Jsoup.connect(url)
-        //.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
-        //.referrer("http://www.google.com")  // to prevent "HTTP error fetching URL. Status=403" error
-        .get();
+  public static Document getDocument(String url, String userAgent, String referrer) throws IOException {
 
+    LOGGER.debug(String.format("Retrieving JSoup Document for url %s with user agent %s and referrer %s", url, userAgent, referrer));
+    Connection connection = Jsoup.connect(url);
+    if(!userAgent.isEmpty()) connection.userAgent(userAgent); //.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+    if(!referrer.isEmpty()) connection.referrer(referrer); //.referrer("http://www.google.com")  // to prevent "HTTP error fetching URL. Status=403" error
+    Document document = connection.get();
     return document;
   }
 

@@ -1,23 +1,14 @@
 package org.mule.extension.webcrawler.internal.operation;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
-import org.mule.extension.webcrawler.internal.config.Configuration;
-import org.mule.extension.webcrawler.internal.constant.Constants;
-import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
-import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.search.SerperDev;
-import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
-import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
@@ -29,9 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Map;
-
-import static org.mule.runtime.extension.api.annotation.param.MediaType.APPLICATION_JSON;
 
 /**
  * This class is a container for operations, every public method in this class

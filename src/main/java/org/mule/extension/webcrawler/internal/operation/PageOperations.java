@@ -2,23 +2,22 @@ package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONArray;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
-import org.mule.extension.webcrawler.internal.config.Configuration;
+import org.mule.extension.webcrawler.internal.config.PageConfiguration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
-import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
-import org.json.JSONObject;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
-import org.mule.extension.webcrawler.internal.helper.search.SerperDev;
+import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetsParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
+import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
@@ -49,13 +48,17 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageGetMetaTags.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
-          @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
+      @Config PageConfiguration configuration,
+      @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
     try {
 
       LOGGER.info("Get meta tags");
 
-      Document document = PageHelper.getDocument(url);
+      Document document = PageHelper.getDocument(
+          url,
+          configuration.getRequestParameters().getUserAgent(),
+          configuration.getRequestParameters().getReferrer());
 
       return ResponseHelper.createResponse(
           PageHelper.getPageMetaTags(document).toString(),
@@ -86,6 +89,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageDownloadImage.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
+          @Config PageConfiguration configuration,
           @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
 
@@ -95,7 +99,11 @@ public class PageOperations {
 
       try {
         // url provided is a website url, so download all images from this document
-        Document document = PageHelper.getDocument(url);
+        Document document = PageHelper.getDocument(
+            url,
+            configuration.getRequestParameters().getUserAgent(),
+            configuration.getRequestParameters().getReferrer());
+
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath);
 
       } catch (UnsupportedMimeTypeException e) {
@@ -133,6 +141,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageDownloadDocument.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   downloadWebsiteDocuments(
+      @Config PageConfiguration configuration,
       @DisplayName("Page Or Document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
 
@@ -142,7 +151,11 @@ public class PageOperations {
 
       try {
         // url provided is a website url, so download all images from this document
-        Document document = PageHelper.getDocument(url);
+        Document document = PageHelper.getDocument(
+            url,
+            configuration.getRequestParameters().getUserAgent(),
+            configuration.getRequestParameters().getReferrer());
+
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath);
 
       } catch (UnsupportedMimeTypeException e) {
@@ -181,14 +194,17 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageGetInsights.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
-          @Config Configuration configuration,
+          @Config PageConfiguration configuration,
           @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
     try {
 
       LOGGER.info("Analyze page");
 
-      Document document = PageHelper.getDocument(url);
+      Document document = PageHelper.getDocument(
+          url,
+          configuration.getRequestParameters().getUserAgent(),
+          configuration.getRequestParameters().getReferrer());
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
@@ -220,8 +236,9 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageGetContent.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
-          @Config Configuration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
+          @Config PageConfiguration configuration,
+          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @ParameterGroup(name="Targets") PageTargetsParameters pageTargetsParameters) {
 
     try {
 
@@ -229,11 +246,14 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document = PageHelper.getDocument(url);
+      Document document = PageHelper.getDocument(
+          url,
+          configuration.getRequestParameters().getUserAgent(),
+          configuration.getRequestParameters().getReferrer());
 
       contents.put("url", document.baseUri());
       contents.put("title", document.title());
-      contents.put("content", PageHelper.getPageContent(document, configuration.getTags()));
+      contents.put("content", PageHelper.getPageContent(document, pageTargetsParameters.getTags()));
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(contents),

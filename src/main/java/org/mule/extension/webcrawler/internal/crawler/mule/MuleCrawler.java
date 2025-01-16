@@ -20,11 +20,11 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_IMAGES_FOLDER = "images/";
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
-  public MuleCrawler(String originalUrl, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis,
-                     boolean downloadImages, boolean downloadDocuments, String downloadPath, List<String> contentTags,
-                     boolean getMetaTags) {
+  public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
+                     boolean dynamicContent, int delayMillis, boolean downloadImages, boolean downloadDocuments,
+                     String downloadPath, List<String> contentTags, boolean getMetaTags) {
 
-    super(originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
+    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
           downloadDocuments, downloadPath, contentTags, getMetaTags);
   }
 
@@ -77,7 +77,7 @@ public class MuleCrawler extends Crawler {
         document = PageHelper.getDocumentDynamic(url);
       }
       else {
-        document = PageHelper.getDocument(url);
+        document = PageHelper.getDocument(url, userAgent, referrer);
       }
 
       // check if url contents have been downloaded before ie applied globally (at all
@@ -201,7 +201,7 @@ public class MuleCrawler extends Crawler {
       MapNode node = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(url);
+      Document document = PageHelper.getDocument(url, userAgent, referrer);
 
       node = new MapNode(url);
       LOGGER.debug("Found url: " + url);
