@@ -10,7 +10,7 @@ import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
-import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetsParameters;
+import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetContentParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
@@ -195,7 +195,8 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
           @Config PageConfiguration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
+          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
     try {
 
@@ -208,7 +209,7 @@ public class PageOperations {
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
-              PageHelper.getPageInsights(document, configuration.getTags(), Constants.PageInsightType.ALL)
+              PageHelper.getPageInsights(document, targetContentParameters.getTags(), Constants.PageInsightType.ALL)
           ),
           new HashMap<String, Object>() {{
             put("url", url);
@@ -238,7 +239,7 @@ public class PageOperations {
       getPageContent(
           @Config PageConfiguration configuration,
           @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @ParameterGroup(name="Targets") PageTargetsParameters pageTargetsParameters) {
+          @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
     try {
 
@@ -253,7 +254,7 @@ public class PageOperations {
 
       contents.put("url", document.baseUri());
       contents.put("title", document.title());
-      contents.put("content", PageHelper.getPageContent(document, pageTargetsParameters.getTags()));
+      contents.put("content", PageHelper.getPageContent(document, targetContentParameters.getTags()));
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(contents),

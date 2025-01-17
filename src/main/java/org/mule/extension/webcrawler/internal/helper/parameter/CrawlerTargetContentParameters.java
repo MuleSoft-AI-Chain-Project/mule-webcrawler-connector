@@ -12,16 +12,18 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 
 import java.util.List;
 
-public class CrawlerTargetsParameters {
+public class CrawlerTargetContentParameters {
 
   @Parameter
+  @Alias("tags")
   @DisplayName("Tag List")
+  @Summary("List of html tags for which content must be retrieved.")
   @Placement(order = 1)
   @Optional
   private List<String> tags;
 
   @Parameter
-  @Alias("retrieveMetaTags")
+  @Alias("getMetaTags")
   @DisplayName("Retrieve Meta Tags")
   @Summary("If true metatags are retrieved from the provided url.")
   @Placement(order = 2)
@@ -77,5 +79,15 @@ public class CrawlerTargetsParameters {
 
   public void setDownloadDocuments(boolean downloadDocuments) {
     this.downloadDocuments = downloadDocuments;
+  }
+
+  @Override
+  public String toString() {
+    return "CrawlerTargetContentParameters{" +
+        "tags=" + tags +
+        ", getMetaTags=" + getMetaTags +
+        ", downloadImages=" + downloadImages +
+        ", downloadDocuments=" + downloadDocuments +
+        '}';
   }
 }

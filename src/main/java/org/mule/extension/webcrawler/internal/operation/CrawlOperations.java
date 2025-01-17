@@ -2,12 +2,12 @@ package org.mule.extension.webcrawler.internal.operation;
 
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.CrawlConfiguration;
-import org.mule.extension.webcrawler.internal.config.PageConfiguration;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
-import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetsParameters;
+import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetContentParameters;
+import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetPagesParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
@@ -59,30 +59,28 @@ public class CrawlOperations {
       crawlWebsite(
       @Config CrawlConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Download Location") @Placement(order = 9) @Example("/users/mulesoft/downloads") String downloadPath,
-      @ParameterGroup(name = "Targets") CrawlerTargetsParameters targetsParameters,
-      @DisplayName("Restrict Crawl under URL")@Placement(order = 2)@Example("False") boolean restrictToPath,
-      @DisplayName("Dynamic Content Retrieval") @Placement(order = 3) @Example("False") boolean dynamicContent,
-      @DisplayName("Maximum Depth") @Placement(order = 4) @Example("2") int maxDepth,
-      @DisplayName("Delay (millisecs)") @Placement(order = 5) @Example("0") int delayMillis) {
+      @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
+      @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
+      @ParameterGroup(name = "Target Content") CrawlerTargetContentParameters targetContentParameters) {
 
     try {
 
-      LOGGER.debug("Initialize crawler");
+      LOGGER.debug("\n\n" + targetPagesParameters.toString() + "\n");
+      LOGGER.debug("\n\n" + targetContentParameters.toString() + "\n");
 
       Crawler crawler = Crawler.builder()
           .userAgent(configuration.getRequestParameters().getUserAgent())
-          .referrer(configuration.getRequestParameters().getReferrer())
+          .rootReferrer(configuration.getRequestParameters().getReferrer())
+          .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
+          .dynamicContent(configuration.getCrawlerSettingsParameters().isDynamicContent())
           .rootURL(url)
-          .maxDepth(maxDepth)
-          .restrictToPath(restrictToPath)
-          .dynamicContent(dynamicContent)
-          .delayMillis(delayMillis)
           .downloadPath(downloadPath)
-          .contentTags(targetsParameters.getTags())
-          .getMetaTags(targetsParameters.isGetMetaTags())
-          .downloadImages(targetsParameters.isDownloadImages())
-          .downloadDocuments(targetsParameters.isDownloadDocuments())
+          .maxDepth(targetPagesParameters.getMaxDepth())
+          .restrictToPath(targetPagesParameters.isRestrictToPath())
+          .contentTags(targetContentParameters.getTags())
+          .getMetaTags(targetContentParameters.isGetMetaTags())
+          .downloadImages(targetContentParameters.isDownloadImages())
+          .downloadDocuments(targetContentParameters.isDownloadDocuments())
           .build();
 
       LOGGER.debug("Start website crawling");
@@ -119,8 +117,7 @@ public class CrawlOperations {
   getSiteMap(
       @Config CrawlConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Maximum Depth") @Placement(order = 2) @Example("2") int maxDepth,
-      @DisplayName("Delay (millisecs)") @Placement(order = 3) @Example("0") int delayMillis) {
+      @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {
 
     try{
 
@@ -128,10 +125,10 @@ public class CrawlOperations {
 
       Crawler crawler = Crawler.builder()
           .userAgent(configuration.getRequestParameters().getUserAgent())
-          .referrer(configuration.getRequestParameters().getReferrer())
+          .rootReferrer(configuration.getRequestParameters().getReferrer())
           .rootURL(url)
-          .maxDepth(maxDepth)
-          .delayMillis(delayMillis)
+          .maxDepth(targetPagesParameters.getMaxDepth())
+          .restrictToPath(targetPagesParameters.isRestrictToPath())
           .build();
 
       Crawler.MapNode root = crawler.map();

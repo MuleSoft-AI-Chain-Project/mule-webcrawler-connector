@@ -25,15 +25,6 @@ public class PageConfiguration {
   @ParameterGroup(name= "Request Parameters")
   public RequestParameters requestParameters;
 
-  // Getters and Setters
-  public List<String> getTags() {
-    return this.tags;
-  }
-
-  public void setTags(List<String> tags) {
-    this.tags = tags;
-  }
-
   public RequestParameters getRequestParameters() {
     return requestParameters;
   }
