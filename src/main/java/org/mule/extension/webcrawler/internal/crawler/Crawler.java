@@ -18,6 +18,8 @@ public abstract class Crawler {
   protected Set<String> visitedLinksGlobal;
   protected Map<Integer, Set<String>> visitedLinksByDepth;
 
+  protected String userAgent;
+  protected String rootReferrer;
   protected String rootURL;
   protected int maxDepth;
   protected boolean restrictToPath;
@@ -29,9 +31,11 @@ public abstract class Crawler {
   protected List<String> contentTags;
   protected boolean getMetaTags;
 
-  public Crawler(String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis, boolean downloadImages,
+  public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis, boolean downloadImages,
                  boolean downloadDocuments, String downloadPath, List<String> contentTags, boolean getMetaTags) {
 
+    this.userAgent = userAgent;
+    this.rootReferrer = rootReferrer;
     this.rootURL = rootURL;
     this.maxDepth = maxDepth;
     this.restrictToPath = restrictToPath;
@@ -55,6 +59,8 @@ public abstract class Crawler {
 
   public static class Builder {
 
+    private String userAgent;
+    private String rootReferrer;
     private String rootURL;
     private int maxDepth;
     private boolean restrictToPath = false;
@@ -65,6 +71,16 @@ public abstract class Crawler {
     private String downloadPath;
     private List<String> contentTags;
     private boolean getMetaTags = false;
+
+    public Crawler.Builder userAgent(String userAgent) {
+      this.userAgent = userAgent;
+      return this;
+    }
+
+    public Crawler.Builder rootReferrer(String rootReferrer) {
+      this.rootReferrer = rootReferrer;
+      return this;
+    }
 
     public Crawler.Builder rootURL(String rootURL) {
       this.rootURL = rootURL;
@@ -122,7 +138,7 @@ public abstract class Crawler {
 
       try {
 
-        crawler = new MuleCrawler(rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
+        crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
                                   downloadDocuments, downloadPath, contentTags, getMetaTags);
 
       } catch (ModuleException e) {
