@@ -2,7 +2,7 @@ package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONArray;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
-import org.mule.extension.webcrawler.internal.config.PageConfiguration;
+import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
@@ -48,7 +48,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageGetMetaTags.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
-      @Config PageConfiguration configuration,
+      @Config WebCrawlerConfiguration configuration,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
     try {
@@ -89,7 +89,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageDownloadImage.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
-          @Config PageConfiguration configuration,
+          @Config WebCrawlerConfiguration configuration,
           @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
 
@@ -141,7 +141,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageDownloadDocument.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   downloadWebsiteDocuments(
-      @Config PageConfiguration configuration,
+      @Config WebCrawlerConfiguration configuration,
       @DisplayName("Page Or Document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
 
@@ -194,7 +194,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageGetInsights.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
-          @Config PageConfiguration configuration,
+          @Config WebCrawlerConfiguration configuration,
           @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
@@ -237,7 +237,7 @@ public class PageOperations {
   @OutputJsonType(schema = "api/metadata/PageGetContent.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
-          @Config PageConfiguration configuration,
+          @Config WebCrawlerConfiguration configuration,
           @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 

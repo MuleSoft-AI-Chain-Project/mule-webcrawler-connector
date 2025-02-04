@@ -1,9 +1,7 @@
 package org.mule.extension.webcrawler.internal.helper.provider;
 
-import org.mule.extension.webcrawler.internal.config.PageConfiguration;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.runtime.api.value.Value;
-import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.values.ValueBuilder;
 import org.mule.runtime.extension.api.values.ValueProvider;
 import org.mule.runtime.extension.api.values.ValueResolvingException;

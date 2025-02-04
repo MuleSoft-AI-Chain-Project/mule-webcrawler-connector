@@ -1,7 +1,7 @@
 package org.mule.extension.webcrawler.internal.operation;
 
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
-import org.mule.extension.webcrawler.internal.config.CrawlConfiguration;
+import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
@@ -57,7 +57,7 @@ public class CrawlOperations {
   @OutputJsonType(schema = "api/metadata/CrawlWebSite.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       crawlWebsite(
-      @Config CrawlConfiguration configuration,
+      @Config WebCrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
@@ -115,7 +115,7 @@ public class CrawlOperations {
   @OutputJsonType(schema = "api/metadata/CrawlGetLinksAsSitemap.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   getSiteMap(
-      @Config CrawlConfiguration configuration,
+      @Config WebCrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {
 

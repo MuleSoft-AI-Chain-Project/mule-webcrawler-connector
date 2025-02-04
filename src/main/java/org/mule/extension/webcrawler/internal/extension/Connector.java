@@ -1,10 +1,7 @@
 package org.mule.extension.webcrawler.internal.extension;
 
-import org.mule.extension.webcrawler.internal.config.CrawlConfiguration;
-import org.mule.extension.webcrawler.internal.config.PageConfiguration;
-import org.mule.extension.webcrawler.internal.config.SearchConfiguration;
+import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
-import org.mule.extension.webcrawler.internal.operation.SearchOperations;
 import org.mule.runtime.extension.api.annotation.Configurations;
 import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.dsl.xml.Xml;
@@ -20,7 +17,7 @@ import static org.mule.sdk.api.meta.JavaVersion.JAVA_17;
  */
 @Xml(prefix = "ms-webcrawler")
 @Extension(name = "MuleSoft WebCrawler Connector")
-@Configurations({CrawlConfiguration.class, PageConfiguration.class, SearchConfiguration.class})
+@Configurations({WebCrawlerConfiguration.class})
 @JavaVersionSupport({JAVA_11, JAVA_17})
 @ErrorTypes(WebCrawlerErrorType.class)
 public class Connector {
