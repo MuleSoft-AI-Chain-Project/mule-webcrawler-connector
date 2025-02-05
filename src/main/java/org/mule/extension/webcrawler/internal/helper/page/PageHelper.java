@@ -40,7 +40,7 @@ public class PageHelper {
     return document;
   }
 
-  public static Document getDocumentDynamic(String url) throws Exception {
+  public static Document getDocumentDynamic(String url, String userAgent) throws Exception {
 
     Document document = null;
     // Set ChromeOptions to enable headless mode
@@ -50,6 +50,7 @@ public class PageHelper {
     options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
     options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
     options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
+    if(!userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
     // Initialize WebDriver
     WebDriver driver = new ChromeDriver(options);
 

@@ -69,7 +69,7 @@ public class PageOperations {
             configuration.getRequestParameters().getReferrer());
       } else {
 
-        document = PageHelper.getDocumentDynamic(url);
+        document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent());
       }
 
       return ResponseHelper.createResponse(
@@ -125,7 +125,7 @@ public class PageOperations {
               configuration.getRequestParameters().getReferrer());
         } else {
 
-          document = PageHelper.getDocumentDynamic(url);
+          document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent());
         }
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
@@ -189,7 +189,7 @@ public class PageOperations {
               configuration.getRequestParameters().getReferrer());
         } else {
 
-          document = PageHelper.getDocumentDynamic(url);
+          document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent());
         }
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
@@ -248,7 +248,7 @@ public class PageOperations {
             configuration.getRequestParameters().getReferrer());
       } else {
 
-        document = PageHelper.getDocumentDynamic(url);
+        document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent());
       }
 
       return ResponseHelper.createResponse(
@@ -301,7 +301,7 @@ public class PageOperations {
             configuration.getRequestParameters().getReferrer());
       } else {
 
-        document = PageHelper.getDocumentDynamic(url);
+        document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent());
       }
 
       String content = PageHelper.getPageContent(document,

@@ -74,7 +74,7 @@ public class MuleCrawler extends Crawler {
       // get page as a html document
       Document document = null;
       if (dynamicContent) {
-        document = PageHelper.getDocumentDynamic(url);
+        document = PageHelper.getDocumentDynamic(url, userAgent);
       }
       else {
         document = PageHelper.getDocument(url, userAgent, referrer);
