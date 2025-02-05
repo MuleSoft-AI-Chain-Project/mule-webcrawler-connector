@@ -17,7 +17,7 @@ public class RequestParameters {
 
   @Parameter
   @Alias("userAgent")
-  @DisplayName("User Agent")
+  @DisplayName("User agent")
   @Summary("The request user-agent header.")
   @Placement(order = 1)
   @Expression(ExpressionSupport.SUPPORTED)

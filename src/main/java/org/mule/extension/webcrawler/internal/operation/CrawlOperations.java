@@ -73,6 +73,7 @@ public class CrawlOperations {
           .rootReferrer(configuration.getRequestParameters().getReferrer())
           .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
           .dynamicContent(configuration.getCrawlerSettingsParameters().isDynamicContent())
+          .rawHtml(configuration.getCrawlerSettingsParameters().isRawHtml())
           .rootURL(url)
           .downloadPath(downloadPath)
           .maxDepth(targetPagesParameters.getMaxDepth())
@@ -80,7 +81,9 @@ public class CrawlOperations {
           .contentTags(targetContentParameters.getTags())
           .getMetaTags(targetContentParameters.isGetMetaTags())
           .downloadImages(targetContentParameters.isDownloadImages())
+          .maxImageNumber(targetContentParameters.getMaxImageNumber())
           .downloadDocuments(targetContentParameters.isDownloadDocuments())
+          .maxDocumentNumber(targetContentParameters.getMaxDocumentNumber())
           .build();
 
       LOGGER.debug("Start website crawling");
@@ -127,8 +130,8 @@ public class CrawlOperations {
           .userAgent(configuration.getRequestParameters().getUserAgent())
           .rootReferrer(configuration.getRequestParameters().getReferrer())
           .rootURL(url)
-          .maxDepth(targetPagesParameters.getMaxDepth())
           .restrictToPath(targetPagesParameters.isRestrictToPath())
+          .maxDepth(targetPagesParameters.getMaxDepth())
           .build();
 
       Crawler.MapNode root = crawler.map();

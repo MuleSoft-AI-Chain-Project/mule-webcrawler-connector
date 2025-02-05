@@ -14,7 +14,7 @@ public class PageTargetContentParameters {
 
   @Parameter
   @Alias("tags")
-  @DisplayName("Tag List")
+  @DisplayName("Tag list")
   @Summary("List of html tags for which content must be retrieved.")
   @Placement(order = 1)
   @Optional

@@ -107,7 +107,10 @@ public class PageHelper {
     return metaTagArray;
   }
 
-  public static HashMap<String, Object> getPageInsights(Document document, List<String> tags, Constants.PageInsightType insight) {
+  public static HashMap<String, Object> getPageInsights(
+      Document document,
+      List<String> tags,
+      Constants.PageInsightType insight) {
 
     // Map to store page analysis
     HashMap<String, Object> pageInsightData = new HashMap<>();
@@ -201,7 +204,7 @@ public class PageHelper {
         elementCounts.put("external", externalLinks.size());
         elementCounts.put("reference", referenceLinks.size());
         elementCounts.put("images", imageLinks.size());
-        elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags)));
+        elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags, false)));
 
         pageInsightData.put("pageStats", elementCounts);
 
@@ -231,26 +234,87 @@ public class PageHelper {
     return pageInsightData;
   }
 
-  public static String getPageContent(Document document, List<String> tags) {
+  public static String getPageContent(Document document, List<String> tags, Boolean rawHtml) {
 
+    if (rawHtml) {
+      return getPageRawHtmlContent(document, tags);
+    } else {
+      return getPageContent(document, tags);
+    }
+  }
+
+  private static String getPageContent(Document document, List<String> tags) {
     StringBuilder collectedText = new StringBuilder();
+    Set<Element> selectedElements = new HashSet<>();
 
-    // check if crawl should only iterate over specified tags and extract contents from these tags only
     if (tags != null && !tags.isEmpty()) {
       for (String selector : tags) {
         Elements elements = document.select(selector);
         for (Element element : elements) {
-          collectedText.append(element.text()).append(" ");
+          // Only add text if the element is not inside an already selected one
+          if (!isNestedInsideAnotherSelected(element, selectedElements)) {
+            collectedText.append(element.text()).append(" ");
+            selectedElements.add(element);
+          }
         }
       }
-    }
-    else {
-      // Extract the text content of the page and add it to the collected text
-      String textContent = document.text();
-      collectedText.append(textContent);
+    } else {
+      collectedText.append(document.text());
     }
 
     return collectedText.toString().trim();
+  }
+
+  /**
+   * Extracts and returns the HTML content of specific elements from an HTML document based on given tags. If no tags are
+   * provided, returns the entire raw HTML content of the document.
+   *
+   * @param document the HTML document to extract content from
+   * @param tags     a list of CSS selectors specifying which elements to extract; if null or empty, extracts the full document's
+   *                 HTML
+   * @return a String containing the concatenated HTML content of the matching elements, or the full document's HTML if no tags
+   * are provided
+   */
+  private static String getPageRawHtmlContent(Document document, List<String> tags) {
+    StringBuilder collectedHtml = new StringBuilder();
+    Set<Element> selectedElements = new HashSet<>();
+
+    if (tags != null && !tags.isEmpty()) {
+      for (String selector : tags) {
+        Elements elements = document.select(selector);
+        for (Element element : elements) {
+          // Only add the element if it's not inside an already selected one
+          if (!isNestedInsideAnotherSelected(element, selectedElements)) {
+            collectedHtml.append(element.outerHtml()).append("\n");
+            selectedElements.add(element);
+          }
+        }
+      }
+    } else {
+      collectedHtml.append(document.html());
+    }
+
+    return collectedHtml.toString().trim();
+  }
+
+  private static boolean isNestedInsideAnotherSelected(Element element, Set<Element> selectedElements) {
+    // Check if the element is inside any of the already selected elements (by checking parent hierarchy)
+    for (Element selected : selectedElements) {
+      if (isDescendant(selected, element)) {
+        return true; // This element is inside an already selected parent
+      }
+    }
+    return false;
+  }
+
+  private static boolean isDescendant(Element parent, Element element) {
+    // Check if the element is a descendant of the parent element by traversing its parents
+    for (Element e : element.parents()) {
+      if (e == parent) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static String savePageContents(JSONObject results, String downloadPath, String title) throws IOException {
@@ -282,11 +346,15 @@ public class PageHelper {
     return (file != null) ? file.getName() : "File is null";
   }
 
-  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory) throws IOException {
-    return downloadWebsiteImages(document, saveDirectory, "");
+  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory, int maxNumber) throws IOException {
+    return downloadWebsiteImages(document, saveDirectory, "", maxNumber);
   }
 
-  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory, String imagesSubFolder) throws IOException {
+  public static JSONArray downloadWebsiteImages(
+      Document document,
+      String saveDirectory,
+      String imagesSubFolder,
+      int maxNumber) throws IOException {
 
     JSONArray imagesJSONArray = new JSONArray();
 
@@ -305,6 +373,7 @@ public class PageHelper {
       for (String imageUrl : imageUrls) {
         JSONObject imageJSONObject = downloadSingleImage(imageUrl, saveDirectory, imagesSubFolder);
         if(imageJSONObject != null) imagesJSONArray.put(imageJSONObject);
+        if(maxNumber>0 && imagesJSONArray.length() >= maxNumber) break;
       }
     }
 
@@ -414,12 +483,12 @@ public class PageHelper {
     return jsonObject;
   }
 
-  public static JSONArray downloadFiles(Document document, String saveDir) throws IOException {
+  public static JSONArray downloadFiles(Document document, String saveDir, int maxNumber) throws IOException {
 
-    return downloadFiles(document, saveDir, "");
+    return downloadFiles(document, saveDir, "", maxNumber);
   }
 
-  public static JSONArray downloadFiles(Document document, String saveDir, String filesSubFolder) throws IOException {
+  public static JSONArray downloadFiles(Document document, String saveDir, String filesSubFolder, int maxNumber) throws IOException {
 
     JSONArray documentsJSONArray = new JSONArray();
 
@@ -441,6 +510,7 @@ public class PageHelper {
 
         JSONObject documentJSONObject = downloadFile(documentURL, saveDir, filesSubFolder);
         if(documentJSONObject != null) documentsJSONArray.put(documentJSONObject);
+        if(maxNumber>0 && documentsJSONArray.length() >= maxNumber) break;
       }
     }
     return documentsJSONArray;
