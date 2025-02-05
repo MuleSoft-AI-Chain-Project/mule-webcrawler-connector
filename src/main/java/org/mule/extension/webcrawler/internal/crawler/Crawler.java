@@ -29,10 +29,11 @@ public abstract class Crawler {
   protected boolean downloadDocuments;
   protected String downloadPath;
   protected List<String> contentTags;
+  protected boolean rawHtml;
   protected boolean getMetaTags;
 
   public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis, boolean downloadImages,
-                 boolean downloadDocuments, String downloadPath, List<String> contentTags, boolean getMetaTags) {
+                 boolean downloadDocuments, String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
 
     this.userAgent = userAgent;
     this.rootReferrer = rootReferrer;
@@ -45,6 +46,7 @@ public abstract class Crawler {
     this.downloadDocuments = downloadDocuments;
     this.downloadPath = downloadPath;
     this.contentTags = contentTags;
+    this.rawHtml = rawHtml;
     this.getMetaTags = getMetaTags;
   }
 
@@ -70,6 +72,7 @@ public abstract class Crawler {
     private boolean downloadDocuments = false;
     private String downloadPath;
     private List<String> contentTags;
+    private boolean rawHtml = false;
     private boolean getMetaTags = false;
 
     public Crawler.Builder userAgent(String userAgent) {
@@ -127,6 +130,11 @@ public abstract class Crawler {
       return this;
     }
 
+    public Crawler.Builder rawHtml(boolean rawHtml) {
+      this.rawHtml = rawHtml;
+      return this;
+    }
+
     public Crawler.Builder getMetaTags(boolean getMetaTags) {
       this.getMetaTags = getMetaTags;
       return this;
@@ -139,7 +147,7 @@ public abstract class Crawler {
       try {
 
         crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
-                                  downloadDocuments, downloadPath, contentTags, getMetaTags);
+                                  downloadDocuments, downloadPath, contentTags, rawHtml, getMetaTags);
 
       } catch (ModuleException e) {
 

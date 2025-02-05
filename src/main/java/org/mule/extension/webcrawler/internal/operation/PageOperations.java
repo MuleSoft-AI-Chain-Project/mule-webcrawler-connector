@@ -55,10 +55,18 @@ public class PageOperations {
 
       LOGGER.info("Get meta tags");
 
-      Document document = PageHelper.getDocument(
-          url,
-          configuration.getRequestParameters().getUserAgent(),
-          configuration.getRequestParameters().getReferrer());
+      Document document;
+
+      if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
+
+        document = PageHelper.getDocument(
+            url,
+            configuration.getRequestParameters().getUserAgent(),
+            configuration.getRequestParameters().getReferrer());
+      } else {
+
+        document = PageHelper.getDocumentDynamic(url);
+      }
 
       return ResponseHelper.createResponse(
           PageHelper.getPageMetaTags(document).toString(),
@@ -99,10 +107,18 @@ public class PageOperations {
 
       try {
         // url provided is a website url, so download all images from this document
-        Document document = PageHelper.getDocument(
-            url,
-            configuration.getRequestParameters().getUserAgent(),
-            configuration.getRequestParameters().getReferrer());
+        Document document;
+
+        if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
+
+          document = PageHelper.getDocument(
+              url,
+              configuration.getRequestParameters().getUserAgent(),
+              configuration.getRequestParameters().getReferrer());
+        } else {
+
+          document = PageHelper.getDocumentDynamic(url);
+        }
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath);
 
@@ -151,10 +167,18 @@ public class PageOperations {
 
       try {
         // url provided is a website url, so download all images from this document
-        Document document = PageHelper.getDocument(
-            url,
-            configuration.getRequestParameters().getUserAgent(),
-            configuration.getRequestParameters().getReferrer());
+        Document document;
+
+        if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
+
+          document = PageHelper.getDocument(
+              url,
+              configuration.getRequestParameters().getUserAgent(),
+              configuration.getRequestParameters().getReferrer());
+        } else {
+
+          document = PageHelper.getDocumentDynamic(url);
+        }
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath);
 
@@ -202,10 +226,18 @@ public class PageOperations {
 
       LOGGER.info("Analyze page");
 
-      Document document = PageHelper.getDocument(
-          url,
-          configuration.getRequestParameters().getUserAgent(),
-          configuration.getRequestParameters().getReferrer());
+      Document document;
+
+      if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
+
+        document = PageHelper.getDocument(
+            url,
+            configuration.getRequestParameters().getUserAgent(),
+            configuration.getRequestParameters().getReferrer());
+      } else {
+
+        document = PageHelper.getDocumentDynamic(url);
+      }
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
@@ -247,14 +279,26 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document = PageHelper.getDocument(
-          url,
-          configuration.getRequestParameters().getUserAgent(),
-          configuration.getRequestParameters().getReferrer());
+      Document document;
+
+      if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
+
+        document = PageHelper.getDocument(
+            url,
+            configuration.getRequestParameters().getUserAgent(),
+            configuration.getRequestParameters().getReferrer());
+      } else {
+
+        document = PageHelper.getDocumentDynamic(url);
+      }
+
+      String content = PageHelper.getPageContent(document,
+                                                 targetContentParameters.getTags(),
+                                                 configuration.getCrawlerSettingsParameters().isRawHtml());
 
       contents.put("url", document.baseUri());
       contents.put("title", document.title());
-      contents.put("content", PageHelper.getPageContent(document, targetContentParameters.getTags()));
+      contents.put("content", content);
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(contents),

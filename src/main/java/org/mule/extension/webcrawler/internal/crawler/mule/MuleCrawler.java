@@ -21,10 +21,10 @@ public class MuleCrawler extends Crawler {
 
   public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
                      boolean dynamicContent, int delayMillis, boolean downloadImages, boolean downloadDocuments,
-                     String downloadPath, List<String> contentTags, boolean getMetaTags) {
+                     String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
 
     super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
-          downloadDocuments, downloadPath, contentTags, getMetaTags);
+          downloadDocuments, downloadPath, contentTags, rawHtml, getMetaTags);
   }
 
   @Override
@@ -120,7 +120,7 @@ public class MuleCrawler extends Crawler {
         }
 
         // get page contents
-        pageData.put("content", PageHelper.getPageContent(document, contentTags));
+        pageData.put("content", PageHelper.getPageContent(document, contentTags, rawHtml));
 
         // save gathered data of page to file
         String filename = PageHelper.savePageContents(pageData, downloadPath, title);
