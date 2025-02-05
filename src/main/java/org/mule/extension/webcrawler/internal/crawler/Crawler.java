@@ -18,29 +18,40 @@ public abstract class Crawler {
   protected Set<String> visitedLinksGlobal;
   protected Map<Integer, Set<String>> visitedLinksByDepth;
 
+  protected String userAgent;
+  protected String rootReferrer;
   protected String rootURL;
   protected int maxDepth;
   protected boolean restrictToPath;
   protected boolean dynamicContent;
   protected int delayMillis;
   protected boolean downloadImages;
+  protected int maxImageNumber;
   protected boolean downloadDocuments;
+  protected int maxDocumentNumber;
   protected String downloadPath;
   protected List<String> contentTags;
+  protected boolean rawHtml;
   protected boolean getMetaTags;
 
-  public Crawler(String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis, boolean downloadImages,
-                 boolean downloadDocuments, String downloadPath, List<String> contentTags, boolean getMetaTags) {
+  public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent,
+                 int delayMillis, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
+                 String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
 
+    this.userAgent = userAgent;
+    this.rootReferrer = rootReferrer;
     this.rootURL = rootURL;
     this.maxDepth = maxDepth;
     this.restrictToPath = restrictToPath;
     this.dynamicContent = dynamicContent;
     this.delayMillis = delayMillis;
     this.downloadImages = downloadImages;
+    this.maxImageNumber = maxImageNumber;
     this.downloadDocuments = downloadDocuments;
+    this.maxDocumentNumber = maxDocumentNumber;
     this.downloadPath = downloadPath;
     this.contentTags = contentTags;
+    this.rawHtml = rawHtml;
     this.getMetaTags = getMetaTags;
   }
 
@@ -55,16 +66,31 @@ public abstract class Crawler {
 
   public static class Builder {
 
+    private String userAgent;
+    private String rootReferrer;
     private String rootURL;
     private int maxDepth;
     private boolean restrictToPath = false;
     private boolean dynamicContent = false;
     private int delayMillis;
-    private boolean downloadImages = false;
-    private boolean downloadDocuments = false;
+    private boolean downloadImages;
+    private int maxImageNumber;
+    private boolean downloadDocuments;
+    private int maxDocumentNumber;
     private String downloadPath;
     private List<String> contentTags;
+    private boolean rawHtml = false;
     private boolean getMetaTags = false;
+
+    public Crawler.Builder userAgent(String userAgent) {
+      this.userAgent = userAgent;
+      return this;
+    }
+
+    public Crawler.Builder rootReferrer(String rootReferrer) {
+      this.rootReferrer = rootReferrer;
+      return this;
+    }
 
     public Crawler.Builder rootURL(String rootURL) {
       this.rootURL = rootURL;
@@ -96,8 +122,18 @@ public abstract class Crawler {
       return this;
     }
 
+    public Crawler.Builder maxImageNumber(int maxImageNumber) {
+      this.maxImageNumber = maxImageNumber;
+      return this;
+    }
+
     public Crawler.Builder downloadDocuments(boolean downloadDocuments) {
       this.downloadDocuments = downloadDocuments;
+      return this;
+    }
+
+    public Crawler.Builder maxDocumentNumber(int maxDocumentNumber) {
+      this.maxDocumentNumber = maxDocumentNumber;
       return this;
     }
 
@@ -108,6 +144,11 @@ public abstract class Crawler {
 
     public Crawler.Builder contentTags(List<String> contentTags) {
       this.contentTags = contentTags;
+      return this;
+    }
+
+    public Crawler.Builder rawHtml(boolean rawHtml) {
+      this.rawHtml = rawHtml;
       return this;
     }
 
@@ -122,8 +163,9 @@ public abstract class Crawler {
 
       try {
 
-        crawler = new MuleCrawler(rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
-                                  downloadDocuments, downloadPath, contentTags, getMetaTags);
+        crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis,
+                                  downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
+                                  downloadPath, contentTags, rawHtml, getMetaTags);
 
       } catch (ModuleException e) {
 

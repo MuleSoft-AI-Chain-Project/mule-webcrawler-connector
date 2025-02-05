@@ -6,7 +6,6 @@ import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
-import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +19,13 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_IMAGES_FOLDER = "images/";
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
-  public MuleCrawler(String originalUrl, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis,
-                     boolean downloadImages, boolean downloadDocuments, String downloadPath, List<String> contentTags,
-                     boolean getMetaTags) {
+  public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
+                     boolean dynamicContent, int delayMillis, boolean downloadImages, int maxImageNumber,
+                     boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
+                     boolean rawHtml, boolean getMetaTags) {
 
-    super(originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
-          downloadDocuments, downloadPath, contentTags, getMetaTags);
+    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages, maxImageNumber,
+          downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags);
   }
 
   @Override
@@ -33,10 +33,10 @@ public class MuleCrawler extends Crawler {
 
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
-    return crawl(rootURL, 0);
+    return crawl(rootURL, 0, rootReferrer);
   }
 
-  private CrawlNode crawl(String url, int currentDepth) {
+  private CrawlNode crawl(String url, int currentDepth, String referrer) {
 
     // return if maxDepth reached
     if (currentDepth > maxDepth) {
@@ -74,10 +74,10 @@ public class MuleCrawler extends Crawler {
       // get page as a html document
       Document document = null;
       if (dynamicContent) {
-        document = PageHelper.getDocumentDynamic(url);
+        document = PageHelper.getDocumentDynamic(url, userAgent);
       }
       else {
-        document = PageHelper.getDocument(url);
+        document = PageHelper.getDocument(url, userAgent, referrer);
       }
 
       // check if url contents have been downloaded before ie applied globally (at all
@@ -104,13 +104,13 @@ public class MuleCrawler extends Crawler {
         if (downloadImages) {
 
           LOGGER.debug("Downloading images for : " + url);
-          pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath, CRAWLED_IMAGES_FOLDER));
+          pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath, CRAWLED_IMAGES_FOLDER, maxImageNumber));
         }
 
         if (downloadDocuments) {
 
           LOGGER.debug("Downloading documents for : " + url);
-          pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER));
+          pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER, maxDocumentNumber));
         }
 
         // get all meta tags from the document
@@ -121,7 +121,7 @@ public class MuleCrawler extends Crawler {
         }
 
         // get page contents
-        pageData.put("content", PageHelper.getPageContent(document, contentTags));
+        pageData.put("content", PageHelper.getPageContent(document, contentTags, rawHtml));
 
         // save gathered data of page to file
         String filename = PageHelper.savePageContents(pageData, downloadPath, title);
@@ -150,7 +150,7 @@ public class MuleCrawler extends Crawler {
           for (String childURL : links) {
 
             // Recursively crawl the link and add as a child
-            CrawlNode childPageNode = crawl(childURL, currentDepth + 1);
+            CrawlNode childPageNode = crawl(childURL, currentDepth + 1, url);
             if (childPageNode != null) {
 
               crawlNode.addChild(childPageNode);
@@ -201,7 +201,7 @@ public class MuleCrawler extends Crawler {
       MapNode node = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(url);
+      Document document = PageHelper.getDocument(url, userAgent, rootReferrer);
 
       node = new MapNode(url);
       LOGGER.debug("Found url: " + url);
@@ -211,12 +211,25 @@ public class MuleCrawler extends Crawler {
         // get all links on the current page
         Set<String> links = new HashSet<>();
 
-        Map<String, Object> pageInsights = (Map<String, Object>)
-            PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS);
-        Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+        if(restrictToPath) {
 
-        if (linksMap != null) {
-          links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
+          Map<String, Object> pageInsights = (Map<String, Object>)
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS);
+          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+          if (linksMap != null) {
+            links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
+          }
+        } else {
+
+          Map<String, Object> pageInsights = (Map<String, Object>)
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL);
+          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+          if (linksMap != null) {
+            links.addAll((Set<String>) linksMap.get("internal"));
+            links.addAll((Set<String>) linksMap.get("external"));
+          }
         }
 
         if (links != null) {
