@@ -171,7 +171,7 @@ public class PageOperations {
           @Summary("Maximum number of documents to download. Default 0 means no limit.")
           @Placement(order = 2) @Expression(ExpressionSupport.SUPPORTED) @Example("10")
           @Optional int maxDocumentNumber,
-      @DisplayName("Download Location") @Placement(order = 3) @Example("/users/mulesoft/downloads") String downloadPath) {
+      @DisplayName("Download location") @Placement(order = 3) @Example("/users/mulesoft/downloads") String downloadPath) {
 
     try {
 
@@ -232,7 +232,7 @@ public class PageOperations {
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @ParameterGroup(name="Target content") PageTargetContentParameters targetContentParameters) {
+          @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
     try {
 
@@ -283,7 +283,7 @@ public class PageOperations {
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @ParameterGroup(name="Target content") PageTargetContentParameters targetContentParameters) {
+          @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
     try {
 

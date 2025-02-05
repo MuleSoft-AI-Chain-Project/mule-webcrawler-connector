@@ -59,7 +59,7 @@ public class CrawlOperations {
       crawlWebsite(
       @Config WebCrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
+      @DisplayName("Download location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
       @ParameterGroup(name = "Target Content") CrawlerTargetContentParameters targetContentParameters) {
 
