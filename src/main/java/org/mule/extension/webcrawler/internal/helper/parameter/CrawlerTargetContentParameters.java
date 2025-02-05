@@ -16,7 +16,7 @@ public class CrawlerTargetContentParameters {
 
   @Parameter
   @Alias("tags")
-  @DisplayName("Tag List")
+  @DisplayName("Tag list")
   @Summary("List of html tags for which content must be retrieved.")
   @Placement(order = 1)
   @Optional
@@ -24,7 +24,7 @@ public class CrawlerTargetContentParameters {
 
   @Parameter
   @Alias("getMetaTags")
-  @DisplayName("Retrieve Meta Tags")
+  @DisplayName("Retrieve meta tags")
   @Summary("If true metatags are retrieved from the provided url.")
   @Placement(order = 2)
   @Expression(ExpressionSupport.SUPPORTED)
@@ -33,7 +33,7 @@ public class CrawlerTargetContentParameters {
 
   @Parameter
   @Alias("downloadImages")
-  @DisplayName("Download Images")
+  @DisplayName("Download images")
   @Summary("If true images referenced at the provided url are downloaded.")
   @Placement(order = 3)
   @Expression(ExpressionSupport.SUPPORTED)
@@ -41,13 +41,33 @@ public class CrawlerTargetContentParameters {
   private boolean downloadImages;
 
   @Parameter
-  @Alias("downloadDocuments")
-  @DisplayName("Download Documents")
-  @Summary("If true documents referenced at the provided url are downloaded.")
+  @Alias("maxImageNumber")
+  @DisplayName("Max image number for each page")
+  @Summary("Maximum number of images to download for each page. Default 0 means no limit.")
   @Placement(order = 4)
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Example("0")
+  @Optional
+  private int maxImageNumber;
+
+  @Parameter
+  @Alias("downloadDocuments")
+  @DisplayName("Download documents")
+  @Summary("If true documents referenced at the provided url are downloaded.")
+  @Placement(order = 5)
   @Expression(ExpressionSupport.SUPPORTED)
   @Example("False")
   private boolean downloadDocuments;
+
+  @Parameter
+  @Alias("maxDocumentNumber")
+  @DisplayName("Max document number for each page")
+  @Summary("Maximum number of documents to download for each page. Default 0 means no limit.")
+  @Placement(order = 6)
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Example("0")
+  @Optional
+  private int maxDocumentNumber;
 
   public List<String> getTags() {
     return tags;
@@ -73,6 +93,14 @@ public class CrawlerTargetContentParameters {
     this.downloadImages = downloadImages;
   }
 
+  public int getMaxImageNumber() {
+    return maxImageNumber;
+  }
+
+  public void setMaxImageNumber(int maxImageNumber) {
+    this.maxImageNumber = maxImageNumber;
+  }
+
   public boolean isDownloadDocuments() {
     return downloadDocuments;
   }
@@ -81,13 +109,23 @@ public class CrawlerTargetContentParameters {
     this.downloadDocuments = downloadDocuments;
   }
 
+  public int getMaxDocumentNumber() {
+    return maxDocumentNumber;
+  }
+
+  public void setMaxDocumentNumber(int maxDocumentNumber) {
+    this.maxDocumentNumber = maxDocumentNumber;
+  }
+
   @Override
   public String toString() {
     return "CrawlerTargetContentParameters{" +
         "tags=" + tags +
         ", getMetaTags=" + getMetaTags +
         ", downloadImages=" + downloadImages +
+        ", maxImageNumber=" + maxImageNumber +
         ", downloadDocuments=" + downloadDocuments +
+        ", maxDocumentNumber=" + maxDocumentNumber +
         '}';
   }
 }

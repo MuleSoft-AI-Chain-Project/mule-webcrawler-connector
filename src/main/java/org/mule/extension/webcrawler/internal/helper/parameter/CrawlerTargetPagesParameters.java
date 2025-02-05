@@ -13,7 +13,7 @@ public class CrawlerTargetPagesParameters {
 
   @Parameter
   @Alias("restrictToPath")
-  @DisplayName("Restrict Crawl under URL")
+  @DisplayName("Restrict crawl under URL")
   @Summary("If true only internal pages are crawled.")
   @Placement(order = 1)
   @Expression(ExpressionSupport.SUPPORTED)
@@ -22,7 +22,7 @@ public class CrawlerTargetPagesParameters {
 
   @Parameter
   @Alias("maxDepth")
-  @DisplayName("Maximum Depth")
+  @DisplayName("Maximum depth")
   @Summary("The maximum level of depth that can be reached while crawling a website.")
   @Placement(order = 2)
   @Expression(ExpressionSupport.SUPPORTED)

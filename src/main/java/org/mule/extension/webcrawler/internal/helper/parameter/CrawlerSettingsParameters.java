@@ -26,7 +26,7 @@ public class CrawlerSettingsParameters {
 
   @Parameter
   @Alias("dynamicContent")
-  @DisplayName("Dynamic Content Retrieval")
+  @DisplayName("Dynamic content retrieval")
   @Summary("If true use selenium driver to crawl dynamically generated content from the page.")
   @Placement(order = 2)
   @Expression(ExpressionSupport.SUPPORTED)
@@ -35,7 +35,7 @@ public class CrawlerSettingsParameters {
 
   @Parameter
   @Alias("rawHtml")
-  @DisplayName("RAW Html")
+  @DisplayName("RAW html")
   @Summary("If true extract raw html from pages and not parsed text content.")
   @Placement(order = 2)
   @Expression(ExpressionSupport.SUPPORTED)

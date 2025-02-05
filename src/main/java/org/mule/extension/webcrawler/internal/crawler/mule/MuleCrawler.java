@@ -20,11 +20,12 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
   public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
-                     boolean dynamicContent, int delayMillis, boolean downloadImages, boolean downloadDocuments,
-                     String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
+                     boolean dynamicContent, int delayMillis, boolean downloadImages, int maxImageNumber,
+                     boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
+                     boolean rawHtml, boolean getMetaTags) {
 
-    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
-          downloadDocuments, downloadPath, contentTags, rawHtml, getMetaTags);
+    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages, maxImageNumber,
+          downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags);
   }
 
   @Override
@@ -103,13 +104,13 @@ public class MuleCrawler extends Crawler {
         if (downloadImages) {
 
           LOGGER.debug("Downloading images for : " + url);
-          pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath, CRAWLED_IMAGES_FOLDER));
+          pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath, CRAWLED_IMAGES_FOLDER, maxImageNumber));
         }
 
         if (downloadDocuments) {
 
           LOGGER.debug("Downloading documents for : " + url);
-          pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER));
+          pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER, maxDocumentNumber));
         }
 
         // get all meta tags from the document

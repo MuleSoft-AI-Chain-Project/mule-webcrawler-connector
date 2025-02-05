@@ -12,15 +12,19 @@ import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetContentParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
+import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
+import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
+import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +102,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
           @Config WebCrawlerConfiguration configuration,
-          @DisplayName("Page Or Image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
+          @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @Alias("maxImageNumber") @DisplayName("Max number of images")
+              @Summary("Maximum number of images to download. Default 0 means no limit.")
+              @Placement(order = 2) @Expression(ExpressionSupport.SUPPORTED) @Example("10")
+              @Optional int maxImageNumber,
+          @DisplayName("Download location") @Placement(order = 3) @Example("/users/mulesoft/downloads") String downloadPath) {
 
     try {
 
@@ -120,7 +128,7 @@ public class PageOperations {
           document = PageHelper.getDocumentDynamic(url);
         }
 
-        imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath);
+        imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
       } catch (UnsupportedMimeTypeException e) {
         // url provided is direct link to image, so download single image
@@ -158,8 +166,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   downloadWebsiteDocuments(
       @Config WebCrawlerConfiguration configuration,
-      @DisplayName("Page Or Document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Download Location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath) {
+      @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
+          @Summary("Maximum number of documents to download. Default 0 means no limit.")
+          @Placement(order = 2) @Expression(ExpressionSupport.SUPPORTED) @Example("10")
+          @Optional int maxDocumentNumber,
+      @DisplayName("Download Location") @Placement(order = 3) @Example("/users/mulesoft/downloads") String downloadPath) {
 
     try {
 
@@ -180,7 +192,7 @@ public class PageOperations {
           document = PageHelper.getDocumentDynamic(url);
         }
 
-        documentsJSONArray = PageHelper.downloadFiles(document, downloadPath);
+        documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
 
       } catch (UnsupportedMimeTypeException e) {
         // url provided is direct link to image, so download single image
@@ -219,8 +231,8 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
+          @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @ParameterGroup(name="Target content") PageTargetContentParameters targetContentParameters) {
 
     try {
 
@@ -270,8 +282,8 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
-          @DisplayName("Page Url") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
+          @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @ParameterGroup(name="Target content") PageTargetContentParameters targetContentParameters) {
 
     try {
 

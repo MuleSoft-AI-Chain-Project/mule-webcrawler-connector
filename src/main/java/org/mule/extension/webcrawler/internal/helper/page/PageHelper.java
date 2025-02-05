@@ -346,11 +346,15 @@ public class PageHelper {
     return (file != null) ? file.getName() : "File is null";
   }
 
-  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory) throws IOException {
-    return downloadWebsiteImages(document, saveDirectory, "");
+  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory, int maxNumber) throws IOException {
+    return downloadWebsiteImages(document, saveDirectory, "", maxNumber);
   }
 
-  public static JSONArray downloadWebsiteImages(Document document, String saveDirectory, String imagesSubFolder) throws IOException {
+  public static JSONArray downloadWebsiteImages(
+      Document document,
+      String saveDirectory,
+      String imagesSubFolder,
+      int maxNumber) throws IOException {
 
     JSONArray imagesJSONArray = new JSONArray();
 
@@ -369,6 +373,7 @@ public class PageHelper {
       for (String imageUrl : imageUrls) {
         JSONObject imageJSONObject = downloadSingleImage(imageUrl, saveDirectory, imagesSubFolder);
         if(imageJSONObject != null) imagesJSONArray.put(imageJSONObject);
+        if(maxNumber>0 && imagesJSONArray.length() >= maxNumber) break;
       }
     }
 
@@ -478,12 +483,12 @@ public class PageHelper {
     return jsonObject;
   }
 
-  public static JSONArray downloadFiles(Document document, String saveDir) throws IOException {
+  public static JSONArray downloadFiles(Document document, String saveDir, int maxNumber) throws IOException {
 
-    return downloadFiles(document, saveDir, "");
+    return downloadFiles(document, saveDir, "", maxNumber);
   }
 
-  public static JSONArray downloadFiles(Document document, String saveDir, String filesSubFolder) throws IOException {
+  public static JSONArray downloadFiles(Document document, String saveDir, String filesSubFolder, int maxNumber) throws IOException {
 
     JSONArray documentsJSONArray = new JSONArray();
 
@@ -505,6 +510,7 @@ public class PageHelper {
 
         JSONObject documentJSONObject = downloadFile(documentURL, saveDir, filesSubFolder);
         if(documentJSONObject != null) documentsJSONArray.put(documentJSONObject);
+        if(maxNumber>0 && documentsJSONArray.length() >= maxNumber) break;
       }
     }
     return documentsJSONArray;

@@ -26,14 +26,17 @@ public abstract class Crawler {
   protected boolean dynamicContent;
   protected int delayMillis;
   protected boolean downloadImages;
+  protected int maxImageNumber;
   protected boolean downloadDocuments;
+  protected int maxDocumentNumber;
   protected String downloadPath;
   protected List<String> contentTags;
   protected boolean rawHtml;
   protected boolean getMetaTags;
 
-  public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent, int delayMillis, boolean downloadImages,
-                 boolean downloadDocuments, String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
+  public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent,
+                 int delayMillis, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
+                 String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
 
     this.userAgent = userAgent;
     this.rootReferrer = rootReferrer;
@@ -43,7 +46,9 @@ public abstract class Crawler {
     this.dynamicContent = dynamicContent;
     this.delayMillis = delayMillis;
     this.downloadImages = downloadImages;
+    this.maxImageNumber = maxImageNumber;
     this.downloadDocuments = downloadDocuments;
+    this.maxDocumentNumber = maxDocumentNumber;
     this.downloadPath = downloadPath;
     this.contentTags = contentTags;
     this.rawHtml = rawHtml;
@@ -68,8 +73,10 @@ public abstract class Crawler {
     private boolean restrictToPath = false;
     private boolean dynamicContent = false;
     private int delayMillis;
-    private boolean downloadImages = false;
-    private boolean downloadDocuments = false;
+    private boolean downloadImages;
+    private int maxImageNumber;
+    private boolean downloadDocuments;
+    private int maxDocumentNumber;
     private String downloadPath;
     private List<String> contentTags;
     private boolean rawHtml = false;
@@ -115,8 +122,18 @@ public abstract class Crawler {
       return this;
     }
 
+    public Crawler.Builder maxImageNumber(int maxImageNumber) {
+      this.maxImageNumber = maxImageNumber;
+      return this;
+    }
+
     public Crawler.Builder downloadDocuments(boolean downloadDocuments) {
       this.downloadDocuments = downloadDocuments;
+      return this;
+    }
+
+    public Crawler.Builder maxDocumentNumber(int maxDocumentNumber) {
+      this.maxDocumentNumber = maxDocumentNumber;
       return this;
     }
 
@@ -146,8 +163,9 @@ public abstract class Crawler {
 
       try {
 
-        crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages,
-                                  downloadDocuments, downloadPath, contentTags, rawHtml, getMetaTags);
+        crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis,
+                                  downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
+                                  downloadPath, contentTags, rawHtml, getMetaTags);
 
       } catch (ModuleException e) {
 
