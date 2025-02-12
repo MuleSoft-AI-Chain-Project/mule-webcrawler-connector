@@ -99,17 +99,17 @@ public class URLUtils {
   // If current page has a reference link to another page, this link will not be considered as a reference link
   public static boolean isReferenceLink(String baseUrl, String linkToCheck) {
     try {
-      URI baseUri = new URI(baseUrl);
-      URI linkUri = new URI(linkToCheck);
+      URI baseUri = URI.create(baseUrl);
+      URI linkUri = URI.create(linkToCheck);
 
       // Check if the scheme, host, and path are the same, and the link has a fragment
       return baseUri.getScheme().equals(linkUri.getScheme()) &&
-          baseUri.getHost().equals(linkUri.getHost()) &&
-          baseUri.getPath().equals(linkUri.getPath()) &&
-          linkUri.getFragment() != null;
+              baseUri.getHost().equals(linkUri.getHost()) &&
+              baseUri.getPath().equals(linkUri.getPath()) &&
+              linkUri.getFragment() != null;
 
-    } catch (URISyntaxException e) {
-      LOGGER.error(e.toString());
+    } catch (IllegalArgumentException e) {
+        LOGGER.error("Invalid URL: {}", e.getMessage());
       return false;
     }
   }

@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
+import org.mule.extension.webcrawler.internal.helper.webdriver.WebDriverManager;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,7 @@ public class MuleCrawler extends Crawler {
       // get page as a html document
       Document document = null;
       if (dynamicContent) {
-        document = PageHelper.getDocumentDynamic(url, userAgent);
+        document = PageHelper.getDocumentDynamic(url, userAgent, false);
       }
       else {
         document = PageHelper.getDocument(url, userAgent, referrer);
@@ -163,6 +164,7 @@ public class MuleCrawler extends Crawler {
     } catch (Exception e) {
       LOGGER.error(e.toString());
     }
+    WebDriverManager.quitDriver();
     return null;
   }
 
