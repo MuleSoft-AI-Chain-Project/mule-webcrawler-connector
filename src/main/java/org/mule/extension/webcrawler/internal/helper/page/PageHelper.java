@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
+import org.mule.extension.webcrawler.internal.helper.webdriver.WebDriverManager;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.mule.runtime.extension.api.exception.ModuleException;
@@ -40,20 +41,10 @@ public class PageHelper {
     return document;
   }
 
-  public static Document getDocumentDynamic(String url, String userAgent) throws Exception {
+  public static Document getDocumentDynamic(String url, String userAgent, Boolean quitDriver) throws Exception {
 
     Document document = null;
-    // Set ChromeOptions to enable headless mode
-    ChromeOptions options = new ChromeOptions();
-    options.addArguments("--headless"); // Run in headless mode
-    options.addArguments("--disable-gpu"); // Disable GPU acceleration (optional)
-    options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
-    options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
-    options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
-    if(!userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
-    // Initialize WebDriver
-    WebDriver driver = new ChromeDriver(options);
-
+    WebDriver driver = WebDriverManager.getDriver(userAgent);
 
     try {
 
@@ -68,7 +59,9 @@ public class PageHelper {
       throw e;
     }
     finally {
-      driver.quit();
+      if (quitDriver) {
+        WebDriverManager.quitDriver();
+      }
     }
 
     return document;
