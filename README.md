@@ -41,10 +41,20 @@ Then add the following dependency to your application's `pom.xml`:
 
 ### Installation into private Anypoint Exchange
 
-You can also make this connector available as an asset in your Anyooint Exchange.
+You can also make this connector available as an asset in your Anypoint Exchange.
 
 This process will require you to build the connector as above, but additionally you will need
 to make some changes to the `pom.xml`.  For this reason, we recommend you fork the repository.
 
 Then, follow the MuleSoft [documentation](https://docs.mulesoft.com/exchange/to-publish-assets-maven) to modify and publish the asset.
 
+### Deploying to CloudHub
+
+In order for dynamic content retrieval to work in CloudHub based deployments, you will need
+to set the `cloudhub.deployment` property to `true`.  
+
+This can be done either via an application property in Runtime Manager, or in your CloudHub deployment
+configuration in your `pom.xml`.
+
+This property will allow the installation of Chrome at runtime into your CloudHub worker VM, along with necessary
+dependencies.
