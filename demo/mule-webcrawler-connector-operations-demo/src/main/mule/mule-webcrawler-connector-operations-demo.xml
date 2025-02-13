@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+  <http:listener-config doc:id="19f8ae78-f60b-406c-a412-dbeb9586a159" doc:name="HTTP Listener config" name="HTTP_Listener_config">
+    <http:listener-connection host="0.0.0.0" port="${http.port}"></http:listener-connection>
+  </http:listener-config>
+  <ms-webcrawler:config name="WebCrawl_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f" userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" dynamicContent="#[p('webcrawler.dynamicContentRetrieval')]" delayMillis="${webcrawler.delay}" rawHtml="#[p('webcrawler.rawHtml')]"/>
+  <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="567555e0-5621-4d8c-8322-d2a43b94d25d" name="Router" api="api/webcrawler-connector-operations-api.raml" parser="RAML"/>
+	<flow name="mule-webcrawler-connector-operations-demoFlow" doc:id="02bd6d6d-156a-47f9-8ce1-ecea4351f499" >
+		<http:listener doc:name="Listener" doc:id="2a5647a2-9a59-49a5-a337-f760d255d190" config-ref="HTTP_Listener_config" path="/api/*"/>
+		<apikit:router doc:name="APIkit Router" doc:id="f23612e9-e0c8-4f8f-b44f-a898de466552" config-ref="Router"/>
+	</flow>
+	<flow name="mule-webcrawler-connector-operations-demoFlow1" doc:id="a618f282-a89c-4887-b74d-1247a7a4d96b" >
+		<http:listener doc:name="Listener" doc:id="f9564544-a10f-4af4-8b42-648c03052dca" config-ref="HTTP_Listener_config" path="/console/*"/>
+		<apikit:console doc:name="APIkit Console" doc:id="9b4d8887-e03e-464b-af33-a5e89fb8b62e" config-ref="Router"/>
+	</flow>
+	<flow doc:id="672f483e-9723-4b98-afb2-4fe26ac9c01f" name="get:\page">
+    <ms-webcrawler:page-content config-ref="WebCrawl_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[Page] Get content" url="#[attributes.queryParams.url]">
+		</ms-webcrawler:page-content>
+  </flow>
+  <flow doc:id="0606793a-d005-42a1-bad2-4b50dd7f5085" name="get:\insights">
+    <ms-webcrawler:page-insights config-ref="WebCrawl_Configuration" doc:id="03a24bad-a29a-413d-a6b2-397222013497" doc:name="[Page] Get insights" url="#[attributes.queryParams.url]">
+		</ms-webcrawler:page-insights>
+  </flow>
+  <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="get:\sitemap">
+    <ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" restrictToPath="true"></ms-webcrawler:crawl-links-as-sitemap>
+  </flow>
+	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\meta-tag">
+		<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[Page] Get meta tags" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration"></ms-webcrawler:page-meta-tags>
+  </flow>
+  <flow doc:id="0ec8037e-2960-4433-b6c2-fffeecf352a8" name="get:\image">
+    <ms-webcrawler:page-download-image doc:id="8337992c-f226-40fa-9feb-83afe8bd29a4" doc:name="[Page] Download image" downloadPath="#[attributes.queryParams.downloadLocation]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" maxImageNumber="50"></ms-webcrawler:page-download-image>
+  </flow>
+  <flow name="get:\document" doc:id="780b240a-a4a9-410c-879f-173df7312650" >
+		<ms-webcrawler:page-download-document doc:name="[Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" config-ref="WebCrawl_Configuration" maxDocumentNumber="50"/>
+	</flow>
+	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search">
+    <ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
+  </flow>
+  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="post:\crawl">
+    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" restrictToPath="true" url="#[attributes.queryParams.url]" getMetaTags="true"></ms-webcrawler:crawl-website>
+  </flow>
+</mule>
