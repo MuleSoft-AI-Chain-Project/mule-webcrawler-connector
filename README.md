@@ -48,7 +48,7 @@ to make some changes to the `pom.xml`.  For this reason, we recommend you fork t
 
 Then, follow the MuleSoft [documentation](https://docs.mulesoft.com/exchange/to-publish-assets-maven) to modify and publish the asset.
 
-### Deploying to CloudHub
+### Deploying to CloudHub (Cloudhub 2.0 NOT supported yet.)
 
 In order for dynamic content retrieval to work in CloudHub based deployments, you will need
 to set the `cloudhub.deployment` property to `true`.  
