@@ -23,27 +23,22 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
     <ms-webcrawler:page-insights config-ref="WebCrawl_Configuration" doc:id="03a24bad-a29a-413d-a6b2-397222013497" doc:name="[Page] Get insights" url="#[attributes.queryParams.url]">
 		</ms-webcrawler:page-insights>
   </flow>
-  <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="gen-sitemap">
-    <http:listener config-ref="HTTP_Listener_config" doc:id="b9285ae6-b4a8-4fcf-ad26-e1effb2f422a" doc:name="Listener" path="/sitemap"></http:listener>
-    <ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[Crawl] Get links as sitemap" maxDepth="#[payload.depth]" url="#[payload.url]" config-ref="WebCrawl_Configuration" restrictToPath="true"></ms-webcrawler:crawl-links-as-sitemap>
+  <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="get:\sitemap">
+    <ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" restrictToPath="true"></ms-webcrawler:crawl-links-as-sitemap>
   </flow>
-	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get-meta-tag">
-    <http:listener config-ref="HTTP_Listener_config" doc:id="64616a65-b8dc-4adb-bbc2-420f6e19e15c" doc:name="Listener" path="/metatag"></http:listener>
-		<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[Page] Get meta tags" url="#[payload.url]" config-ref="WebCrawl_Configuration"></ms-webcrawler:page-meta-tags>
+	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\meta-tag">
+		<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[Page] Get meta tags" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration"></ms-webcrawler:page-meta-tags>
   </flow>
-  <flow doc:id="0ec8037e-2960-4433-b6c2-fffeecf352a8" name="get-image">
-    <http:listener config-ref="HTTP_Listener_config" doc:id="a405bd01-fbf9-4ba6-956b-e62985d9e773" doc:name="Listener" path="/image"></http:listener>
-    <ms-webcrawler:page-download-image doc:id="8337992c-f226-40fa-9feb-83afe8bd29a4" doc:name="[Page] Download image" downloadPath="#[payload.downloadLocation]" url="#[payload.url]" config-ref="WebCrawl_Configuration" maxImageNumber="50"></ms-webcrawler:page-download-image>
+  <flow doc:id="0ec8037e-2960-4433-b6c2-fffeecf352a8" name="get:\image">
+    <ms-webcrawler:page-download-image doc:id="8337992c-f226-40fa-9feb-83afe8bd29a4" doc:name="[Page] Download image" downloadPath="#[attributes.queryParams.downloadLocation]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" maxImageNumber="50"></ms-webcrawler:page-download-image>
   </flow>
-  <flow name="get-document" doc:id="780b240a-a4a9-410c-879f-173df7312650" >
-		<http:listener doc:name="Listener" doc:id="512dff3a-e709-4f76-99ba-780896eeacf2" config-ref="HTTP_Listener_config" path="/document" />
-		<ms-webcrawler:page-download-document doc:name="[Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[payload.url]" downloadPath="#[payload.downloadLocation]" config-ref="WebCrawl_Configuration" maxDocumentNumber="50"/>
+  <flow name="get:\document" doc:id="780b240a-a4a9-410c-879f-173df7312650" >
+		<ms-webcrawler:page-download-document doc:name="[Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" config-ref="WebCrawl_Configuration" maxDocumentNumber="50"/>
 	</flow>
 	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search">
     <ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
   </flow>
-  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="crawl">
-    <http:listener config-ref="HTTP_Listener_config" doc:id="60146b8f-25de-4adb-99d6-85c443527c60" doc:name="Listener" path="/crawl"></http:listener>
-    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[payload.downloadLocation]" maxDepth="#[payload.depth]" restrictToPath="true" url="#[payload.url]" getMetaTags="true"></ms-webcrawler:crawl-website>
+  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="post:\crawl">
+    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" restrictToPath="true" url="#[attributes.queryParams.url]" getMetaTags="true"></ms-webcrawler:crawl-website>
   </flow>
 </mule>

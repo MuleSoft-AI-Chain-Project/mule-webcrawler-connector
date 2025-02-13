@@ -91,18 +91,15 @@ baseUriParameters:
         description: Search results retrieved successfully
 
 /crawl:
-  post:
-    body:
-      application/json:
-        type: object
-        properties:
-          url:
-            type: string
-            required: true
-          depth:
-            type: integer
-          downloadLocation:
-            type: string
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      depth:
+        type: integer
+      downloadLocation:
+        type: string
     responses:
       200:
         description: Website crawled successfully
