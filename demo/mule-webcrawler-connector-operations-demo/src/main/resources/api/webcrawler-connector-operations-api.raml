@@ -1,0 +1,108 @@
+#%RAML 1.0
+title: MuleSoft WebCrawler API
+description: API for web crawling and data extraction
+version: 1.0.0
+
+baseUri: http://localhost:{port}
+baseUriParameters:
+  port:
+    default: "8081"
+
+/page:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+    responses:
+      200:
+        description: Page content retrieved successfully
+
+/insights:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+    responses:
+      200:
+        description: Page insights retrieved successfully
+
+/sitemap:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      depth:
+        type: integer
+    responses:
+      200:
+        description: Sitemap generated successfully
+
+/metatag:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+    responses:
+      200:
+        description: Meta tags retrieved successfully
+
+/image:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      downloadLocation:
+        type: string
+        required: true
+    responses:
+      200:
+        description: Images downloaded successfully
+
+/document:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      downloadLocation:
+        type: string
+        required: true
+    responses:
+      200:
+        description: Documents downloaded successfully
+
+/search:
+  get:
+    headers:
+      Serper-Api-Key:
+        type: string
+        required: true
+    queryParameters:
+      query:
+        type: string
+        required: true
+    responses:
+      200:
+        description: Search results retrieved successfully
+
+/crawl:
+  post:
+    body:
+      application/json:
+        type: object
+        properties:
+          url:
+            type: string
+            required: true
+          depth:
+            type: integer
+          downloadLocation:
+            type: string
+    responses:
+      200:
+        description: Website crawled successfully
