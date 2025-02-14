@@ -50,7 +50,7 @@ Then, follow the MuleSoft [documentation](https://docs.mulesoft.com/exchange/to-
 
 ### Deploying to CloudHub
 
-In order for dynamic content retrieval to work in either CloudHub based deployments, you will need
+In order for dynamic content retrieval to work in CloudHub based deployments, you will need
 to set the `cloudhub.deployment` property to `true`.  
 
 This can be done either via an application property in Runtime Manager, or in your CloudHub deployment
