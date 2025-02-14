@@ -3,11 +3,13 @@ package org.mule.extension.webcrawler.internal.helper.webdriver;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+
+import org.openqa.selenium.JavascriptExecutor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
 
 public class WebDriverManager {
 
@@ -28,24 +30,28 @@ public class WebDriverManager {
         return driver;
     }
 
-    private static WebDriver setupWebDriver(String userAgent) throws IOException, InterruptedException {
+    private static WebDriver setupWebDriver(String userAgent) {
 
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless"); // Run in headless mode
-        options.addArguments("--disable-gpu"); // Disable GPU acceleration (optional)
-        options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
-        options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
-        options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
-        if(!userAgent.isEmpty()) options.addArguments("--user-agent=\"" + userAgent + "\"");
 
         if (CloudHubChromeConfigurer.isCloudHubDeployment()) {
             CloudHubChromeConfigurer.setup();
-            String tempDir = Files.createTempDirectory("chrome-profile").toString();
             options.setBinary(CloudHubChromeConfigurer.CHROME_LIB_WRAPPER_SCRIPT);
-            options.addArguments("--user-data-dir=" + tempDir);
+        } else {
+            options.addArguments("--headless"); // NON CH only; CloudHub already uses headless chrome
         }
 
+        options.addArguments("--disable-gpu"); // Disable GPU acceleration
+        options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
+        options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
+        options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
+        if(!userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
+
         driver = new ChromeDriver(options);
+
+        String actualUserAgent = (String) ((JavascriptExecutor) driver).executeScript("return navigator.userAgent;");
+        LOGGER.info("User Agent: {}", actualUserAgent);
+
         return driver;
     }
 

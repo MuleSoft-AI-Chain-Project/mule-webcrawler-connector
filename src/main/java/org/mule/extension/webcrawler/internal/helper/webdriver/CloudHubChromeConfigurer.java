@@ -3,9 +3,8 @@ package org.mule.extension.webcrawler.internal.helper.webdriver;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,8 +27,7 @@ public class CloudHubChromeConfigurer {
     public static final String CHROME_CDP_VERSION = "133";
     public static final String CHROME_DEPENDENCY_RESOURCE_PATH = "/cloudhub-chrome-dependencies.zip";
     public static final String CHROME_DEPENDENCY_LIBS_PATH = "/tmp/chrome-deps-linux64";
-    public static final String CHROME_DEPENDENCY_RPM_PATH = "/tmp/rpms-linux64";
-    public static final String CHROME_PATH = "/tmp/chrome-linux64";
+    public static final String CHROME_PATH = "/tmp/chrome-headless-shell-linux64";
     public static final String CHROME_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
             "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
             "exec " + CHROME_PATH + "/chrome \"$@\"\n";
@@ -52,27 +50,28 @@ public class CloudHubChromeConfigurer {
                 JSONObject jsonResponse = new JSONObject(getChromeMilestoneVersionJsonAsString());
                 String chromeVersion = jsonResponse.getJSONObject("milestones").getJSONObject(CHROME_CDP_VERSION).getString("version");
                 String chromeDownloadUrl =
-                        String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chrome-linux64.zip", chromeVersion);
+                        String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chrome-headless-shell-linux64.zip", chromeVersion);
                 String chromeDriverDownloadUrl =
                         String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chromedriver-linux64.zip", chromeVersion);
 
-                LOGGER.info("Downloading Chrome from: {}", chromeDownloadUrl);
-                FileUtils.copyURLToFile(new URL(chromeDownloadUrl), new File("/tmp/chrome-linux64.zip"));
+                LOGGER.info("Downloading Chrome Headless Shell from: {}", chromeDownloadUrl);
+                FileUtils.copyURLToFile(new URL(chromeDownloadUrl), new File("/tmp/chrome-headless-shell-linux64.zip"));
 
                 LOGGER.info("Downloading ChromeDriver from: {}", chromeDriverDownloadUrl);
                 FileUtils.copyURLToFile(new URL(chromeDriverDownloadUrl), new File("/tmp/chromedriver-linux64.zip"));
 
-                unzip("/tmp/chrome-linux64.zip", "/tmp");
+                unzip("/tmp/chrome-headless-shell-linux64.zip", "/tmp");
                 unzip("/tmp/chromedriver-linux64.zip", "/tmp");
 
                 createLibWrapperScript(CHROME_LIB_WRAPPER_SCRIPT, CHROME_WRAPPER_SCRIPT_CONTENT);
                 createLibWrapperScript(CHROME_WEBDRIVER_WRAPPER_SCRIPT, CHROME_WEBDRIVER_WRAPPER_SCRIPT_CONTENT);
 
-                CloudHubRpmExtractor.extractRpmsFromJar();
+                extractSoLibs();
 
                 System.setProperty("webdriver.chrome.driver", CHROME_WEBDRIVER_WRAPPER_SCRIPT);
 
-                logChromeVersion();
+                logVersion(CHROME_LIB_WRAPPER_SCRIPT, CHROME_PATH + "/chrome-headless-shell");
+                logVersion(CHROME_WEBDRIVER_WRAPPER_SCRIPT, CHROME_WEBDRIVER_PATH + "/chromedriver");
 
             } catch (Exception e) {
                 LOGGER.error("Error in Chrome setup", e);
@@ -119,6 +118,30 @@ public class CloudHubChromeConfigurer {
         }
     }
 
+    private static void extractSoLibs() throws IOException {
+        // Extract JAR resource to a temp file
+        File tempZip = File.createTempFile("chrome_dependencies", ".zip", new File("/tmp"));
+
+        try (InputStream zipStream = CloudHubChromeConfigurer.class.getResourceAsStream(CHROME_DEPENDENCY_RESOURCE_PATH);
+             OutputStream outStream = new FileOutputStream(tempZip)) {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = zipStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+        }
+
+        try (ZipFile zipFile = new ZipFile(tempZip)) {
+            ZipArchiveEntry entry;
+            for (Enumeration<ZipArchiveEntry> entries = zipFile.getEntries(); entries.hasMoreElements(); ) {
+                entry = entries.nextElement();
+                extractEntry(zipFile, entry, new File(CHROME_DEPENDENCY_LIBS_PATH));
+            }
+        }
+
+        tempZip.delete();
+    }
+
     private static void extractEntry(ZipFile zipFile, ZipArchiveEntry entry, File destDir) throws IOException {
         File outputFile = new File(destDir, entry.getName());
 
@@ -126,7 +149,16 @@ public class CloudHubChromeConfigurer {
             outputFile.mkdirs();
         } else {
             outputFile.getParentFile().mkdirs();
-            Files.copy(zipFile.getInputStream(entry), outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            // Handle symlinks
+            if (entry.isUnixSymlink()) {
+                String targetPath = zipFile.getUnixSymlink(entry); // Get symlink target
+                Path target = Paths.get(destDir.getAbsolutePath(), targetPath);
+                Files.createSymbolicLink(outputFile.toPath(), target);
+            } else {
+                Files.copy(zipFile.getInputStream(entry), outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                Files.setPosixFilePermissions(outputFile.toPath(), PosixFilePermissions.fromString("rwxr-xr-x"));
+            }
 
             // Set executable permissions if applicable
             if ((entry.getUnixMode() & 0b001000000) != 0) { // Check Unix executable bit
@@ -160,29 +192,54 @@ public class CloudHubChromeConfigurer {
             boolean isExecutable = Files.isExecutable(filePath);
             boolean isReadable = Files.isReadable(filePath);
             boolean isWritable = Files.isWritable(filePath);
+            boolean isSymbolicLink = Files.isSymbolicLink(filePath);
             long fileSize = Files.size(filePath);
 
-            LOGGER.info("{} | Executable: {} | Readable: {} | Writable: {} | Size: {} bytes",
-                    file.getAbsolutePath(), isExecutable, isReadable, isWritable, fileSize);
+            LOGGER.info("{} | Executable: {} | Readable: {} | Writable: {} | SymLink: {} | Size: {} bytes",
+                    file.getAbsolutePath(), isExecutable, isReadable, isWritable, isSymbolicLink, fileSize);
 
         } catch (Exception e) {
             LOGGER.info("Error reading properties for file: {}", file.getAbsolutePath());
         }
     }
 
-    public static void logChromeVersion() throws IOException, InterruptedException {
+    public static void testCommand(String[] command) throws IOException, InterruptedException {
+        LOGGER.info("Executing command: {}", String.join(" ", command));
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.redirectErrorStream(true); // Merge stdout and stderr
+        Process process = processBuilder.start();
+
+        // Capture the output
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                LOGGER.info(line);
+            }
+        }
+
+        int exitCode = process.waitFor();
+        if (exitCode == 0) {
+            LOGGER.info("command completed successfully.");
+        } else {
+            LOGGER.error("command failed with exit code: {}", exitCode);
+        }
+    }
+
+    public static void logVersion(String wrapperScript, String binary) throws IOException, InterruptedException {
         try {
-            Process process = new ProcessBuilder(CHROME_LIB_WRAPPER_SCRIPT, "--version").start();
+            Process process = new ProcessBuilder(wrapperScript, "--version").start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String version = reader.readLine();
-            LOGGER.info("Chrome version is: {}", version);
+            if (version != null) {
+                LOGGER.info("{} version is: {}", wrapperScript, version);
+            } else {
+                LOGGER.info("Dumping diagnostic logs for {}", binary);
+                logLddOutput(binary);
+                logFilesWithProperties(Paths.get(binary).getParent().toString());
+            }
         } catch (Exception e) {
-            LOGGER.error("Failed to get Chrome version", e.getMessage());
-            LOGGER.info("Dumping diagnostic logs");
-            logLddOutput();
-            logFilesWithProperties(CHROME_PATH);
-            logFilesWithProperties(CHROME_WEBDRIVER_PATH);
-            logFilesWithProperties(CHROME_DEPENDENCY_LIBS_PATH);
+            LOGGER.error("Failed to get version", e.getMessage());
         }
     }
 
@@ -205,9 +262,9 @@ public class CloudHubChromeConfigurer {
         }
     }
 
-    public static void logLddOutput() throws IOException, InterruptedException {
+    public static void logLddOutput(String lddCommand) throws IOException, InterruptedException {
         String[] command = {"/bin/bash", "-c",
-                "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + " && ldd " + CHROME_PATH + "/chrome"};
+                "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + " && ldd " + lddCommand};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.redirectErrorStream(true); // Merge stdout and stderr
