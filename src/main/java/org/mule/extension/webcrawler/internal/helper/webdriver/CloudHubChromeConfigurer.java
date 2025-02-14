@@ -30,10 +30,12 @@ public class CloudHubChromeConfigurer {
     public static final String CHROME_PATH = "/tmp/chrome-headless-shell-linux64";
     public static final String CHROME_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
             "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
+            "export FONTCONFIG_PATH=/tmp\n" +
             "exec " + CHROME_PATH + "/chrome \"$@\"\n";
     public static final String CHROME_WEBDRIVER_PATH = "/tmp/chromedriver-linux64";
     public static String CHROME_WEBDRIVER_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
             "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
+            "export FONTCONFIG_PATH=/tmp\n" +
             "exec " + CHROME_WEBDRIVER_PATH + "/chromedriver \"$@\"\n";
     public static final String CHROME_LIB_WRAPPER_SCRIPT = "/tmp/chrome-linux64/chrome-lib-wrapper";
     public static final String CHROME_WEBDRIVER_WRAPPER_SCRIPT = "/tmp/chrome-linux64/chrome-webdriver-wrapper";
