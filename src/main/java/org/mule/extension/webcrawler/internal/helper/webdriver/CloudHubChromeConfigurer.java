@@ -23,20 +23,20 @@ public class CloudHubChromeConfigurer {
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
 
     public static final String LATEST_MILESTONE_VERSION_URL =
-            "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json";
+        "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json";
     public static final String CHROME_CDP_VERSION = "133";
     public static final String CHROME_DEPENDENCY_RESOURCE_PATH = "/cloudhub-chrome-dependencies.zip";
     public static final String CHROME_DEPENDENCY_LIBS_PATH = "/tmp/chrome-deps-linux64";
     public static final String CHROME_PATH = "/tmp/chrome-headless-shell-linux64";
     public static final String CHROME_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
-            "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
-            "export FONTCONFIG_PATH=/tmp\n" +
-            "exec " + CHROME_PATH + "/chrome-headless-shell \"$@\"\n";
+        "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
+        "export FONTCONFIG_PATH=/tmp\n" +
+        "exec " + CHROME_PATH + "/chrome-headless-shell \"$@\"\n";
     public static final String CHROME_WEBDRIVER_PATH = "/tmp/chromedriver-linux64";
     public static String CHROME_WEBDRIVER_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
-            "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
-            "export FONTCONFIG_PATH=/tmp\n" +
-            "exec " + CHROME_WEBDRIVER_PATH + "/chromedriver \"$@\"\n";
+        "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
+        "export FONTCONFIG_PATH=/tmp\n" +
+        "exec " + CHROME_WEBDRIVER_PATH + "/chromedriver \"$@\"\n";
     public static final String CHROME_LIB_WRAPPER_SCRIPT = "/tmp/chrome-linux64/chrome-lib-wrapper";
     public static final String CHROME_WEBDRIVER_WRAPPER_SCRIPT = "/tmp/chrome-linux64/chrome-webdriver-wrapper";
 
@@ -52,9 +52,9 @@ public class CloudHubChromeConfigurer {
                 JSONObject jsonResponse = new JSONObject(getChromeMilestoneVersionJsonAsString());
                 String chromeVersion = jsonResponse.getJSONObject("milestones").getJSONObject(CHROME_CDP_VERSION).getString("version");
                 String chromeDownloadUrl =
-                        String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chrome-headless-shell-linux64.zip", chromeVersion);
+                    String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chrome-headless-shell-linux64.zip", chromeVersion);
                 String chromeDriverDownloadUrl =
-                        String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chromedriver-linux64.zip", chromeVersion);
+                    String.format("https://storage.googleapis.com/chrome-for-testing-public/%s/linux64/chromedriver-linux64.zip", chromeVersion);
 
                 LOGGER.info("Downloading Chrome Headless Shell from: {}", chromeDownloadUrl);
                 FileUtils.copyURLToFile(new URL(chromeDownloadUrl), new File("/tmp/chrome-headless-shell-linux64.zip"));
@@ -125,7 +125,7 @@ public class CloudHubChromeConfigurer {
         File tempZip = File.createTempFile("chrome_dependencies", ".zip", new File("/tmp"));
 
         try (InputStream zipStream = CloudHubChromeConfigurer.class.getResourceAsStream(CHROME_DEPENDENCY_RESOURCE_PATH);
-             OutputStream outStream = new FileOutputStream(tempZip)) {
+            OutputStream outStream = new FileOutputStream(tempZip)) {
             byte[] buffer = new byte[8192];
             int bytesRead;
             while ((bytesRead = zipStream.read(buffer)) != -1) {
@@ -198,7 +198,7 @@ public class CloudHubChromeConfigurer {
             long fileSize = Files.size(filePath);
 
             LOGGER.info("{} | Executable: {} | Readable: {} | Writable: {} | SymLink: {} | Size: {} bytes",
-                    file.getAbsolutePath(), isExecutable, isReadable, isWritable, isSymbolicLink, fileSize);
+                        file.getAbsolutePath(), isExecutable, isReadable, isWritable, isSymbolicLink, fileSize);
 
         } catch (Exception e) {
             LOGGER.info("Error reading properties for file: {}", file.getAbsolutePath());
@@ -266,7 +266,7 @@ public class CloudHubChromeConfigurer {
 
     public static void logLddOutput(String lddCommand) throws IOException, InterruptedException {
         String[] command = {"/bin/bash", "-c",
-                "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + " && ldd " + lddCommand};
+            "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + " && ldd " + lddCommand};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.redirectErrorStream(true); // Merge stdout and stderr
@@ -290,4 +290,3 @@ public class CloudHubChromeConfigurer {
         }
     }
 }
-
