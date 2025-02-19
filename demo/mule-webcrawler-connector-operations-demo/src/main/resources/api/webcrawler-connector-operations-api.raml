@@ -8,6 +8,21 @@ baseUriParameters:
   port:
     default: "8081"
 
+types:
+  Node:
+    type: object
+    properties:
+      url:
+        type: string
+        description: The URL of the resource
+        required: true
+      children:
+        type: array
+        description: A list of child objects, each with its own URL and potential children
+        items:
+          type: Node
+    additionalProperties: false
+    
 /page:
   get:
     queryParameters:
@@ -38,7 +53,10 @@ baseUriParameters:
         type: integer
     responses:
       200:
-        description: Sitemap generated successfully
+        description: Node generated successfully
+        body:
+          application/json:
+            type: Node
 
 /metatag:
   get:
