@@ -140,11 +140,25 @@ public class MuleCrawler extends Crawler {
         // get all links on the current page
         Set<String> links = new HashSet<>();
 
-        HashMap<String, Object> pageInsights = PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS);
-        HashMap<String, Object> linksMap = (HashMap<String, Object>) pageInsights.get("links");
+        if(restrictToPath) {
 
-        if (linksMap != null) {
-          links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
+          Map<String, Object> pageInsights = (Map<String, Object>)
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS);
+          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+          if (linksMap != null) {
+            links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
+          }
+        } else {
+
+          Map<String, Object> pageInsights = (Map<String, Object>)
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL);
+          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+          if (linksMap != null) {
+            links.addAll((Set<String>) linksMap.get("internal"));
+            links.addAll((Set<String>) linksMap.get("external"));
+          }
         }
 
         if (links != null) {
@@ -173,14 +187,23 @@ public class MuleCrawler extends Crawler {
 
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
-    return map(rootURL, 0);
+    return map(rootURL, 0, rootReferrer);
   }
 
-  private MapNode map(String url, int currentDepth) {
+  private MapNode map(String url, int currentDepth, String referrer) {
 
     // return if maxDepth reached
     if (currentDepth > maxDepth) {
       return null;
+    }
+
+    if (restrictToPath) {
+      // Restrict crawling to URLs under the original URL only
+      if (!url.startsWith(rootURL)) {
+
+        LOGGER.debug("SKIPPING due to strict crawling: " + url);
+        return null;
+      }
     }
 
     // Initialize the set for the current depth if not already present
@@ -203,7 +226,13 @@ public class MuleCrawler extends Crawler {
       MapNode node = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(url, userAgent, rootReferrer);
+      Document document = null;
+      if (dynamicContent) {
+        document = PageHelper.getDocumentDynamic(url, userAgent, false);
+      }
+      else {
+        document = PageHelper.getDocument(url, userAgent, referrer);
+      }
 
       node = new MapNode(url);
       LOGGER.debug("Found url: " + url);
@@ -235,13 +264,16 @@ public class MuleCrawler extends Crawler {
         }
 
         if (links != null) {
+
+          LOGGER.debug(String.format("Found %d links on page: %s", links.size(), url));
+
           for (String childURL : links) {
 
             MapNode childNode;
 
             // Recursively crawl the link and add as a child
             childNode = currentDepth < maxDepth ?
-                map(childURL, currentDepth +1) :
+                map(childURL, currentDepth +1, url) :
                 new MapNode(childURL);
 
             if (childNode != null) {
