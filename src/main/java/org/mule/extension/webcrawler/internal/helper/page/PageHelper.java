@@ -139,19 +139,21 @@ public class PageHelper {
           insight == Constants.PageInsightType.EXTERNALLINKS) {
 
         // Select all anchor tags with href attributes
-        Elements links = document.select("a[href]");
+        Elements linkElements = document.select("a[href], iframe[src]");
 
-        for (Element link : links) {
-          String href = link.absUrl("href"); // get absolute URLs
+        for (Element linkElement : linkElements) {
+          String link = !(linkElement.absUrl("href").isEmpty()) ?
+              linkElement.absUrl("href") :
+              linkElement.absUrl("src"); // get absolute URLs
 
-          if(URLUtils.isDocumentUrl(href)) {
-            documentLinks.add(href);
-          } else if (URLUtils.isExternalLink(baseUrl, href)) {
-            externalLinks.add(href);
-          } else if (URLUtils.isReferenceLink(baseUrl, href)) {
-            referenceLinks.add(href);
+          if(URLUtils.isDocumentUrl(link)) {
+            documentLinks.add(link);
+          } else if (URLUtils.isExternalLink(baseUrl, link)) {
+            externalLinks.add(link);
+          } else if (URLUtils.isReferenceLink(baseUrl, link)) {
+            referenceLinks.add(link);
           } else {
-            internalLinks.add(href);
+            internalLinks.add(link);
           }
         }
 
