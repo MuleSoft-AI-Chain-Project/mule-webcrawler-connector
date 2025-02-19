@@ -129,6 +129,8 @@ public class CrawlOperations {
       Crawler crawler = Crawler.builder()
           .userAgent(configuration.getRequestParameters().getUserAgent())
           .rootReferrer(configuration.getRequestParameters().getReferrer())
+          .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
+          .dynamicContent(configuration.getCrawlerSettingsParameters().isDynamicContent())
           .rootURL(url)
           .restrictToPath(targetPagesParameters.isRestrictToPath())
           .maxDepth(targetPagesParameters.getMaxDepth())
