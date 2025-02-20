@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.crawler;
 
+import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.runtime.extension.api.exception.ModuleException;
@@ -33,10 +34,12 @@ public abstract class Crawler {
   protected List<String> contentTags;
   protected boolean rawHtml;
   protected boolean getMetaTags;
+  protected RegexUrlsFilterLogic regexUrlsFilterLogic;
+  protected List<String> regexUrls;
 
   public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent,
                  int delayMillis, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
-                 String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags) {
+                 String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     this.userAgent = userAgent;
     this.rootReferrer = rootReferrer;
@@ -53,6 +56,8 @@ public abstract class Crawler {
     this.contentTags = contentTags;
     this.rawHtml = rawHtml;
     this.getMetaTags = getMetaTags;
+    this.regexUrlsFilterLogic = regexUrlsFilterLogic;
+    this.regexUrls = regexUrls;
   }
 
   public abstract CrawlNode crawl();
@@ -81,6 +86,8 @@ public abstract class Crawler {
     private List<String> contentTags;
     private boolean rawHtml = false;
     private boolean getMetaTags = false;
+    private RegexUrlsFilterLogic regexUrlsFilterLogic;
+    private List<String> regexUrls;
 
     public Crawler.Builder userAgent(String userAgent) {
       this.userAgent = userAgent;
@@ -157,6 +164,16 @@ public abstract class Crawler {
       return this;
     }
 
+    public Crawler.Builder regexUrlsFilterLogic(RegexUrlsFilterLogic regexUrlsFilterLogic) {
+      this.regexUrlsFilterLogic = regexUrlsFilterLogic;
+      return this;
+    }
+
+    public Crawler.Builder regexUrls(List<String> regexUrls) {
+      this.regexUrls = regexUrls;
+      return this;
+    }
+
     public Crawler build() {
 
       Crawler crawler;
@@ -165,7 +182,7 @@ public abstract class Crawler {
 
         crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis,
                                   downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
-                                  downloadPath, contentTags, rawHtml, getMetaTags);
+                                  downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
 
       } catch (ModuleException e) {
 

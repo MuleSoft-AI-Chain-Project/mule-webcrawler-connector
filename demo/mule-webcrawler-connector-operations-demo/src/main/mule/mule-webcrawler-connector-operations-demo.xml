@@ -135,7 +135,12 @@ output application/json
 		</ms-webcrawler:page-insights>
   </flow>
   <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="get:\sitemap:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration"></ms-webcrawler:crawl-links-as-sitemap>
+    <ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" regexUrlsFilterLogic="EXCLUDE">
+			<ms-webcrawler:regex-urls >
+				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
+				<ms-webcrawler:regex-url value="javascript:void(0);" />
+			</ms-webcrawler:regex-urls>
+		</ms-webcrawler:crawl-links-as-sitemap>
   </flow>
 	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\meta-tag:webcrawler-connector-operations-api-config">
 		<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[Page] Get meta tags" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration"></ms-webcrawler:page-meta-tags>
@@ -146,10 +151,14 @@ output application/json
   <flow name="get:\document:webcrawler-connector-operations-api-config" doc:id="780b240a-a4a9-410c-879f-173df7312650" >
 		<ms-webcrawler:page-download-document doc:name="[Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" config-ref="WebCrawl_Configuration" maxDocumentNumber="50"/>
 	</flow>
-	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search:application\json:webcrawler-connector-operations-api-config">
+	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search:webcrawler-connector-operations-api-config">
     <ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
   </flow>
-  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="post:\crawl:application\json:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" restrictToPath="true" url="#[attributes.queryParams.url]" getMetaTags="true"></ms-webcrawler:crawl-website>
+  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl:webcrawler-connector-operations-api-config">
+    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE">
+			<ms-webcrawler:regex-urls >
+				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
+			</ms-webcrawler:regex-urls>
+		</ms-webcrawler:crawl-website>
   </flow>
 </mule>

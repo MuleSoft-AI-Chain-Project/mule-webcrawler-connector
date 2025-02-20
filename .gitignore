@@ -55,3 +55,12 @@ generated-test-sources/
 
 .java-version
 
+
+# Added by Illuminated Cloud
+.localdev/
+/IlluminatedCloud/
+/out/
+node_modules/
+/.illuminatedCloud/
+**/tsconfig*.json
+**/*.tsbuildinfo

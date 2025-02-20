@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.webdriver.WebDriverManager;
@@ -23,10 +24,10 @@ public class MuleCrawler extends Crawler {
   public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
                      boolean dynamicContent, int delayMillis, boolean downloadImages, int maxImageNumber,
                      boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
-                     boolean rawHtml, boolean getMetaTags) {
+                     boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages, maxImageNumber,
-          downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags);
+          downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
   }
 
   @Override
@@ -143,7 +144,7 @@ public class MuleCrawler extends Crawler {
         if(restrictToPath) {
 
           Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS);
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS, regexUrlsFilterLogic, regexUrls);
           Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
 
           if (linksMap != null) {
@@ -152,12 +153,13 @@ public class MuleCrawler extends Crawler {
         } else {
 
           Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL);
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL, regexUrlsFilterLogic, regexUrls);
           Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
 
           if (linksMap != null) {
             links.addAll((Set<String>) linksMap.get("internal"));
             links.addAll((Set<String>) linksMap.get("external"));
+            links.addAll((Set<String>) linksMap.get("iframe"));
           }
         }
 
@@ -245,7 +247,7 @@ public class MuleCrawler extends Crawler {
         if(restrictToPath) {
 
           Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS);
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS, regexUrlsFilterLogic, regexUrls);
           Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
 
           if (linksMap != null) {
@@ -254,12 +256,13 @@ public class MuleCrawler extends Crawler {
         } else {
 
           Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL);
+              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL, regexUrlsFilterLogic, regexUrls);
           Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
 
           if (linksMap != null) {
             links.addAll((Set<String>) linksMap.get("internal"));
             links.addAll((Set<String>) linksMap.get("external"));
+            links.addAll((Set<String>) linksMap.get("iframe"));
           }
         }
 

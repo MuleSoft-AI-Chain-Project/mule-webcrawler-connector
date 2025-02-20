@@ -81,9 +81,7 @@ public class CrawlerTargetContentParameters {
     return getMetaTags;
   }
 
-  public void setGetMetaTags(boolean getMetaTags) {
-    this.getMetaTags = getMetaTags;
-  }
+  public void setGetMetaTags(boolean getMetaTags) { this.getMetaTags = getMetaTags; }
 
   public boolean isDownloadImages() {
     return downloadImages;
@@ -116,7 +114,6 @@ public class CrawlerTargetContentParameters {
   public void setMaxDocumentNumber(int maxDocumentNumber) {
     this.maxDocumentNumber = maxDocumentNumber;
   }
-
   @Override
   public String toString() {
     return "CrawlerTargetContentParameters{" +
