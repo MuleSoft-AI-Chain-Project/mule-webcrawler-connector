@@ -11,6 +11,7 @@
         "reference": { "type": "integer", "description": "Number of reference links" },
         "internal": { "type": "integer", "description": "Number of internal links" },
         "external": { "type": "integer", "description": "Number of external links" },
+        "iframe": { "type": "integer", "description": "Number of iframe links" },
         "images": { "type": "integer", "description": "Number of images" },
         "wordCount": { "type": "integer", "description": "Total word count" },
         "h1": { "type": "integer", "description": "Number of H1 headings" },
@@ -42,6 +43,11 @@
         "external": {
           "type": "array",
           "description": "List of external links",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "iframe": {
+          "type": "array",
+          "description": "List of iframe links",
           "items": { "type": "string", "format": "uri" }
         },
         "images": {

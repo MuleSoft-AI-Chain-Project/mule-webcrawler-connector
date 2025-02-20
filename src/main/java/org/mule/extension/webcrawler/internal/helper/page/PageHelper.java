@@ -26,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 public class PageHelper {
 
@@ -106,6 +107,16 @@ public class PageHelper {
       List<String> tags,
       Constants.PageInsightType insight) {
 
+    return getPageInsights(document, tags, insight, null, null);
+  }
+
+  public static HashMap<String, Object> getPageInsights(
+      Document document,
+      List<String> tags,
+      Constants.PageInsightType insight,
+      Constants.RegexUrlsFilterLogic regexUrlsFilterLogic,
+      List<String> regexUrls) {
+
     // Map to store page analysis
     HashMap<String, Object> pageInsightData = new HashMap<>();
 
@@ -118,6 +129,9 @@ public class PageHelper {
       Set<String> internalLinks = new HashSet<>();
       Set<String> externalLinks = new HashSet<>();
       Set<String> referenceLinks = new HashSet<>();
+
+      // iframe
+      Set<String> iframeLinks = new HashSet<>();
 
       // image-links set
       Set<String> imageLinks = new HashSet<>();
@@ -139,12 +153,13 @@ public class PageHelper {
           insight == Constants.PageInsightType.EXTERNALLINKS) {
 
         // Select all anchor tags with href attributes
-        Elements linkElements = document.select("a[href], iframe[src]");
+        Elements linkElements = document.select("a[href]");
 
         for (Element linkElement : linkElements) {
-          String link = !(linkElement.absUrl("href").isEmpty()) ?
-              linkElement.absUrl("href") :
-              linkElement.absUrl("src"); // get absolute URLs
+          String link = linkElement.absUrl("href"); // get absolute URLs
+
+          // Check if the URL matches any regex pattern in the regex list
+          if(skipUrl(link, regexUrlsFilterLogic, regexUrls))  continue;
 
           if(URLUtils.isDocumentUrl(link)) {
             documentLinks.add(link);
@@ -167,13 +182,36 @@ public class PageHelper {
           linksMap.put("reference", referenceLinks);
       }
 
+      // Handle iframe
+      if (insight == Constants.PageInsightType.ALL ||
+          insight == Constants.PageInsightType.IFRAMELINKS) {
 
+        // Select all iframe tags with src attributes
+        Elements linkElements = document.select("iframe[src]");
+        for (Element linkElement : linkElements) {
+
+          String iFrameUrl = linkElement.absUrl("src");
+
+          // Check if the URL matches any regex pattern in the regex list
+          if(skipUrl(iFrameUrl, regexUrlsFilterLogic, regexUrls))  continue;
+
+          iframeLinks.add(iFrameUrl);
+        }
+
+        linksMap.put("iframe", iframeLinks);
+      }
+
+      // Handle images
       if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.IMAGELINKS) {
-        // images
 
+        // Select all img tags with src attributes
         Elements images = document.select("img[src]");
         for (Element img : images) {
           String imageUrl = img.absUrl("src");
+
+          // Check if the URL matches any regex pattern in the regex list
+          if(skipUrl(imageUrl, regexUrlsFilterLogic, regexUrls))  continue;
+
           imageLinks.add(imageUrl);
         }
 
@@ -199,6 +237,7 @@ public class PageHelper {
         elementCounts.put("internal", internalLinks.size());
         elementCounts.put("external", externalLinks.size());
         elementCounts.put("reference", referenceLinks.size());
+        elementCounts.put("iframe", iframeLinks.size());
         elementCounts.put("images", imageLinks.size());
         elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags, false)));
 
@@ -215,6 +254,7 @@ public class PageHelper {
         insight == Constants.PageInsightType.INTERNALLINKS ||
         insight == Constants.PageInsightType.REFERENCELINKS ||
         insight == Constants.PageInsightType.EXTERNALLINKS ||
+        insight == Constants.PageInsightType.IFRAMELINKS ||
         insight == Constants.PageInsightType.IMAGELINKS)
 
       pageInsightData.put("links", linksMap);
@@ -228,6 +268,25 @@ public class PageHelper {
     }
 
     return pageInsightData;
+  }
+
+  /**
+   * Determines whether a given URL should be skipped based on the provided filter logic and regex patterns.
+   *
+   * @param url                  The URL to evaluate.
+   * @param regexUrlsFilterLogic The logic to apply for filtering URLs. It can either be INCLUDE or EXCLUDE.
+   * @param regexUrls            A list of regex patterns to match against the URL.
+   * @return {@code true} if the URL should be skipped according to the filter logic, {@code false} otherwise.
+   */
+  private static boolean skipUrl(String url, Constants.RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
+    if (regexUrlsFilterLogic != null && regexUrls != null && !regexUrls.isEmpty()) {
+      boolean matchesPattern = regexUrls.stream().anyMatch(pattern -> Pattern.matches(pattern, url));
+      if ((regexUrlsFilterLogic == Constants.RegexUrlsFilterLogic.INCLUDE && !matchesPattern) ||
+          (regexUrlsFilterLogic == Constants.RegexUrlsFilterLogic.EXCLUDE && matchesPattern)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static String getPageContent(Document document, List<String> tags, Boolean rawHtml) {

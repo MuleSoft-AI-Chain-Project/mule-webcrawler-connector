@@ -84,6 +84,8 @@ public class CrawlOperations {
           .maxImageNumber(targetContentParameters.getMaxImageNumber())
           .downloadDocuments(targetContentParameters.isDownloadDocuments())
           .maxDocumentNumber(targetContentParameters.getMaxDocumentNumber())
+          .regexUrlsFilterLogic(targetPagesParameters.getRegexUrlsFilterLogic())
+          .regexUrls(targetPagesParameters.getRegexUrls())
           .build();
 
       LOGGER.debug("Start website crawling");
@@ -134,6 +136,8 @@ public class CrawlOperations {
           .rootURL(url)
           .restrictToPath(targetPagesParameters.isRestrictToPath())
           .maxDepth(targetPagesParameters.getMaxDepth())
+          .regexUrlsFilterLogic(targetPagesParameters.getRegexUrlsFilterLogic())
+          .regexUrls(targetPagesParameters.getRegexUrls())
           .build();
 
       Crawler.MapNode root = crawler.map();
