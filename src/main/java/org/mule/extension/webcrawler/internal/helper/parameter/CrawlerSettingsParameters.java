@@ -1,6 +1,5 @@
 package org.mule.extension.webcrawler.internal.helper.parameter;
 
-import org.mule.extension.webcrawler.internal.helper.provider.UserAgentNameProvider;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
@@ -37,10 +36,18 @@ public class CrawlerSettingsParameters {
   @Alias("rawHtml")
   @DisplayName("RAW html")
   @Summary("If true extract raw html from pages and not parsed text content.")
-  @Placement(order = 2)
+  @Placement(order = 3)
   @Expression(ExpressionSupport.SUPPORTED)
   @Example("False")
   private boolean rawHtml;
+
+  @Parameter
+  @Alias("enforceRobotsTxt")
+  @DisplayName("Enforce robots.txt")
+  @Summary("If true, enforce checks against the robots.txt file.")
+  @Placement(order = 4)
+  @Optional(defaultValue = "false")
+  private boolean enforceRobotsTxt;
 
   public int getDelayMillis() {
     return delayMillis;
@@ -57,4 +64,8 @@ public class CrawlerSettingsParameters {
   public boolean isRawHtml() { return rawHtml;}
 
   public void setRawHtml(boolean rawHtml) { this.rawHtml = rawHtml; }
+
+  public boolean isEnforceRobotsTxt() { return enforceRobotsTxt; }
+
+  public void setEnforceRobotsTxt(boolean enforceRobotsTxt) { this.enforceRobotsTxt = enforceRobotsTxt; }
 }

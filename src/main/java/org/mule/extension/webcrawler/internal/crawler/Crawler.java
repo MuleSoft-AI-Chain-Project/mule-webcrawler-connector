@@ -26,6 +26,7 @@ public abstract class Crawler {
   protected boolean restrictToPath;
   protected boolean dynamicContent;
   protected int delayMillis;
+  protected boolean enforceRobotsTxt;
   protected boolean downloadImages;
   protected int maxImageNumber;
   protected boolean downloadDocuments;
@@ -38,7 +39,7 @@ public abstract class Crawler {
   protected List<String> regexUrls;
 
   public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent,
-                 int delayMillis, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
+                 int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
                  String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     this.userAgent = userAgent;
@@ -48,6 +49,7 @@ public abstract class Crawler {
     this.restrictToPath = restrictToPath;
     this.dynamicContent = dynamicContent;
     this.delayMillis = delayMillis;
+    this.enforceRobotsTxt = enforceRobotsTxt;
     this.downloadImages = downloadImages;
     this.maxImageNumber = maxImageNumber;
     this.downloadDocuments = downloadDocuments;
@@ -78,6 +80,7 @@ public abstract class Crawler {
     private boolean restrictToPath = false;
     private boolean dynamicContent = false;
     private int delayMillis;
+    private boolean enforceRobotsTxt;
     private boolean downloadImages;
     private int maxImageNumber;
     private boolean downloadDocuments;
@@ -121,6 +124,11 @@ public abstract class Crawler {
 
     public Crawler.Builder delayMillis(int delayMillis) {
       this.delayMillis = delayMillis;
+      return this;
+    }
+
+    public Crawler.Builder enforceRobotsTxt(boolean enforceRobotsTxt) {
+      this.enforceRobotsTxt = enforceRobotsTxt;
       return this;
     }
 
@@ -181,7 +189,7 @@ public abstract class Crawler {
       try {
 
         crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis,
-                                  downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
+                                  enforceRobotsTxt, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
                                   downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
 
       } catch (ModuleException e) {
