@@ -14,23 +14,25 @@ import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class PageHelper {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PageHelper.class);
+
+  private static final ConcurrentHashMap<String, String> robotsTxtCache = new ConcurrentHashMap<>();
 
   public static Document getDocument(String url, String userAgent, String referrer) throws IOException {
 
@@ -662,5 +664,85 @@ public class PageHelper {
     }
 
     return jsonObject;
+  }
+
+  public static boolean canCrawl(String url, String userAgent) {
+
+    String robotsTxtContent = getRobotsTxt(url);
+    if (robotsTxtContent == null) {
+      return true; // If robots.txt cannot be retrieved, assume crawling is allowed
+    }
+
+    String baseUrl;
+    try {
+      URL base = new URL(url);
+      baseUrl = base.getProtocol() + "://" + base.getHost();
+    } catch (MalformedURLException e) {
+      LOGGER.error("Invalid URL: " + url, e);
+      return false;
+    }
+
+    // Parse robots.txt content
+    String[] lines = robotsTxtContent.split("\n");
+    boolean userAgentMatched = false;
+    boolean isAllowed = true;
+
+    for (String line : lines) {
+      line = line.trim();
+      if (line.isEmpty() || line.startsWith("#")) {
+        continue; // Skip empty lines and comments
+      }
+
+      if (line.toLowerCase().startsWith("user-agent:")) {
+        String agent = line.substring(11).trim();
+        userAgentMatched = agent.equals("*") || agent.equalsIgnoreCase(userAgent);
+      } else if (userAgentMatched) {
+        if (line.toLowerCase().startsWith("disallow:")) {
+          String path = line.substring(9).trim();
+          if (path.isEmpty() || url.startsWith(baseUrl + path)) {
+            isAllowed = false;
+            break;
+          }
+        } else if (line.toLowerCase().startsWith("allow:")) {
+          String path = line.substring(6).trim();
+          if (url.startsWith(baseUrl + path)) {
+            isAllowed = true;
+            break;
+          }
+        }
+      }
+    }
+
+    return isAllowed;
+  }
+
+  public static String getRobotsTxt(String url) {
+    try {
+      URL baseUrl = new URL(url);
+      String baseUrlString = baseUrl.getProtocol() + "://" + baseUrl.getHost();
+
+      // Check if the robots.txt content is already cached
+      if (robotsTxtCache.containsKey(baseUrlString)) {
+        return robotsTxtCache.get(baseUrlString);
+      }
+
+      String robotsTxtUrl = baseUrlString + "/robots.txt";
+      Document document = Jsoup.connect(robotsTxtUrl).get();
+      String robotsTxtContent = Jsoup.connect(robotsTxtUrl)
+          .ignoreContentType(true) // Ensures it handles plain text
+          .execute()
+          .body();
+
+      LOGGER.debug("Retrieved robots.txt content:\n\n " + robotsTxtContent + "\n\n");
+
+      // Cache the robots.txt content
+      robotsTxtCache.put(baseUrlString, robotsTxtContent);
+
+      return robotsTxtContent;
+
+    } catch (IOException e) {
+      LOGGER.error("Error retrieving robots.txt from " + url, e);
+      return null;
+    }
   }
 }

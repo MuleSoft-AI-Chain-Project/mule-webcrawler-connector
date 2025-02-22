@@ -4,7 +4,7 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
   <http:listener-config doc:id="19f8ae78-f60b-406c-a412-dbeb9586a159" doc:name="HTTP Listener config" name="HTTP_Listener_config">
     <http:listener-connection host="0.0.0.0" port="${http.port}"></http:listener-connection>
   </http:listener-config>
-  <ms-webcrawler:config name="WebCrawl_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f" userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" dynamicContent="#[p('webcrawler.dynamicContentRetrieval')]" delayMillis="${webcrawler.delay}" rawHtml="#[p('webcrawler.rawHtml')]"/>
+  <ms-webcrawler:config name="WebCrawl_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f" userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" dynamicContent="#[p('webcrawler.dynamicContentRetrieval')]" delayMillis="${webcrawler.delay}" rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]"/>
   <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
 	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="567555e0-5621-4d8c-8322-d2a43b94d25d" name="webcrawler-connector-operations-api-config" api="api/webcrawler-connector-operations-api.raml"/>
 	<flow name="mule-webcrawler-connector-operations-demoFlow" doc:id="02bd6d6d-156a-47f9-8ce1-ecea4351f499" >
@@ -97,6 +97,21 @@ output application/json
                     </ee:variables>
                 </ee:transform>
             </on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="89013d06-831c-4a5e-966f-3a2a19ff1c71" type="MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR">
+				<ee:transform doc:name="Transform Message" doc:id="a547fa7d-9c90-4a8c-a939-9bb927017b83" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[403]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
         </error-handler>
 	</flow>
 	<flow name="mule-webcrawler-connector-operations-demoFlow1" doc:id="a618f282-a89c-4887-b74d-1247a7a4d96b" >

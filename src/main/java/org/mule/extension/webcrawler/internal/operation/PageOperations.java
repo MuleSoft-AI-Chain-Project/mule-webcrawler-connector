@@ -59,6 +59,14 @@ public class PageOperations {
 
       LOGGER.info("Get meta tags");
 
+      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+
+        throw new ModuleException(
+            String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
+            WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
+      }
+
       Document document;
 
       if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
@@ -114,6 +122,15 @@ public class PageOperations {
       JSONArray imagesJSONArray = new JSONArray();
 
       try {
+
+        if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+            !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+
+          throw new ModuleException(
+              String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
+              WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
+        }
+
         // url provided is a website url, so download all images from this document
         Document document;
 
@@ -174,6 +191,14 @@ public class PageOperations {
       @DisplayName("Download location") @Placement(order = 3) @Example("/users/mulesoft/downloads") String downloadPath) {
 
     try {
+
+      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+
+        throw new ModuleException(
+            String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
+            WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
+      }
 
       JSONArray documentsJSONArray = new JSONArray();
 
@@ -238,6 +263,14 @@ public class PageOperations {
 
       LOGGER.info("Analyze page");
 
+      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+
+        throw new ModuleException(
+            String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
+            WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
+      }
+
       Document document;
 
       if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
@@ -288,6 +321,14 @@ public class PageOperations {
     try {
 
       LOGGER.info("Get page content");
+
+      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+
+        throw new ModuleException(
+            String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
+            WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
+      }
 
       Map<String, String> contents = new HashMap<String, String>();
 

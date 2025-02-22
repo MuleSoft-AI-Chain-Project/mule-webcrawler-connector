@@ -12,7 +12,10 @@
 .mule/
 .sfdx/
 .tooling*/
+weave/
 /demo/*/src/test/
+/demo/**/*.bin
+/demo/**/application-types.xml
 
 # Maven
 target/

@@ -22,12 +22,13 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
   public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
-                     boolean dynamicContent, int delayMillis, boolean downloadImages, int maxImageNumber,
+                     boolean dynamicContent, int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber,
                      boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
                      boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, downloadImages, maxImageNumber,
-          downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
+    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, enforceRobotsTxt, downloadImages,
+          maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags,
+          regexUrlsFilterLogic, regexUrls);
   }
 
   @Override
@@ -42,6 +43,11 @@ public class MuleCrawler extends Crawler {
 
     // return if maxDepth reached
     if (currentDepth > maxDepth) {
+      return null;
+    }
+
+    if(enforceRobotsTxt && !PageHelper.canCrawl(url, userAgent)) {
+      LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
 
@@ -196,6 +202,11 @@ public class MuleCrawler extends Crawler {
 
     // return if maxDepth reached
     if (currentDepth > maxDepth) {
+      return null;
+    }
+
+    if(enforceRobotsTxt && !PageHelper.canCrawl(url, userAgent)) {
+      LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
 
