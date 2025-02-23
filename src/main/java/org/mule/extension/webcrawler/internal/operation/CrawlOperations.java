@@ -2,13 +2,16 @@ package org.mule.extension.webcrawler.internal.operation;
 
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
+import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetContentParameters;
 import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetPagesParameters;
+import org.mule.extension.webcrawler.internal.pagination.CrawlerPagingProvider;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
+import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
@@ -19,6 +22,8 @@ import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.exception.ModuleException;
+import org.mule.runtime.extension.api.runtime.operation.Result;
+import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +56,12 @@ public class CrawlOperations {
    * - some sites require cookies or sessions to be present
    */
   @MediaType(value = APPLICATION_JSON, strict = false)
-  @Alias("crawl-website")
-  @DisplayName("[Crawl] Website")
+  @Alias("crawl-website-full-scan")
+  @DisplayName("[Crawl] Website (Full Scan)")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/CrawlWebSite.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
-      crawlWebsite(
+      crawlWebsiteFullScan(
       @Config WebCrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Download location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
@@ -98,6 +103,32 @@ public class CrawlOperations {
             put("url", url);
           }}
       );
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+      throw new ModuleException(
+          String.format("Error while crawling website '%s'.", url),
+          WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+          e);
+    }
+  }
+
+  @MediaType(value = APPLICATION_JSON, strict = false)
+  @Alias("crawl-website-streaming")
+  @DisplayName("[Crawl] Website (Streaming)")
+  @Throws(WebCrawlerErrorTypeProvider.class)
+
+  public PagingProvider<WebCrawlerConnection, Result<CursorProvider, ResponseAttributes>>
+  crawlWebsiteFullScan(
+      @Config WebCrawlerConfiguration configuration,
+      @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {
+
+    try {
+
+      return new CrawlerPagingProvider();
 
     } catch (ModuleException me) {
       throw me;

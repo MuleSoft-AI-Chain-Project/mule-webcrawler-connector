@@ -169,11 +169,14 @@ output application/json
 	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search:webcrawler-connector-operations-api-config">
     <ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
   </flow>
-  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE">
+  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl-full-scan:webcrawler-connector-operations-api-config">
+    <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website (Full Scan)" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE">
 			<ms-webcrawler:regex-urls >
 				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 			</ms-webcrawler:regex-urls>
-		</ms-webcrawler:crawl-website>
+		</ms-webcrawler:crawl-website-full-scan>
   </flow>
+	<flow name="get:\crawl-streaming:webcrawler-connector-operations-api-config" doc:id="c07a5247-c0b2-4eb2-9dc4-df728b5d500f" >
+		<ms-webcrawler:crawl-website-streaming doc:name="[Crawl] Website (Streaming)" doc:id="04d41c2c-f054-41f0-b4b0-fa10154e0f85" config-ref="WebCrawl_Configuration" url="#[attributes.queryParams.url]" maxDepth="attributes.queryParams.depth"/>
+	</flow>
 </mule>
