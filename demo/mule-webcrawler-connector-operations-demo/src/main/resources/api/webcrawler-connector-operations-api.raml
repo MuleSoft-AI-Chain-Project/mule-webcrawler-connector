@@ -108,7 +108,7 @@ types:
       200:
         description: Search results retrieved successfully
 
-/crawl:
+/crawl-full-scan:
   get:
     queryParameters:
       url:
@@ -118,6 +118,18 @@ types:
         type: integer
       downloadLocation:
         type: string
+    responses:
+      200:
+        description: Website crawled successfully
+        
+/crawl-streaming:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      depth:
+        type: integer
     responses:
       200:
         description: Website crawled successfully
