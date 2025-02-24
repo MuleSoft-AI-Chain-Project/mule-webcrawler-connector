@@ -3,6 +3,7 @@ package org.mule.extension.webcrawler.internal.operation;
 import org.json.JSONArray;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
+import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
@@ -17,10 +18,8 @@ import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
-import org.mule.runtime.extension.api.annotation.param.Config;
-import org.mule.runtime.extension.api.annotation.param.MediaType;
+import org.mule.runtime.extension.api.annotation.param.*;
 import org.mule.runtime.extension.api.annotation.param.Optional;
-import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
@@ -53,6 +52,7 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
       @Config WebCrawlerConfiguration configuration,
+      @Connection WebCrawlerConnection connection,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
     try {
@@ -60,25 +60,16 @@ public class PageOperations {
       LOGGER.info("Get meta tags");
 
       if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
-          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+          !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
             String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document;
+      Document document = PageHelper.getDocument(connection, url);
 
-      if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
-
-        document = PageHelper.getDocument(
-            url,
-            configuration.getRequestParameters().getUserAgent(),
-            configuration.getRequestParameters().getReferrer());
-      } else {
-
-        document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent(), true);
-      }
+      LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
       return ResponseHelper.createResponse(
           PageHelper.getPageMetaTags(document).toString(),
@@ -110,6 +101,7 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
           @Config WebCrawlerConfiguration configuration,
+          @Connection WebCrawlerConnection connection,
           @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @Alias("maxImageNumber") @DisplayName("Max number of images")
               @Summary("Maximum number of images to download. Default 0 means no limit.")
@@ -124,26 +116,14 @@ public class PageOperations {
       try {
 
         if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
-            !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+            !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
           throw new ModuleException(
               String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
               WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
         }
 
-        // url provided is a website url, so download all images from this document
-        Document document;
-
-        if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
-
-          document = PageHelper.getDocument(
-              url,
-              configuration.getRequestParameters().getUserAgent(),
-              configuration.getRequestParameters().getReferrer());
-        } else {
-
-          document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent(), true);
-        }
+        Document document = PageHelper.getDocument(connection, url);
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
@@ -183,6 +163,7 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   downloadWebsiteDocuments(
       @Config WebCrawlerConfiguration configuration,
+      @Connection WebCrawlerConnection connection,
       @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
           @Summary("Maximum number of documents to download. Default 0 means no limit.")
@@ -193,7 +174,7 @@ public class PageOperations {
     try {
 
       if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
-          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+          !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
             String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
@@ -203,19 +184,7 @@ public class PageOperations {
       JSONArray documentsJSONArray = new JSONArray();
 
       try {
-        // url provided is a website url, so download all images from this document
-        Document document;
-
-        if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
-
-          document = PageHelper.getDocument(
-              url,
-              configuration.getRequestParameters().getUserAgent(),
-              configuration.getRequestParameters().getReferrer());
-        } else {
-
-          document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent(), true);
-        }
+        Document document = PageHelper.getDocument(connection, url);
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
 
@@ -256,6 +225,7 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
+          @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
@@ -264,25 +234,14 @@ public class PageOperations {
       LOGGER.info("Analyze page");
 
       if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
-          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+          !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
             String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document;
-
-      if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
-
-        document = PageHelper.getDocument(
-            url,
-            configuration.getRequestParameters().getUserAgent(),
-            configuration.getRequestParameters().getReferrer());
-      } else {
-
-        document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent(), true);
-      }
+      Document document = PageHelper.getDocument(connection, url);
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
@@ -315,6 +274,7 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
+          @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
@@ -323,7 +283,7 @@ public class PageOperations {
       LOGGER.info("Get page content");
 
       if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
-          !PageHelper.canCrawl(url, configuration.getRequestParameters().getUserAgent())) {
+          !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
             String.format("The URL '%s' is not allowed to be crawled based on robots.txt.", url),
@@ -332,18 +292,7 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document;
-
-      if(!configuration.getCrawlerSettingsParameters().isDynamicContent()) {
-
-        document = PageHelper.getDocument(
-            url,
-            configuration.getRequestParameters().getUserAgent(),
-            configuration.getRequestParameters().getReferrer());
-      } else {
-
-        document = PageHelper.getDocumentDynamic(url, configuration.getRequestParameters().getUserAgent(), true);
-      }
+      Document document = PageHelper.getDocument(connection, url);
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

@@ -24,19 +24,10 @@ public class CrawlerSettingsParameters {
   private int delayMillis;
 
   @Parameter
-  @Alias("dynamicContent")
-  @DisplayName("Dynamic content retrieval")
-  @Summary("If true use selenium driver to crawl dynamically generated content from the page.")
-  @Placement(order = 2)
-  @Expression(ExpressionSupport.SUPPORTED)
-  @Example("False")
-  private boolean dynamicContent;
-
-  @Parameter
   @Alias("rawHtml")
   @DisplayName("RAW html")
   @Summary("If true extract raw html from pages and not parsed text content.")
-  @Placement(order = 3)
+  @Placement(order = 2)
   @Expression(ExpressionSupport.SUPPORTED)
   @Example("False")
   private boolean rawHtml;
@@ -45,7 +36,7 @@ public class CrawlerSettingsParameters {
   @Alias("enforceRobotsTxt")
   @DisplayName("Enforce robots.txt")
   @Summary("If true, enforce checks against the robots.txt file.")
-  @Placement(order = 4)
+  @Placement(order = 3)
   @Optional(defaultValue = "false")
   private boolean enforceRobotsTxt;
 
@@ -56,10 +47,6 @@ public class CrawlerSettingsParameters {
   public void setDelayMillis(int delayMillis) {
     this.delayMillis = delayMillis;
   }
-
-  public boolean isDynamicContent() { return dynamicContent; }
-
-  public void setDynamicContent(boolean dynamicContent) { this.dynamicContent = dynamicContent; }
 
   public boolean isRawHtml() { return rawHtml;}
 
