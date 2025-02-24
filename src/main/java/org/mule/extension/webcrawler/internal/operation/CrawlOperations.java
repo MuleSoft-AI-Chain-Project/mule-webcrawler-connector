@@ -3,6 +3,7 @@ package org.mule.extension.webcrawler.internal.operation;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.connection.http.HttpConnection;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
@@ -16,6 +17,7 @@ import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
 import org.mule.runtime.extension.api.annotation.param.Config;
+import org.mule.runtime.extension.api.annotation.param.Connection;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
@@ -63,6 +65,7 @@ public class CrawlOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       crawlWebsiteFullScan(
       @Config WebCrawlerConfiguration configuration,
+      @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Download location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
@@ -74,10 +77,8 @@ public class CrawlOperations {
       LOGGER.debug("\n\n" + targetContentParameters.toString() + "\n");
 
       Crawler crawler = Crawler.builder()
-          .userAgent(configuration.getRequestParameters().getUserAgent())
-          .rootReferrer(configuration.getRequestParameters().getReferrer())
+          .connection(connection)
           .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
-          .dynamicContent(configuration.getCrawlerSettingsParameters().isDynamicContent())
           .rawHtml(configuration.getCrawlerSettingsParameters().isRawHtml())
           .rootURL(url)
           .downloadPath(downloadPath)
@@ -152,6 +153,7 @@ public class CrawlOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   getSiteMap(
       @Config WebCrawlerConfiguration configuration,
+      @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {
 
@@ -160,10 +162,8 @@ public class CrawlOperations {
       LOGGER.info("Generate sitemap");
 
       Crawler crawler = Crawler.builder()
-          .userAgent(configuration.getRequestParameters().getUserAgent())
-          .rootReferrer(configuration.getRequestParameters().getReferrer())
+          .connection(connection)
           .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
-          .dynamicContent(configuration.getCrawlerSettingsParameters().isDynamicContent())
           .rootURL(url)
           .restrictToPath(targetPagesParameters.isRestrictToPath())
           .maxDepth(targetPagesParameters.getMaxDepth())

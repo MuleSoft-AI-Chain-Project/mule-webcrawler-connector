@@ -2,18 +2,16 @@ package org.mule.extension.webcrawler.internal.helper.page;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
-import org.mule.extension.webcrawler.internal.helper.webdriver.WebDriverManager;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.mule.runtime.extension.api.exception.ModuleException;
-import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 public class PageHelper {
@@ -34,40 +33,26 @@ public class PageHelper {
 
   private static final ConcurrentHashMap<String, String> robotsTxtCache = new ConcurrentHashMap<>();
 
-  public static Document getDocument(String url, String userAgent, String referrer) throws IOException {
+  public static Document getDocument(WebCrawlerConnection connection, String url) throws IOException {
 
-    LOGGER.debug(String.format("Retrieving JSoup Document for url %s with user agent %s and referrer %s", url, userAgent, referrer));
-    Connection connection = Jsoup.connect(url);
-    if(!userAgent.isEmpty()) connection.userAgent(userAgent); //.userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
-    if(!referrer.isEmpty()) connection.referrer(referrer); //.referrer("http://www.google.com")  // to prevent "HTTP error fetching URL. Status=403" error
-    Document document = connection.get();
-    return document;
+    LOGGER.debug(String.format("Retrieving JSoup Document for url %s", url));
+    try (InputStream pageSourceInputStream = connection.getPageSource(url).get()) { // Blocks until complete
+      String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
+      return Jsoup.parse(pageSource, url);
+    } catch (InterruptedException | ExecutionException e) {
+      throw new IOException("Error fetching page source", e);
+    }
   }
 
-  public static Document getDocumentDynamic(String url, String userAgent, Boolean quitDriver) throws Exception {
+  public static Document getDocument(WebCrawlerConnection connection, String url, String referrer) throws IOException {
 
-    Document document = null;
-    WebDriver driver = WebDriverManager.getDriver(userAgent);
-
-    try {
-
-      // Load the dynamic page
-      driver.get(url);
-      // Retrieve the page source and parse with Jsoup
-      String pageSource = driver.getPageSource();
-      document = Jsoup.parse(pageSource, url);
+    LOGGER.debug(String.format("Retrieving JSoup Document for url %s and referer %s", url, referrer));
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer).get()) { // Blocks until complete
+      String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
+      return Jsoup.parse(pageSource, url);
+    } catch (InterruptedException | ExecutionException e) {
+      throw new IOException("Error fetching page source", e);
     }
-    catch (Exception e) {
-      LOGGER.error("Error in loading dynamic content: " + e.toString());
-      throw e;
-    }
-    finally {
-      if (quitDriver) {
-        WebDriverManager.quitDriver();
-      }
-    }
-
-    return document;
   }
 
   public static JSONArray getPageMetaTags(Document document) {
@@ -740,8 +725,9 @@ public class PageHelper {
 
       return robotsTxtContent;
 
-    } catch (IOException e) {
-      LOGGER.error("Error retrieving robots.txt from " + url, e);
+    } catch (Exception e) {
+
+      LOGGER.debug("Error retrieving robots.txt from " + url, e);
       return null;
     }
   }

@@ -29,6 +29,10 @@ types:
       url:
         type: string
         required: true
+      connection:
+        type: string
+        default: http
+        required: false
     responses:
       200:
         description: Page content retrieved successfully
@@ -39,6 +43,10 @@ types:
       url:
         type: string
         required: true
+      connection:
+        type: string
+        default: http
+        required: false
     responses:
       200:
         description: Page insights retrieved successfully
@@ -49,6 +57,10 @@ types:
       url:
         type: string
         required: true
+      connection:
+        type: string
+        default: http
+        required: false
       depth:
         type: integer
     responses:
@@ -64,6 +76,10 @@ types:
       url:
         type: string
         required: true
+      connection:
+        type: string
+        default: http
+        required: false
     responses:
       200:
         description: Meta tags retrieved successfully
@@ -77,6 +93,10 @@ types:
       downloadLocation:
         type: string
         required: true
+      connection:
+        type: string
+        default: http
+        required: false
     responses:
       200:
         description: Images downloaded successfully
@@ -90,9 +110,48 @@ types:
       downloadLocation:
         type: string
         required: true
+      connection:
+        type: string
+        default: http
+        required: false
     responses:
       200:
         description: Documents downloaded successfully
+
+/crawl-full-scan:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      depth:
+        type: integer
+      downloadLocation:
+        type: string
+      connection:
+        type: string
+        default: http
+        required: false
+    responses:
+      200:
+        description: Website crawled successfully
+        
+/crawl-streaming:
+  get:
+    queryParameters:
+      url:
+        type: string
+        required: true
+      depth:
+        type: integer
+      connection:
+        type: string
+        default: http
+        required: false
+    responses:
+      200:
+        description: Website crawled successfully
+        
 
 /search:
   get:
@@ -107,29 +166,3 @@ types:
     responses:
       200:
         description: Search results retrieved successfully
-
-/crawl-full-scan:
-  get:
-    queryParameters:
-      url:
-        type: string
-        required: true
-      depth:
-        type: integer
-      downloadLocation:
-        type: string
-    responses:
-      200:
-        description: Website crawled successfully
-        
-/crawl-streaming:
-  get:
-    queryParameters:
-      url:
-        type: string
-        required: true
-      depth:
-        type: integer
-    responses:
-      200:
-        description: Website crawled successfully

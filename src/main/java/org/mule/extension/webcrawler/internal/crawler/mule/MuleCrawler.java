@@ -3,11 +3,11 @@ package org.mule.extension.webcrawler.internal.crawler.mule;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
+import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
-import org.mule.extension.webcrawler.internal.helper.webdriver.WebDriverManager;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +21,12 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_IMAGES_FOLDER = "images/";
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
-  public MuleCrawler(String userAgent, String referrer, String originalUrl, int maxDepth, boolean restrictToPath,
-                     boolean dynamicContent, int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber,
+  public MuleCrawler(WebCrawlerConnection connection, String originalUrl, int maxDepth, boolean restrictToPath,
+                     int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber,
                      boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
                      boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    super(userAgent, referrer, originalUrl, maxDepth, restrictToPath, dynamicContent, delayMillis, enforceRobotsTxt, downloadImages,
+    super(connection, originalUrl, maxDepth, restrictToPath, delayMillis, enforceRobotsTxt, downloadImages,
           maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags,
           regexUrlsFilterLogic, regexUrls);
   }
@@ -36,7 +36,7 @@ public class MuleCrawler extends Crawler {
 
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
-    return crawl(rootURL, 0, rootReferrer);
+    return crawl(rootURL, 0, connection.getReferrer());
   }
 
   private CrawlNode crawl(String url, int currentDepth, String referrer) {
@@ -46,7 +46,7 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if(enforceRobotsTxt && !PageHelper.canCrawl(url, userAgent)) {
+    if(enforceRobotsTxt && !PageHelper.canCrawl(url, connection.getUserAgent())) {
       LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
@@ -80,13 +80,7 @@ public class MuleCrawler extends Crawler {
       CrawlNode crawlNode = null;
 
       // get page as a html document
-      Document document = null;
-      if (dynamicContent) {
-        document = PageHelper.getDocumentDynamic(url, userAgent, false);
-      }
-      else {
-        document = PageHelper.getDocument(url, userAgent, referrer);
-      }
+      Document document = PageHelper.getDocument(connection, url, referrer);
 
       // check if url contents have been downloaded before ie applied globally (at all
       // depths). Note, we don't want to do this globally for CrawlType.LINK because
@@ -186,7 +180,6 @@ public class MuleCrawler extends Crawler {
     } catch (Exception e) {
       LOGGER.error(e.toString());
     }
-    WebDriverManager.quitDriver();
     return null;
   }
 
@@ -195,7 +188,7 @@ public class MuleCrawler extends Crawler {
 
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
-    return map(rootURL, 0, rootReferrer);
+    return map(rootURL, 0, connection.getReferrer());
   }
 
   private MapNode map(String url, int currentDepth, String referrer) {
@@ -205,7 +198,7 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if(enforceRobotsTxt && !PageHelper.canCrawl(url, userAgent)) {
+    if(enforceRobotsTxt && !PageHelper.canCrawl(url, connection.getUserAgent())) {
       LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
@@ -239,13 +232,7 @@ public class MuleCrawler extends Crawler {
       MapNode node = null;
 
       // get page as a html document
-      Document document = null;
-      if (dynamicContent) {
-        document = PageHelper.getDocumentDynamic(url, userAgent, false);
-      }
-      else {
-        document = PageHelper.getDocument(url, userAgent, referrer);
-      }
+      Document document = PageHelper.getDocument(connection, url, referrer);
 
       node = new MapNode(url);
       LOGGER.debug("Found url: " + url);

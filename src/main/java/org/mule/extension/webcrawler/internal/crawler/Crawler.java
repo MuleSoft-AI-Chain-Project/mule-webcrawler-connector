@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.crawler;
 
+import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
@@ -19,12 +20,10 @@ public abstract class Crawler {
   protected Set<String> visitedLinksGlobal;
   protected Map<Integer, Set<String>> visitedLinksByDepth;
 
-  protected String userAgent;
-  protected String rootReferrer;
+  protected WebCrawlerConnection connection;
   protected String rootURL;
   protected int maxDepth;
   protected boolean restrictToPath;
-  protected boolean dynamicContent;
   protected int delayMillis;
   protected boolean enforceRobotsTxt;
   protected boolean downloadImages;
@@ -38,16 +37,15 @@ public abstract class Crawler {
   protected RegexUrlsFilterLogic regexUrlsFilterLogic;
   protected List<String> regexUrls;
 
-  public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent,
-                 int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
-                 String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
+  public Crawler(WebCrawlerConnection connection, String rootURL, int maxDepth, boolean restrictToPath, int delayMillis,
+                 boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber, boolean downloadDocuments,
+                 int maxDocumentNumber, String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags,
+                 RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    this.userAgent = userAgent;
-    this.rootReferrer = rootReferrer;
+    this.connection = connection;
     this.rootURL = rootURL;
     this.maxDepth = maxDepth;
     this.restrictToPath = restrictToPath;
-    this.dynamicContent = dynamicContent;
     this.delayMillis = delayMillis;
     this.enforceRobotsTxt = enforceRobotsTxt;
     this.downloadImages = downloadImages;
@@ -73,12 +71,10 @@ public abstract class Crawler {
 
   public static class Builder {
 
-    private String userAgent;
-    private String rootReferrer;
+    private WebCrawlerConnection connection;
     private String rootURL;
     private int maxDepth;
     private boolean restrictToPath = false;
-    private boolean dynamicContent = false;
     private int delayMillis;
     private boolean enforceRobotsTxt;
     private boolean downloadImages;
@@ -92,15 +88,11 @@ public abstract class Crawler {
     private RegexUrlsFilterLogic regexUrlsFilterLogic;
     private List<String> regexUrls;
 
-    public Crawler.Builder userAgent(String userAgent) {
-      this.userAgent = userAgent;
+    public Crawler.Builder connection(WebCrawlerConnection connection) {
+      this.connection = connection;
       return this;
     }
 
-    public Crawler.Builder rootReferrer(String rootReferrer) {
-      this.rootReferrer = rootReferrer;
-      return this;
-    }
 
     public Crawler.Builder rootURL(String rootURL) {
       this.rootURL = rootURL;
@@ -114,11 +106,6 @@ public abstract class Crawler {
 
     public Crawler.Builder restrictToPath(boolean restrictToPath) {
       this.restrictToPath = restrictToPath;
-      return this;
-    }
-
-    public Crawler.Builder dynamicContent(boolean dynamicContent) {
-      this.dynamicContent = dynamicContent;
       return this;
     }
 
@@ -188,7 +175,7 @@ public abstract class Crawler {
 
       try {
 
-        crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis,
+        crawler = new MuleCrawler(connection, rootURL, maxDepth, restrictToPath, delayMillis,
                                   enforceRobotsTxt, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
                                   downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
 
