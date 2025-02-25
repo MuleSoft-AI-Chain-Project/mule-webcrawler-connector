@@ -1,11 +1,13 @@
 package org.mule.extension.webcrawler.internal.crawler;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.runtime.extension.api.exception.ModuleException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,22 +198,27 @@ public abstract class Crawler {
   public static class SiteNode {
 
     private String url;
+    @JsonIgnore
     private int currentDepth;
+    @JsonIgnore
+    private String referrer;
     private String filename;
     private List<SiteNode> children;
 
-    public SiteNode(String url, int currentDepth) {
+    public SiteNode(String url, int currentDepth, String referrer) {
 
       this.url = url;
       this.currentDepth = currentDepth;
+      this.referrer = referrer;
       this.children = new ArrayList<>();
     }
 
-    public SiteNode(String url, int currentDepth, String filename) {
+    public SiteNode(String url, int currentDepth, String referrer, String filename) {
 
       this.url = url;
       this.currentDepth = currentDepth;
       this.filename = filename;
+      this.referrer = referrer;
       this.children = new ArrayList<>();
     }
 
@@ -221,6 +228,10 @@ public abstract class Crawler {
 
     public int getCurrentDepth() {
       return currentDepth;
+    }
+
+    public String getReferrer() {
+      return referrer;
     }
 
     public String getFilename() {
