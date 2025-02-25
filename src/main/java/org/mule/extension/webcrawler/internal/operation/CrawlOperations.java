@@ -3,18 +3,19 @@ package org.mule.extension.webcrawler.internal.operation;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.connection.http.HttpConnection;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetContentParameters;
 import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetPagesParameters;
+import org.mule.extension.webcrawler.internal.metadata.CrawlWebSiteStreamingOutputTypeMetadataResolver;
 import org.mule.extension.webcrawler.internal.pagination.CrawlerPagingProvider;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
+import org.mule.runtime.extension.api.annotation.metadata.OutputResolver;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
 import org.mule.runtime.extension.api.annotation.param.Config;
 import org.mule.runtime.extension.api.annotation.param.Connection;
@@ -26,6 +27,7 @@ import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
+import org.mule.runtime.extension.api.runtime.streaming.StreamingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.APPLICATION_JSON;
 
 /**
@@ -61,7 +64,7 @@ public class CrawlOperations {
   @Alias("crawl-website-full-scan")
   @DisplayName("[Crawl] Website (Full Scan)")
   @Throws(WebCrawlerErrorTypeProvider.class)
-  @OutputJsonType(schema = "api/metadata/CrawlWebSite.json")
+  @OutputJsonType(schema = "api/metadata/CrawlWebSiteFullScan.json")
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       crawlWebsiteFullScan(
       @Config WebCrawlerConfiguration configuration,
@@ -96,7 +99,7 @@ public class CrawlOperations {
 
       LOGGER.debug("Start website crawling");
 
-      Crawler.CrawlNode rootNode = crawler.crawl();
+      Crawler.SiteNode rootNode = crawler.crawl();
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(rootNode),
@@ -116,20 +119,21 @@ public class CrawlOperations {
     }
   }
 
-  @MediaType(value = APPLICATION_JSON, strict = false)
+  @MediaType(value = ANY, strict = false)
   @Alias("crawl-website-streaming")
   @DisplayName("[Crawl] Website (Streaming)")
   @Throws(WebCrawlerErrorTypeProvider.class)
-
+  @OutputResolver(output = CrawlWebSiteStreamingOutputTypeMetadataResolver.class)
   public PagingProvider<WebCrawlerConnection, Result<CursorProvider, ResponseAttributes>>
-  crawlWebsiteFullScan(
+  crawlWebsiteStreaming(
       @Config WebCrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {
+      @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
+      StreamingHelper streamingHelper) {
 
     try {
 
-      return new CrawlerPagingProvider();
+      return new CrawlerPagingProvider(configuration, url, targetPagesParameters, streamingHelper);
 
     } catch (ModuleException me) {
       throw me;
@@ -171,7 +175,7 @@ public class CrawlOperations {
           .regexUrls(targetPagesParameters.getRegexUrls())
           .build();
 
-      Crawler.MapNode root = crawler.map();
+      Crawler.SiteNode root = crawler.map();
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(root),

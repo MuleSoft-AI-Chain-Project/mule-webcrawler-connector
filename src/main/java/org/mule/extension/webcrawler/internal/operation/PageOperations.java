@@ -75,6 +75,7 @@ public class PageOperations {
           PageHelper.getPageMetaTags(document).toString(),
           new HashMap<String, Object>() {{
             put("url", url);
+            put("title", document.title());
           }}
       );
 
@@ -113,6 +114,8 @@ public class PageOperations {
 
       JSONArray imagesJSONArray = new JSONArray();
 
+      Document document = null;
+
       try {
 
         if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
@@ -123,7 +126,7 @@ public class PageOperations {
               WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
         }
 
-        Document document = PageHelper.getDocument(connection, url);
+        document = PageHelper.getDocument(connection, url);
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
@@ -133,11 +136,15 @@ public class PageOperations {
         imagesJSONArray.put(PageHelper.downloadSingleImage(url, downloadPath));
       }
 
+      HashMap<String, Object> attributes = new HashMap<String, Object>() {{
+        put("url", url);
+      }};
+
+      if(document != null) attributes.put("title", document.title());
+
       return ResponseHelper.createResponse(
           imagesJSONArray.toString(),
-          new HashMap<String, Object>() {{
-            put("url", url);
-          }}
+          attributes
       );
 
     } catch (ModuleException me) {
@@ -183,8 +190,10 @@ public class PageOperations {
 
       JSONArray documentsJSONArray = new JSONArray();
 
+      Document document = null;
+
       try {
-        Document document = PageHelper.getDocument(connection, url);
+        document = PageHelper.getDocument(connection, url);
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
 
@@ -194,11 +203,15 @@ public class PageOperations {
         documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
       }
 
+      HashMap<String, Object> attributes = new HashMap<String, Object>() {{
+        put("url", url);
+      }};
+
+      if(document != null) attributes.put("title", document.title());
+
       return ResponseHelper.createResponse(
           documentsJSONArray.toString(),
-          new HashMap<String, Object>() {{
-            put("url", url);
-          }}
+          attributes
       );
 
     } catch (ModuleException me) {
@@ -249,6 +262,7 @@ public class PageOperations {
           ),
           new HashMap<String, Object>() {{
             put("url", url);
+            put("title", document.title());
           }}
       );
 
@@ -306,6 +320,7 @@ public class PageOperations {
           JSONUtils.convertToJSON(contents),
           new HashMap<String, Object>() {{
             put("url", url);
+            put("title", document.title());
           }}
       );
 

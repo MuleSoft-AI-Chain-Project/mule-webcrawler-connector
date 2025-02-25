@@ -51,7 +51,7 @@ public class PageHelper {
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       return Jsoup.parse(pageSource, url);
     } catch (InterruptedException | ExecutionException e) {
-      throw new IOException("Error fetching page source", e);
+      throw new IOException(String.format("Error fetching page source for %s", url), e);
     }
   }
 

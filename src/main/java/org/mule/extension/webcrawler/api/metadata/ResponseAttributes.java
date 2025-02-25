@@ -16,6 +16,7 @@ import static org.mule.runtime.extension.api.annotation.param.MediaType.APPLICAT
 public class ResponseAttributes  implements Serializable {
 
   private final String url;
+  private final String title;
 
   /**
    * Additional attributes not explicitly defined as fields in this class.
@@ -25,12 +26,15 @@ public class ResponseAttributes  implements Serializable {
   public ResponseAttributes(HashMap<String, Object> requestAttributes) {
 
     this.url = requestAttributes.containsKey("url") ? (String) requestAttributes.remove("url") : null;
+    this.title = requestAttributes.containsKey("title") ? (String) requestAttributes.remove("title") : null;
     this.otherAttributes = requestAttributes;
   }
 
   public String getUrl() {
     return url;
   }
+
+    public String getTitle() { return title; }
 
   /**
    * Gets additional attributes of the document.

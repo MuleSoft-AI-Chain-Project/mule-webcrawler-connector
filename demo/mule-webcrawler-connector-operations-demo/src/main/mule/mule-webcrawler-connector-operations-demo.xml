@@ -4,10 +4,10 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
   <http:listener-config doc:id="19f8ae78-f60b-406c-a412-dbeb9586a159" doc:name="HTTP Listener config" name="HTTP_Listener_config">
     <http:listener-connection host="0.0.0.0" port="${http.port}"></http:listener-connection>
   </http:listener-config>
-  <ms-webcrawler:config name="HTTP_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f"  delayMillis="${webcrawler.delay}" rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]">
+  <ms-webcrawler:config name="HTTP_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f"  rawHtml="true" enforceRobotsTxt="true">
 		<ms-webcrawler:http-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
-	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" delayMillis="${webcrawler.delay}" rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]">
+	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" rawHtml="true" enforceRobotsTxt="true">
 		<ms-webcrawler:web-driver-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
   <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
@@ -251,6 +251,34 @@ output application/json
 			</otherwise>
 		</choice>
   </flow>
+	<flow name="get:\crawl-streaming:webcrawler-connector-operations-api-config" doc:id="7ec4d25e-1eb3-4b6c-9dbc-9743ddd36f01">
+		<choice doc:name="Choice" doc:id="4f93626b-f19d-458d-9043-a41126cda290">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
+				<ms-webcrawler:crawl-website-streaming doc:name="[WebDriver] [Crawl] Website (Streaming)" doc:id="aa390ac4-c168-47c7-9dfc-073e177d227b" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]">
+				</ms-webcrawler:crawl-website-streaming>
+				<ee:transform doc:name="Transform Message" doc:id="ed94bdba-19b2-48ee-ac1d-2eee0514c944" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ms-webcrawler:crawl-website-streaming doc:name="[HTTP] [Crawl] Website (Streaming)" doc:id="d8c8fd5e-4df2-4ee2-afbd-98b339597265" config-ref="HTTP_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" >
+				</ms-webcrawler:crawl-website-streaming>
+				<ee:transform doc:name="Transform Message" doc:id="4cfc11fa-0dcb-438d-9819-2f528960c2b2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search:webcrawler-connector-operations-api-config">
 		<ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
   </flow>
