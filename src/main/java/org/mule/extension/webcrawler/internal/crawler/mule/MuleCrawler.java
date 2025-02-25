@@ -9,7 +9,6 @@ import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilter
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.util.Utils;
-import org.mule.sdk.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -215,7 +214,7 @@ public class MuleCrawler extends Crawler {
       // get page as a html document
       Document document = PageHelper.getDocument(connection, url, referrer);
 
-      node = new SiteNode(url, currentDepth);
+      node = new SiteNode(url, currentDepth, referrer);
       LOGGER.debug("Found url: " + url);
 
       // If not at max depth, find and crawl the links on the page
@@ -235,7 +234,7 @@ public class MuleCrawler extends Crawler {
             // Recursively crawl the link and add as a child
             childNode = currentDepth < maxDepth ?
                 map(childURL, currentDepth +1, url) :
-                new SiteNode(childURL, currentDepth +1 );
+                new SiteNode(childURL, currentDepth +1, url);
 
             if (childNode != null) {
               node.addChild(childNode);
@@ -295,7 +294,7 @@ public class MuleCrawler extends Crawler {
         visitedLinksGlobal = new HashSet<>();
 
         if(rootURL != null) {
-          siteNodeQueue.add(new SiteNode(rootURL, 0));
+          siteNodeQueue.add(new SiteNode(rootURL, 0, connection.getReferrer()));
         } else {
           throw new IllegalArgumentException("Root URL cannot be null.");
         }
@@ -333,7 +332,7 @@ public class MuleCrawler extends Crawler {
           return null;
         }
 
-        document = PageHelper.getDocument(connection, currentNode.getUrl(), connection.getReferrer());
+        document = PageHelper.getDocument(connection, currentNode.getUrl(), currentNode.getReferrer());
 
         if(currentNode.getCurrentDepth() < maxDepth) {
 
@@ -345,7 +344,7 @@ public class MuleCrawler extends Crawler {
 
             for (String childURL : links) {
 
-              siteNodeQueue.add(new SiteNode(childURL, currentNode.getCurrentDepth() + 1));
+              siteNodeQueue.add(new SiteNode(childURL, currentNode.getCurrentDepth() + 1, currentNode.getUrl()));
             }
           }
         }
