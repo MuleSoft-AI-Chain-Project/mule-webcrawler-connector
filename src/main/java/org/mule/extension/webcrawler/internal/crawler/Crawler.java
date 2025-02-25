@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.crawler;
 
+import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
@@ -8,10 +9,7 @@ import org.mule.runtime.extension.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public abstract class Crawler {
 
@@ -60,9 +58,9 @@ public abstract class Crawler {
     this.regexUrls = regexUrls;
   }
 
-  public abstract CrawlNode crawl();
+  public abstract SiteNode crawl();
 
-  public abstract MapNode map();
+  public abstract SiteNode map();
 
   public static Crawler.Builder builder() {
 
@@ -195,13 +193,25 @@ public abstract class Crawler {
     }
   }
 
-  public static class MapNode {
+  public static class SiteNode {
 
     private String url;
-    private List<MapNode> children;
+    private int currentDepth;
+    private String filename;
+    private List<SiteNode> children;
 
-    public MapNode(String url) {
+    public SiteNode(String url, int currentDepth) {
+
       this.url = url;
+      this.currentDepth = currentDepth;
+      this.children = new ArrayList<>();
+    }
+
+    public SiteNode(String url, int currentDepth, String filename) {
+
+      this.url = url;
+      this.currentDepth = currentDepth;
+      this.filename = filename;
       this.children = new ArrayList<>();
     }
 
@@ -209,29 +219,35 @@ public abstract class Crawler {
       return url;
     }
 
-    public List<MapNode> getChildren() {
+    public int getCurrentDepth() {
+      return currentDepth;
+    }
+
+    public String getFilename() {
+      return filename;
+    }
+
+    public List<SiteNode> getChildren() {
       return children;
     }
 
-    public void addChild(MapNode child) {
+    public void addChild(SiteNode child) {
       this.children.add(child);
     }
   }
 
-  public static class CrawlNode extends MapNode {
+  public DocumentIterator documentIterator() { return new DocumentIterator(); }
 
-    private final String pageContentFile;
+  public class DocumentIterator implements Iterator<Document> {
 
-    public CrawlNode(String pageURL, String pageContentFile) {
-
-      super(pageURL);
-      this.pageContentFile = pageContentFile;
-
+    @Override
+    public boolean hasNext() {
+      throw new UnsupportedOperationException("This method should be overridden by subclasses");
     }
 
-    public String getPageContentFile() {
-      return pageContentFile;
+    @Override
+    public Document next() {
+      throw new UnsupportedOperationException("This method should be overridden by subclasses");
     }
   }
-
 }

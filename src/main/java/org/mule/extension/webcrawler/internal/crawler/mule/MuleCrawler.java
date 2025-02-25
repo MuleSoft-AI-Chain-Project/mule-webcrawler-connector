@@ -9,9 +9,11 @@ import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilter
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.util.Utils;
+import org.mule.sdk.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 
 public class MuleCrawler extends Crawler {
@@ -32,14 +34,14 @@ public class MuleCrawler extends Crawler {
   }
 
   @Override
-  public CrawlNode crawl() {
+  public SiteNode crawl() {
 
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
     return crawl(rootURL, 0, connection.getReferrer());
   }
 
-  private CrawlNode crawl(String url, int currentDepth, String referrer) {
+  private SiteNode crawl(String url, int currentDepth, String referrer) {
 
     // return if maxDepth reached
     if (currentDepth > maxDepth) {
@@ -77,7 +79,7 @@ public class MuleCrawler extends Crawler {
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(currentDepth).add(url);
 
-      CrawlNode crawlNode = null;
+      SiteNode siteNode = null;
 
       // get page as a html document
       Document document = PageHelper.getDocument(connection, url, referrer);
@@ -129,53 +131,32 @@ public class MuleCrawler extends Crawler {
         String filename = PageHelper.savePageContents(pageData, downloadPath, title);
 
         // Create a new pageNode for this URL
-        crawlNode = new CrawlNode(url, filename);
+        siteNode = new SiteNode(url, currentDepth, filename);
 
       } else {
         // content previously downloaded, so setting file name as such
-        crawlNode = new CrawlNode(url, "Duplicate.");
+        siteNode = new SiteNode(url, currentDepth, "Duplicate.");
       }
 
       // If not at max depth, find and crawl the links on the page
       if (currentDepth <= maxDepth) {
+
         // get all links on the current page
-        Set<String> links = new HashSet<>();
-
-        if(restrictToPath) {
-
-          Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS, regexUrlsFilterLogic, regexUrls);
-          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
-
-          if (linksMap != null) {
-            links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
-          }
-        } else {
-
-          Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL, regexUrlsFilterLogic, regexUrls);
-          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
-
-          if (linksMap != null) {
-            links.addAll((Set<String>) linksMap.get("internal"));
-            links.addAll((Set<String>) linksMap.get("external"));
-            links.addAll((Set<String>) linksMap.get("iframe"));
-          }
-        }
+        Set<String> links = getPageLinks(document);
 
         if (links != null) {
           for (String childURL : links) {
 
             // Recursively crawl the link and add as a child
-            CrawlNode childPageNode = crawl(childURL, currentDepth + 1, url);
-            if (childPageNode != null) {
+            SiteNode childSiteNode = crawl(childURL, currentDepth + 1, url);
+            if (childSiteNode != null) {
 
-              crawlNode.addChild(childPageNode);
+              siteNode.addChild(childSiteNode);
             }
           }
         }
       }
-      return crawlNode;
+      return siteNode;
 
     } catch (Exception e) {
       LOGGER.error(e.toString());
@@ -184,14 +165,14 @@ public class MuleCrawler extends Crawler {
   }
 
   @Override
-  public MapNode map() {
+  public SiteNode map() {
 
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
     return map(rootURL, 0, connection.getReferrer());
   }
 
-  private MapNode map(String url, int currentDepth, String referrer) {
+  private SiteNode map(String url, int currentDepth, String referrer) {
 
     // return if maxDepth reached
     if (currentDepth > maxDepth) {
@@ -229,40 +210,19 @@ public class MuleCrawler extends Crawler {
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(currentDepth).add(url);
 
-      MapNode node = null;
+      SiteNode node = null;
 
       // get page as a html document
       Document document = PageHelper.getDocument(connection, url, referrer);
 
-      node = new MapNode(url);
+      node = new SiteNode(url, currentDepth);
       LOGGER.debug("Found url: " + url);
 
       // If not at max depth, find and crawl the links on the page
       if (currentDepth <= maxDepth) {
+
         // get all links on the current page
-        Set<String> links = new HashSet<>();
-
-        if(restrictToPath) {
-
-          Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS, regexUrlsFilterLogic, regexUrls);
-          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
-
-          if (linksMap != null) {
-            links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
-          }
-        } else {
-
-          Map<String, Object> pageInsights = (Map<String, Object>)
-              PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL, regexUrlsFilterLogic, regexUrls);
-          Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
-
-          if (linksMap != null) {
-            links.addAll((Set<String>) linksMap.get("internal"));
-            links.addAll((Set<String>) linksMap.get("external"));
-            links.addAll((Set<String>) linksMap.get("iframe"));
-          }
-        }
+        Set<String> links = getPageLinks(document);
 
         if (links != null) {
 
@@ -270,12 +230,12 @@ public class MuleCrawler extends Crawler {
 
           for (String childURL : links) {
 
-            MapNode childNode;
+            SiteNode childNode;
 
             // Recursively crawl the link and add as a child
             childNode = currentDepth < maxDepth ?
                 map(childURL, currentDepth +1, url) :
-                new MapNode(childURL);
+                new SiteNode(childURL, currentDepth +1 );
 
             if (childNode != null) {
               node.addChild(childNode);
@@ -288,5 +248,113 @@ public class MuleCrawler extends Crawler {
       LOGGER.error(e.toString());
     }
     return null;
+  }
+
+  private Set<String> getPageLinks(Document document) {
+
+    // get all links on the current page
+    Set<String> links = new HashSet<>();
+
+    if(restrictToPath) {
+
+      Map<String, Object> pageInsights = (Map<String, Object>)
+          PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS, regexUrlsFilterLogic, regexUrls);
+      Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+      if (linksMap != null) {
+        links = (Set<String>) linksMap.get("internal"); // Cast to Set<String>
+      }
+    } else {
+
+      Map<String, Object> pageInsights = (Map<String, Object>)
+          PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL, regexUrlsFilterLogic, regexUrls);
+      Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+      if (linksMap != null) {
+        links.addAll((Set<String>) linksMap.get("internal"));
+        links.addAll((Set<String>) linksMap.get("external"));
+        links.addAll((Set<String>) linksMap.get("iframe"));
+      }
+    }
+    return links;
+  }
+
+  @Override
+  public DocumentIterator documentIterator() {
+    return new DocumentIterator();
+  }
+
+  public class DocumentIterator extends Crawler.DocumentIterator {
+
+    private final Queue<SiteNode> siteNodeQueue = new LinkedList<>();
+
+    public DocumentIterator () {
+
+        super();
+
+        visitedLinksGlobal = new HashSet<>();
+
+        if(rootURL != null) {
+          siteNodeQueue.add(new SiteNode(rootURL, 0));
+        } else {
+          throw new IllegalArgumentException("Root URL cannot be null.");
+        }
+    }
+
+    // Override hasNext to check if there are files left to process
+    @Override
+    public boolean hasNext() {
+
+      return !siteNodeQueue.isEmpty();
+    }
+
+    // Override next to return the next document
+    @Override
+    public Document next() {
+
+      if (!hasNext()) {
+        throw new NoSuchElementException("No more documents to iterate.");
+      }
+      SiteNode currentNode = siteNodeQueue.poll();
+      Document document = null;
+      try {
+
+
+        // Check if this URL has already been visited at this depth
+        if (visitedLinksGlobal.contains(currentNode.getUrl())) {
+
+          LOGGER.debug(String.format("SKIPPING %s since already visited.", rootURL));
+          return null;
+        }
+
+        if(enforceRobotsTxt && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
+
+          LOGGER.debug(String.format("SKIPPING %s due to robots.txt.", rootURL));
+          return null;
+        }
+
+        document = PageHelper.getDocument(connection, currentNode.getUrl(), connection.getReferrer());
+
+        if(currentNode.getCurrentDepth() < maxDepth) {
+
+          // get all links on the current page
+          Set<String> links = getPageLinks(document);
+          if (links != null && !links.isEmpty()) {
+
+            LOGGER.debug(String.format("Found %d links on page: %s", links.size(), currentNode.getUrl()));
+
+            for (String childURL : links) {
+
+              siteNodeQueue.add(new SiteNode(childURL, currentNode.getCurrentDepth() + 1));
+            }
+          }
+        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+      visitedLinksGlobal.add(currentNode.getUrl());
+      return document;
+    }
   }
 }

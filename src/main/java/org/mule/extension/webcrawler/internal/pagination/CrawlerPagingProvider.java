@@ -1,24 +1,120 @@
 package org.mule.extension.webcrawler.internal.pagination;
 
+import org.json.JSONObject;
+import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
+import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.crawler.Crawler;
+import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
+import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
+import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
+import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetPagesParameters;
+import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.streaming.CursorProvider;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
+import org.mule.runtime.extension.api.runtime.streaming.StreamingHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
+import static org.mule.extension.webcrawler.internal.helper.ResponseHelper.createPageResponse;
+import static org.mule.extension.webcrawler.internal.helper.page.PageHelper.getPageContent;
 
 public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnection, Result<CursorProvider, ResponseAttributes>> {
 
-  @Override
-  public List<Result<CursorProvider, ResponseAttributes>> getPage(WebCrawlerConnection webCrawlerConnection) {
-    return List.of();
+  private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerPagingProvider.class);
+
+  private Crawler crawler;
+  private Iterator<Document> documentIterator;
+  private WebCrawlerConfiguration configuration;
+  private String url;
+  private CrawlerTargetPagesParameters targetPagesParameters;
+  private StreamingHelper streamingHelper;
+
+  public CrawlerPagingProvider(WebCrawlerConfiguration configuration, String url, CrawlerTargetPagesParameters targetPagesParameters,
+                               StreamingHelper streamingHelper) {
+
+    this.configuration = configuration;
+    this.url = url;
+    this.targetPagesParameters = targetPagesParameters;
+    this.streamingHelper = streamingHelper;
   }
 
   @Override
-  public Optional<Integer> getTotalResults(WebCrawlerConnection webCrawlerConnection) {
+  public List<Result<CursorProvider, ResponseAttributes>> getPage(WebCrawlerConnection connection) {
+
+    try {
+
+      if(crawler == null) {
+
+        crawler = Crawler.builder()
+            .connection(connection)
+            .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
+            .rawHtml(configuration.getCrawlerSettingsParameters().isRawHtml())
+            .rootURL(url)
+            .maxDepth(targetPagesParameters.getMaxDepth())
+            .restrictToPath(targetPagesParameters.isRestrictToPath())
+            .regexUrlsFilterLogic(targetPagesParameters.getRegexUrlsFilterLogic())
+            .regexUrls(targetPagesParameters.getRegexUrls())
+            .build();
+
+        documentIterator = crawler.documentIterator();
+      }
+
+      while(documentIterator.hasNext()) {
+
+        try {
+
+          Document document = documentIterator.next();
+          if(document == null) {
+            continue;
+          }
+
+          String pageContent = getPageContent(document, null, configuration.getCrawlerSettingsParameters().isRawHtml());
+
+          Map<String, String> pageMap = new HashMap<String, String>();
+          pageMap.put("url", document.baseUri());
+          pageMap.put("title", document.title());
+          pageMap.put("content", pageContent);
+
+          return createPageResponse(
+              JSONUtils.convertToJSON(pageMap),
+              new HashMap<String, Object>() {{
+                put("url", url);
+              }},
+              streamingHelper
+          );
+
+        } catch (Exception e) {
+
+          // Look for next page if any on error
+          LOGGER.error("Error while getting page content.", e);
+        }
+
+      }
+
+      return Collections.emptyList();
+
+    } catch (ModuleException me) {
+      throw me;
+
+    } catch (Exception e) {
+
+      throw new ModuleException(
+          String.format("Error while getting page from %s.", url),
+          WebCrawlerErrorType.CRAWL_OPERATIONS_FAILURE,
+          e);
+    }
+
+  }
+
+  @Override
+  public Optional<Integer> getTotalResults(WebCrawlerConnection connection) {
     return Optional.empty();
   }
 
@@ -28,7 +124,7 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
   }
 
   @Override
-  public void close(WebCrawlerConnection webCrawlerConnection) throws MuleException {
+  public void close(WebCrawlerConnection connection) throws MuleException {
 
   }
 }
