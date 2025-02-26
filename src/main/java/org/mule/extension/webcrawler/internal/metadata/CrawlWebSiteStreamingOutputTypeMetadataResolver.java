@@ -12,7 +12,7 @@ import org.mule.runtime.api.metadata.resolving.OutputTypeResolver;
 import java.io.InputStream;
 import java.util.Optional;
 
-public class CrawlWebSiteStreamingOutputTypeMetadataResolver implements OutputTypeResolver<WebCrawlerConfiguration> {
+public class CrawlWebSiteStreamingOutputTypeMetadataResolver implements OutputTypeResolver<Object> {
 
   @Override
   public String getCategoryName() {
@@ -20,7 +20,7 @@ public class CrawlWebSiteStreamingOutputTypeMetadataResolver implements OutputTy
   }
 
   @Override
-  public MetadataType getOutputType(MetadataContext metadataContext, WebCrawlerConfiguration configuration)
+  public MetadataType getOutputType(MetadataContext metadataContext, Object key)
       throws MetadataResolvingException, ConnectionException {
 
     InputStream resourceAsStream = Thread.currentThread()
