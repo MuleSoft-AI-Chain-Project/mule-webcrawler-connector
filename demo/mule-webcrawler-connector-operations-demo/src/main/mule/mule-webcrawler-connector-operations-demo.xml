@@ -266,7 +266,7 @@ payload.payload]]></ee:set-payload>
 				</ee:transform>
 			</when>
 			<otherwise>
-				<ms-webcrawler:crawl-website-streaming doc:name="[HTTP] [Crawl] Website (Streaming)" doc:id="d8c8fd5e-4df2-4ee2-afbd-98b339597265" config-ref="HTTP_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" >
+				<ms-webcrawler:crawl-website-streaming doc:name="[HTTP] [Crawl] Website (Streaming)" doc:id="d8c8fd5e-4df2-4ee2-afbd-98b339597265" config-ref="HTTP_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]">
 				</ms-webcrawler:crawl-website-streaming>
 				<ee:transform doc:name="Transform Message" doc:id="4cfc11fa-0dcb-438d-9819-2f528960c2b2" >
 					<ee:message >
