@@ -15,6 +15,6 @@
       }
     }
   },
-  "required": ["url", "children"],
+  "required": ["url"],
   "additionalProperties": false
 }

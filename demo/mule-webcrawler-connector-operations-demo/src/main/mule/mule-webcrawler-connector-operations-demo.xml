@@ -4,7 +4,12 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
   <http:listener-config doc:id="19f8ae78-f60b-406c-a412-dbeb9586a159" doc:name="HTTP Listener config" name="HTTP_Listener_config">
     <http:listener-connection host="0.0.0.0" port="${http.port}"></http:listener-connection>
   </http:listener-config>
-  <ms-webcrawler:config name="WebCrawl_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f" userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" dynamicContent="#[p('webcrawler.dynamicContentRetrieval')]" delayMillis="${webcrawler.delay}" rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]"/>
+  <ms-webcrawler:config name="HTTP_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f"  rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]" delayMillis="${webcrawler.delay}">
+		<ms-webcrawler:http-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
+	</ms-webcrawler:config>
+	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]" delayMillis="${webcrawler.delay}">
+		<ms-webcrawler:web-driver-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
+	</ms-webcrawler:config>
   <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
 	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="567555e0-5621-4d8c-8322-d2a43b94d25d" name="webcrawler-connector-operations-api-config" api="api/webcrawler-connector-operations-api.raml"/>
 	<flow name="mule-webcrawler-connector-operations-demoFlow" doc:id="02bd6d6d-156a-47f9-8ce1-ecea4351f499" >
@@ -112,6 +117,21 @@ output application/json
 					</ee:variables>
 				</ee:transform>
 			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d3bbf123-a23b-4f14-be46-a216c5057784" type="MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE">
+				<ee:transform doc:name="Transform Message" doc:id="a841f6b1-b399-4f18-b884-3b6e7651179d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":error.description
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[404]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
         </error-handler>
 	</flow>
 	<flow name="mule-webcrawler-connector-operations-demoFlow1" doc:id="a618f282-a89c-4887-b74d-1247a7a4d96b" >
@@ -142,38 +162,124 @@ output application/json
         </error-handler>
 	</flow>
 	<flow doc:id="672f483e-9723-4b98-afb2-4fe26ac9c01f" name="get:\page:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:page-content config-ref="WebCrawl_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[Page] Get content" url="#[attributes.queryParams.url]">
+    <choice doc:name="Choice" doc:id="8e851b32-b3e1-4d88-920e-56d55d6f6956" >
+			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
+				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" />
+			</when>
+			<otherwise >
+				<ms-webcrawler:page-content config-ref="HTTP_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[HTTP] [Page] Get content" url="#[attributes.queryParams.url]">
 		</ms-webcrawler:page-content>
+			</otherwise>
+		</choice>
   </flow>
   <flow doc:id="0606793a-d005-42a1-bad2-4b50dd7f5085" name="get:\insights:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:page-insights config-ref="WebCrawl_Configuration" doc:id="03a24bad-a29a-413d-a6b2-397222013497" doc:name="[Page] Get insights" url="#[attributes.queryParams.url]">
+    <choice doc:name="Choice" doc:id="56db7772-a4ce-47fc-897c-2f2c08bf6fe3">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
+				<ms-webcrawler:page-insights doc:name="[WebDriver] [Page] Get insights" doc:id="b4a2b508-7cf8-4843-bf46-159228f12a0e" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" />
+			</when>
+			<otherwise >
+				<ms-webcrawler:page-insights config-ref="HTTP_Configuration" doc:id="03a24bad-a29a-413d-a6b2-397222013497" doc:name="[HTTP] [Page] Get insights" url="#[attributes.queryParams.url]">
 		</ms-webcrawler:page-insights>
+			</otherwise>
+		</choice>
   </flow>
   <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="get:\sitemap:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" regexUrlsFilterLogic="EXCLUDE">
-			<ms-webcrawler:regex-urls >
+    <choice doc:name="Choice" doc:id="51bd87fb-ad97-42f1-b69e-91f6151027ad">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
+				<ms-webcrawler:crawl-links-as-sitemap doc:name="[WebDriver] [Crawl] Get links as sitemap" doc:id="f2bb58e3-5e20-4578-97fe-f17e39f26427" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" >
+					<ms-webcrawler:regex-urls >
+						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
+						<ms-webcrawler:regex-url value="javascript:void(0);" />
+					</ms-webcrawler:regex-urls>
+				</ms-webcrawler:crawl-links-as-sitemap>
+			</when>
+			<otherwise >
+				<ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" regexUrlsFilterLogic="EXCLUDE">
+			<ms-webcrawler:regex-urls>
 				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 				<ms-webcrawler:regex-url value="javascript:void(0);" />
 			</ms-webcrawler:regex-urls>
 		</ms-webcrawler:crawl-links-as-sitemap>
+			</otherwise>
+		</choice>
   </flow>
-	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\meta-tag:webcrawler-connector-operations-api-config">
-		<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[Page] Get meta tags" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration"></ms-webcrawler:page-meta-tags>
+	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\metatag:webcrawler-connector-operations-api-config">
+		<choice doc:name="Choice" doc:id="e69fbf73-5f99-49f2-9426-42e80694100f">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
+				<ms-webcrawler:page-meta-tags doc:name="[WebDriver] [Page] Get meta tags" doc:id="4dab9a59-66cc-4095-9cff-af3485238d8a" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" />
+			</when>
+			<otherwise >
+				<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[HTTP] [Page] Get meta tags" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration"></ms-webcrawler:page-meta-tags>
+			</otherwise>
+		</choice>
   </flow>
   <flow doc:id="0ec8037e-2960-4433-b6c2-fffeecf352a8" name="get:\image:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:page-download-image doc:id="8337992c-f226-40fa-9feb-83afe8bd29a4" doc:name="[Page] Download image" downloadPath="#[attributes.queryParams.downloadLocation]" url="#[attributes.queryParams.url]" config-ref="WebCrawl_Configuration" maxImageNumber="50"></ms-webcrawler:page-download-image>
+    <choice doc:name="Choice" doc:id="87f3bb6d-bbb1-40c8-ab26-6c1c89c2a221">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
+				<ms-webcrawler:page-download-image doc:name="[WebDriver] [Page] Download image" doc:id="4af986f4-7378-4807-b470-1a8effa09acf" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxImageNumber="50" downloadPath="#[attributes.queryParams.downloadLocation]" />
+			</when>
+			<otherwise >
+				<ms-webcrawler:page-download-image doc:id="8337992c-f226-40fa-9feb-83afe8bd29a4" doc:name="[HTTP] [Page] Download image" downloadPath="#[attributes.queryParams.downloadLocation]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" maxImageNumber="50"></ms-webcrawler:page-download-image>
+			</otherwise>
+		</choice>
   </flow>
   <flow name="get:\document:webcrawler-connector-operations-api-config" doc:id="780b240a-a4a9-410c-879f-173df7312650" >
-		<ms-webcrawler:page-download-document doc:name="[Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" config-ref="WebCrawl_Configuration" maxDocumentNumber="50"/>
+		<choice doc:name="Choice" doc:id="8d8274bf-8924-45db-8928-91735ee79920">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
+				<ms-webcrawler:page-download-document doc:name="[WebDriver] [Page] Download document" doc:id="6a733dd1-3a05-4643-a39c-1cab4555f011" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDocumentNumber="50" downloadPath="#[attributes.queryParams.downloadLocation]" />
+			</when>
+			<otherwise >
+				<ms-webcrawler:page-download-document doc:name="[HTTP] [Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" config-ref="HTTP_Configuration" maxDocumentNumber="50" />
+			</otherwise>
+		</choice>
 	</flow>
-	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
-  </flow>
-  <flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl:webcrawler-connector-operations-api-config">
-    <ms-webcrawler:crawl-website config-ref="WebCrawl_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[Crawl] Website" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE">
-			<ms-webcrawler:regex-urls >
+	<flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl-full-scan:webcrawler-connector-operations-api-config">
+    <choice doc:name="Choice" doc:id="dd2ca71d-007d-48f2-bd03-d2057abd965d">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
+				<ms-webcrawler:crawl-website-full-scan doc:name="[WebDriver] [Crawl] Website (Full Scan)" doc:id="47d56237-9e9d-42c6-8c9b-9613ae6accd5" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" getMetaTags="true" downloadImages="true" downloadDocuments="true" >
+					<ms-webcrawler:regex-urls >
+						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
+					</ms-webcrawler:regex-urls>
+				</ms-webcrawler:crawl-website-full-scan>
+			</when>
+			<otherwise>
+				<ms-webcrawler:crawl-website-full-scan config-ref="HTTP_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[HTTP] [Crawl] Website (Full Scan)" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE">
+			<ms-webcrawler:regex-urls>
 				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 			</ms-webcrawler:regex-urls>
-		</ms-webcrawler:crawl-website>
+		</ms-webcrawler:crawl-website-full-scan>
+			</otherwise>
+		</choice>
+  </flow>
+	<flow name="get:\crawl-streaming:webcrawler-connector-operations-api-config" doc:id="7ec4d25e-1eb3-4b6c-9dbc-9743ddd36f01">
+		<choice doc:name="Choice" doc:id="4f93626b-f19d-458d-9043-a41126cda290">
+			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
+				<ms-webcrawler:crawl-website-streaming doc:name="[WebDriver] [Crawl] Website (Streaming)" doc:id="aa390ac4-c168-47c7-9dfc-073e177d227b" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]">
+				</ms-webcrawler:crawl-website-streaming>
+				<ee:transform doc:name="Transform Message" doc:id="ed94bdba-19b2-48ee-ac1d-2eee0514c944" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ms-webcrawler:crawl-website-streaming doc:name="[HTTP] [Crawl] Website (Streaming)" doc:id="d8c8fd5e-4df2-4ee2-afbd-98b339597265" config-ref="HTTP_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]">
+				</ms-webcrawler:crawl-website-streaming>
+				<ee:transform doc:name="Transform Message" doc:id="f052db65-c3d7-4232-aeda-9ea2d8f16d9d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow doc:id="c89d474d-02d5-4eb4-b642-22aa07ff8f18" name="get:\search:webcrawler-connector-operations-api-config">
+		<ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
   </flow>
 </mule>

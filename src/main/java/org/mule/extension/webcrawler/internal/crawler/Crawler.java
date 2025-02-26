@@ -1,16 +1,17 @@
 package org.mule.extension.webcrawler.internal.crawler;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+import org.jsoup.nodes.Document;
+import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.runtime.extension.api.exception.ModuleException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public abstract class Crawler {
 
@@ -19,12 +20,10 @@ public abstract class Crawler {
   protected Set<String> visitedLinksGlobal;
   protected Map<Integer, Set<String>> visitedLinksByDepth;
 
-  protected String userAgent;
-  protected String rootReferrer;
+  protected WebCrawlerConnection connection;
   protected String rootURL;
   protected int maxDepth;
   protected boolean restrictToPath;
-  protected boolean dynamicContent;
   protected int delayMillis;
   protected boolean enforceRobotsTxt;
   protected boolean downloadImages;
@@ -38,16 +37,15 @@ public abstract class Crawler {
   protected RegexUrlsFilterLogic regexUrlsFilterLogic;
   protected List<String> regexUrls;
 
-  public Crawler(String userAgent, String rootReferrer, String rootURL, int maxDepth, boolean restrictToPath, boolean dynamicContent,
-                 int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber,
-                 String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
+  public Crawler(WebCrawlerConnection connection, String rootURL, int maxDepth, boolean restrictToPath, int delayMillis,
+                 boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber, boolean downloadDocuments,
+                 int maxDocumentNumber, String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags,
+                 RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    this.userAgent = userAgent;
-    this.rootReferrer = rootReferrer;
+    this.connection = connection;
     this.rootURL = rootURL;
     this.maxDepth = maxDepth;
     this.restrictToPath = restrictToPath;
-    this.dynamicContent = dynamicContent;
     this.delayMillis = delayMillis;
     this.enforceRobotsTxt = enforceRobotsTxt;
     this.downloadImages = downloadImages;
@@ -62,9 +60,9 @@ public abstract class Crawler {
     this.regexUrls = regexUrls;
   }
 
-  public abstract CrawlNode crawl();
+  public abstract SiteNode crawl();
 
-  public abstract MapNode map();
+  public abstract SiteNode map();
 
   public static Crawler.Builder builder() {
 
@@ -73,12 +71,10 @@ public abstract class Crawler {
 
   public static class Builder {
 
-    private String userAgent;
-    private String rootReferrer;
+    private WebCrawlerConnection connection;
     private String rootURL;
     private int maxDepth;
     private boolean restrictToPath = false;
-    private boolean dynamicContent = false;
     private int delayMillis;
     private boolean enforceRobotsTxt;
     private boolean downloadImages;
@@ -92,15 +88,11 @@ public abstract class Crawler {
     private RegexUrlsFilterLogic regexUrlsFilterLogic;
     private List<String> regexUrls;
 
-    public Crawler.Builder userAgent(String userAgent) {
-      this.userAgent = userAgent;
+    public Crawler.Builder connection(WebCrawlerConnection connection) {
+      this.connection = connection;
       return this;
     }
 
-    public Crawler.Builder rootReferrer(String rootReferrer) {
-      this.rootReferrer = rootReferrer;
-      return this;
-    }
 
     public Crawler.Builder rootURL(String rootURL) {
       this.rootURL = rootURL;
@@ -114,11 +106,6 @@ public abstract class Crawler {
 
     public Crawler.Builder restrictToPath(boolean restrictToPath) {
       this.restrictToPath = restrictToPath;
-      return this;
-    }
-
-    public Crawler.Builder dynamicContent(boolean dynamicContent) {
-      this.dynamicContent = dynamicContent;
       return this;
     }
 
@@ -188,7 +175,7 @@ public abstract class Crawler {
 
       try {
 
-        crawler = new MuleCrawler(userAgent, rootReferrer, rootURL, maxDepth, restrictToPath, dynamicContent, delayMillis,
+        crawler = new MuleCrawler(connection, rootURL, maxDepth, restrictToPath, delayMillis,
                                   enforceRobotsTxt, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
                                   downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
 
@@ -208,13 +195,30 @@ public abstract class Crawler {
     }
   }
 
-  public static class MapNode {
+  public static class SiteNode {
 
     private String url;
-    private List<MapNode> children;
+    @JsonIgnore
+    private int currentDepth;
+    @JsonIgnore
+    private String referrer;
+    private String filename;
+    private List<SiteNode> children;
 
-    public MapNode(String url) {
+    public SiteNode(String url, int currentDepth, String referrer) {
+
       this.url = url;
+      this.currentDepth = currentDepth;
+      this.referrer = referrer;
+      this.children = new ArrayList<>();
+    }
+
+    public SiteNode(String url, int currentDepth, String referrer, String filename) {
+
+      this.url = url;
+      this.currentDepth = currentDepth;
+      this.filename = filename;
+      this.referrer = referrer;
       this.children = new ArrayList<>();
     }
 
@@ -222,29 +226,39 @@ public abstract class Crawler {
       return url;
     }
 
-    public List<MapNode> getChildren() {
+    public int getCurrentDepth() {
+      return currentDepth;
+    }
+
+    public String getReferrer() {
+      return referrer;
+    }
+
+    public String getFilename() {
+      return filename;
+    }
+
+    public List<SiteNode> getChildren() {
       return children;
     }
 
-    public void addChild(MapNode child) {
+    public void addChild(SiteNode child) {
       this.children.add(child);
     }
   }
 
-  public static class CrawlNode extends MapNode {
+  public DocumentIterator documentIterator() { return new DocumentIterator(); }
 
-    private final String pageContentFile;
+  public class DocumentIterator implements Iterator<Document> {
 
-    public CrawlNode(String pageURL, String pageContentFile) {
-
-      super(pageURL);
-      this.pageContentFile = pageContentFile;
-
+    @Override
+    public boolean hasNext() {
+      throw new UnsupportedOperationException("This method should be overridden by subclasses");
     }
 
-    public String getPageContentFile() {
-      return pageContentFile;
+    @Override
+    public Document next() {
+      throw new UnsupportedOperationException("This method should be overridden by subclasses");
     }
   }
-
 }
