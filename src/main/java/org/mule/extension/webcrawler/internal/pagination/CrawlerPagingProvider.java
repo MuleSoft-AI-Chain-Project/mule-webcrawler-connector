@@ -92,10 +92,9 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
 
         } catch (Exception e) {
 
-          // Look for next page if any on error
-          LOGGER.error("Error while getting page content.", e);
+          //Look for next page if any on error
+          LOGGER.error(String.format("Error while getting page content. %s", e.getMessage()));
         }
-
       }
 
       return Collections.emptyList();
