@@ -1,7 +1,6 @@
 package org.mule.extension.webcrawler.internal.metadata;
 
 import org.mule.runtime.core.api.util.IOUtils;
-import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.metadata.api.model.MetadataType;
 import org.mule.metadata.json.api.JsonTypeLoader;
 import org.mule.runtime.api.connection.ConnectionException;
