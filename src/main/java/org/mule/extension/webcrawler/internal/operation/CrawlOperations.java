@@ -3,6 +3,7 @@ package org.mule.extension.webcrawler.internal.operation;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
@@ -70,7 +71,8 @@ public class CrawlOperations {
       @Config WebCrawlerConfiguration configuration,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-      @DisplayName("Download location") @Placement(order = 2) @Example("/users/mulesoft/downloads") String downloadPath,
+      @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
+      @DisplayName("Download location") @Placement(order = 3) @Example("/users/mulesoft/downloads") String downloadPath,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
       @ParameterGroup(name = "Target Content") CrawlerTargetContentParameters targetContentParameters) {
 
@@ -82,7 +84,7 @@ public class CrawlOperations {
       Crawler crawler = Crawler.builder()
           .connection(connection)
           .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
-          .rawHtml(configuration.getCrawlerSettingsParameters().isRawHtml())
+          .outputFormat(outputFormat)
           .rootURL(url)
           .downloadPath(downloadPath)
           .maxDepth(targetPagesParameters.getMaxDepth())
@@ -102,7 +104,7 @@ public class CrawlOperations {
       Crawler.SiteNode rootNode = crawler.crawl();
 
       return ResponseHelper.createResponse(
-          JSONUtils.convertToJSON(rootNode),
+          JSONUtils.convertToJSON(rootNode, true),
           new HashMap<String, Object>() {{
             put("url", url);
           }}
@@ -128,12 +130,13 @@ public class CrawlOperations {
   crawlWebsiteStreaming(
       @Config WebCrawlerConfiguration configuration,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+      @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
       StreamingHelper streamingHelper) {
 
     try {
 
-      return new CrawlerPagingProvider(configuration, url, targetPagesParameters, streamingHelper);
+      return new CrawlerPagingProvider(configuration, url, outputFormat, targetPagesParameters, streamingHelper);
 
     } catch (ModuleException me) {
       throw me;
@@ -178,7 +181,7 @@ public class CrawlOperations {
       Crawler.SiteNode root = crawler.map();
 
       return ResponseHelper.createResponse(
-          JSONUtils.convertToJSON(root),
+          JSONUtils.convertToJSON(root, true),
           new HashMap<String, Object>() {{
             put("url", url);
           }}

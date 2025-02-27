@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.util;
 
+import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,5 +38,10 @@ public class Utils {
         Thread.currentThread().interrupt(); // Ensure thread interruption status is reset
       }
     }
+  }
+
+  public static String convertHtmlToMarkdown(String html) {
+
+    return FlexmarkHtmlConverter.builder().build().convert(html);
   }
 }

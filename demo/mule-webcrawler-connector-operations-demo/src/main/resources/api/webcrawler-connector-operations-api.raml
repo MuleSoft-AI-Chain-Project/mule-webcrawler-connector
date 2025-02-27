@@ -29,6 +29,10 @@ types:
       url:
         type: string
         required: true
+      outputFormat:
+        type: string
+        enum: [HTML, TEXT, MARKDOWN]
+        required: true
       connection:
         type: string
         default: http
@@ -124,6 +128,10 @@ types:
       url:
         type: string
         required: true
+      outputFormat:
+        type: string
+        enum: [HTML, TEXT, MARKDOWN]
+        required: true
       depth:
         type: integer
       downloadLocation:
@@ -141,6 +149,10 @@ types:
     queryParameters:
       url:
         type: string
+        required: true
+      outputFormat:
+        type: string
+        enum: [HTML, TEXT, MARKDOWN]
         required: true
       depth:
         type: integer

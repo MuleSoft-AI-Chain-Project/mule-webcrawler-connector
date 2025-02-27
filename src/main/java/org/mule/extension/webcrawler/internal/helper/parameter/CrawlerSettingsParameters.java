@@ -24,19 +24,10 @@ public class CrawlerSettingsParameters {
   private int delayMillis;
 
   @Parameter
-  @Alias("rawHtml")
-  @DisplayName("RAW html")
-  @Summary("If true extract raw html from pages and not parsed text content.")
-  @Placement(order = 2)
-  @Expression(ExpressionSupport.SUPPORTED)
-  @Example("False")
-  private boolean rawHtml;
-
-  @Parameter
   @Alias("enforceRobotsTxt")
   @DisplayName("Enforce robots.txt")
   @Summary("If true, enforce checks against the robots.txt file.")
-  @Placement(order = 3)
+  @Placement(order = 2)
   @Optional(defaultValue = "false")
   private boolean enforceRobotsTxt;
 
@@ -47,10 +38,6 @@ public class CrawlerSettingsParameters {
   public void setDelayMillis(int delayMillis) {
     this.delayMillis = delayMillis;
   }
-
-  public boolean isRawHtml() { return rawHtml;}
-
-  public void setRawHtml(boolean rawHtml) { this.rawHtml = rawHtml; }
 
   public boolean isEnforceRobotsTxt() { return enforceRobotsTxt; }
 

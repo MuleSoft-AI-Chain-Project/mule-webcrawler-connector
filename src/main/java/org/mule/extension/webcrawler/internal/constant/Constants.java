@@ -5,13 +5,13 @@ public class Constants {
   private Constants() {
   }
 
-  public enum CrawlType {CONTENT, LINK}
-
   public enum PageInsightType {ALL, DOCUMENTLINKS, INTERNALLINKS, EXTERNALLINKS, REFERENCELINKS, IFRAMELINKS, IMAGELINKS, ELEMENTCOUNTSTATS}
 
   public enum DocumentExtension {PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, RAR}
 
   public enum RegexUrlsFilterLogic { INCLUDE, EXCLUDE}
+
+  public enum OutputFormat { TEXT, HTML, MARKDOWN }
 
   // Google Chrome User-Agents
   public static final String USER_AGENT_CHROME_WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36";

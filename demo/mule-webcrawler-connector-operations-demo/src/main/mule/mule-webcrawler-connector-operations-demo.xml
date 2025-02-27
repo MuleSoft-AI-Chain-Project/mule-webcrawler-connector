@@ -4,10 +4,10 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
   <http:listener-config doc:id="19f8ae78-f60b-406c-a412-dbeb9586a159" doc:name="HTTP Listener config" name="HTTP_Listener_config">
     <http:listener-connection host="0.0.0.0" port="${http.port}"></http:listener-connection>
   </http:listener-config>
-  <ms-webcrawler:config name="HTTP_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f"  rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]" delayMillis="${webcrawler.delay}">
+  <ms-webcrawler:config name="HTTP_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f" enforceRobotsTxt="true" delayMillis="${webcrawler.delay}">
 		<ms-webcrawler:http-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
-	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" rawHtml="#[p('webcrawler.rawHtml')]" enforceRobotsTxt="#[p('webcrawler.enforceRobotsTxt')]" delayMillis="${webcrawler.delay}">
+	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" enforceRobotsTxt="true" delayMillis="${webcrawler.delay}">
 		<ms-webcrawler:web-driver-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
   <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
@@ -164,10 +164,10 @@ output application/json
 	<flow doc:id="672f483e-9723-4b98-afb2-4fe26ac9c01f" name="get:\page:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="8e851b32-b3e1-4d88-920e-56d55d6f6956" >
 			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
-				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" />
+				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]"/>
 			</when>
 			<otherwise >
-				<ms-webcrawler:page-content config-ref="HTTP_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[HTTP] [Page] Get content" url="#[attributes.queryParams.url]">
+				<ms-webcrawler:page-content config-ref="HTTP_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[HTTP] [Page] Get content" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]">
 		</ms-webcrawler:page-content>
 			</otherwise>
 		</choice>
@@ -236,14 +236,14 @@ output application/json
 	<flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl-full-scan:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="dd2ca71d-007d-48f2-bd03-d2057abd965d">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:crawl-website-full-scan doc:name="[WebDriver] [Crawl] Website (Full Scan)" doc:id="47d56237-9e9d-42c6-8c9b-9613ae6accd5" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" getMetaTags="true" downloadImages="true" downloadDocuments="true" >
+				<ms-webcrawler:crawl-website-full-scan doc:name="[WebDriver] [Crawl] Website (Full Scan)" doc:id="47d56237-9e9d-42c6-8c9b-9613ae6accd5" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" getMetaTags="true" downloadImages="true" downloadDocuments="true" outputFormat="#[attributes.queryParams.outputFormat]">
 					<ms-webcrawler:regex-urls >
 						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 					</ms-webcrawler:regex-urls>
 				</ms-webcrawler:crawl-website-full-scan>
 			</when>
 			<otherwise>
-				<ms-webcrawler:crawl-website-full-scan config-ref="HTTP_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[HTTP] [Crawl] Website (Full Scan)" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE">
+				<ms-webcrawler:crawl-website-full-scan config-ref="HTTP_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[HTTP] [Crawl] Website (Full Scan)" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE" outputFormat="#[attributes.queryParams.outputFormat]">
 			<ms-webcrawler:regex-urls>
 				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 			</ms-webcrawler:regex-urls>
@@ -254,7 +254,7 @@ output application/json
 	<flow name="get:\crawl-streaming:webcrawler-connector-operations-api-config" doc:id="7ec4d25e-1eb3-4b6c-9dbc-9743ddd36f01">
 		<choice doc:name="Choice" doc:id="4f93626b-f19d-458d-9043-a41126cda290">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
-				<ms-webcrawler:crawl-website-streaming doc:name="[WebDriver] [Crawl] Website (Streaming)" doc:id="aa390ac4-c168-47c7-9dfc-073e177d227b" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]">
+				<ms-webcrawler:crawl-website-streaming doc:name="[WebDriver] [Crawl] Website (Streaming)" doc:id="aa390ac4-c168-47c7-9dfc-073e177d227b" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" outputFormat="#[attributes.queryParams.outputFormat]">
 				</ms-webcrawler:crawl-website-streaming>
 				<ee:transform doc:name="Transform Message" doc:id="ed94bdba-19b2-48ee-ac1d-2eee0514c944" >
 					<ee:message >
@@ -266,7 +266,7 @@ payload.payload]]></ee:set-payload>
 				</ee:transform>
 			</when>
 			<otherwise>
-				<ms-webcrawler:crawl-website-streaming doc:name="[HTTP] [Crawl] Website (Streaming)" doc:id="d8c8fd5e-4df2-4ee2-afbd-98b339597265" config-ref="HTTP_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]">
+				<ms-webcrawler:crawl-website-streaming doc:name="[HTTP] [Crawl] Website (Streaming)" doc:id="d8c8fd5e-4df2-4ee2-afbd-98b339597265" config-ref="HTTP_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" outputFormat="#[attributes.queryParams.outputFormat]">
 				</ms-webcrawler:crawl-website-streaming>
 				<ee:transform doc:name="Transform Message" doc:id="f052db65-c3d7-4232-aeda-9ea2d8f16d9d" >
 					<ee:message >

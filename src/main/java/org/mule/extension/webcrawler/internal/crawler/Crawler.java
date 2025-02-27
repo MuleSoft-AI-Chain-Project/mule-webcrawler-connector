@@ -1,8 +1,8 @@
 package org.mule.extension.webcrawler.internal.crawler;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
@@ -32,14 +32,14 @@ public abstract class Crawler {
   protected int maxDocumentNumber;
   protected String downloadPath;
   protected List<String> contentTags;
-  protected boolean rawHtml;
+  protected Constants.OutputFormat outputFormat;
   protected boolean getMetaTags;
   protected RegexUrlsFilterLogic regexUrlsFilterLogic;
   protected List<String> regexUrls;
 
   public Crawler(WebCrawlerConnection connection, String rootURL, int maxDepth, boolean restrictToPath, int delayMillis,
                  boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber, boolean downloadDocuments,
-                 int maxDocumentNumber, String downloadPath, List<String> contentTags, boolean rawHtml, boolean getMetaTags,
+                 int maxDocumentNumber, String downloadPath, List<String> contentTags, Constants.OutputFormat outputFormat, boolean getMetaTags,
                  RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     this.connection = connection;
@@ -54,7 +54,7 @@ public abstract class Crawler {
     this.maxDocumentNumber = maxDocumentNumber;
     this.downloadPath = downloadPath;
     this.contentTags = contentTags;
-    this.rawHtml = rawHtml;
+    this.outputFormat = outputFormat;
     this.getMetaTags = getMetaTags;
     this.regexUrlsFilterLogic = regexUrlsFilterLogic;
     this.regexUrls = regexUrls;
@@ -83,7 +83,7 @@ public abstract class Crawler {
     private int maxDocumentNumber;
     private String downloadPath;
     private List<String> contentTags;
-    private boolean rawHtml = false;
+    private Constants.OutputFormat outputFormat;
     private boolean getMetaTags = false;
     private RegexUrlsFilterLogic regexUrlsFilterLogic;
     private List<String> regexUrls;
@@ -149,8 +149,8 @@ public abstract class Crawler {
       return this;
     }
 
-    public Crawler.Builder rawHtml(boolean rawHtml) {
-      this.rawHtml = rawHtml;
+    public Crawler.Builder outputFormat(Constants.OutputFormat outputFormat) {
+      this.outputFormat = outputFormat;
       return this;
     }
 
@@ -177,7 +177,7 @@ public abstract class Crawler {
 
         crawler = new MuleCrawler(connection, rootURL, maxDepth, restrictToPath, delayMillis,
                                   enforceRobotsTxt, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
-                                  downloadPath, contentTags, rawHtml, getMetaTags, regexUrlsFilterLogic, regexUrls);
+                                  downloadPath, contentTags, outputFormat, getMetaTags, regexUrlsFilterLogic, regexUrls);
 
       } catch (ModuleException e) {
 
