@@ -290,6 +290,7 @@ public class PageOperations {
           @Config WebCrawlerConfiguration configuration,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
+          @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
     try {
@@ -310,7 +311,7 @@ public class PageOperations {
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),
-                                                 configuration.getCrawlerSettingsParameters().isRawHtml());
+                                                 outputFormat);
 
       contents.put("url", document.baseUri());
       contents.put("title", document.title());

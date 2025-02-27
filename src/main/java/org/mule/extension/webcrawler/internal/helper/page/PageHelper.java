@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.lang.invoke.SwitchPoint;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -26,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
+import static org.mule.extension.webcrawler.internal.constant.Constants.OutputFormat.TEXT;
 
 public class PageHelper {
 
@@ -226,7 +229,7 @@ public class PageHelper {
         elementCounts.put("reference", referenceLinks.size());
         elementCounts.put("iframe", iframeLinks.size());
         elementCounts.put("images", imageLinks.size());
-        elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags, false)));
+        elementCounts.put("wordCount", Utils.countWords(getPageContent(document, tags, TEXT)));
 
         pageInsightData.put("pageStats", elementCounts);
 
@@ -276,12 +279,17 @@ public class PageHelper {
     return false;
   }
 
-  public static String getPageContent(Document document, List<String> tags, Boolean rawHtml) {
+  public static String getPageContent(Document document, List<String> tags, Constants.OutputFormat outputFormat) {
 
-    if (rawHtml) {
-      return getPageRawHtmlContent(document, tags);
-    } else {
-      return getPageContent(document, tags);
+    switch(outputFormat) {
+      case TEXT:
+        return getPageContent(document, tags);
+      case HTML:
+        return getPageRawHtmlContent(document, tags);
+      case MARKDOWN:
+        return Utils.convertHtmlToMarkdown(getPageRawHtmlContent(document, tags));
+      default:
+        return getPageRawHtmlContent(document, tags);
     }
   }
 

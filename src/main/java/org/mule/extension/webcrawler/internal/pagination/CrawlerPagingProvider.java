@@ -5,10 +5,9 @@ import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
-import org.mule.extension.webcrawler.internal.crawler.mule.MuleCrawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
-import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetPagesParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.runtime.api.exception.MuleException;
@@ -33,14 +32,19 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
   private Iterator<Document> documentIterator;
   private WebCrawlerConfiguration configuration;
   private String url;
+  private Constants.OutputFormat outputFormat;
   private CrawlerTargetPagesParameters targetPagesParameters;
   private StreamingHelper streamingHelper;
 
-  public CrawlerPagingProvider(WebCrawlerConfiguration configuration, String url, CrawlerTargetPagesParameters targetPagesParameters,
+  public CrawlerPagingProvider(WebCrawlerConfiguration configuration,
+                               String url,
+                               Constants.OutputFormat outputFormat,
+                               CrawlerTargetPagesParameters targetPagesParameters,
                                StreamingHelper streamingHelper) {
 
     this.configuration = configuration;
     this.url = url;
+    this.outputFormat = outputFormat;
     this.targetPagesParameters = targetPagesParameters;
     this.streamingHelper = streamingHelper;
   }
@@ -55,7 +59,7 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
         crawler = Crawler.builder()
             .connection(connection)
             .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
-            .rawHtml(configuration.getCrawlerSettingsParameters().isRawHtml())
+            .outputFormat(outputFormat)
             .rootURL(url)
             .maxDepth(targetPagesParameters.getMaxDepth())
             .restrictToPath(targetPagesParameters.isRestrictToPath())
@@ -75,7 +79,7 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
             continue;
           }
 
-          String pageContent = getPageContent(document, null, configuration.getCrawlerSettingsParameters().isRawHtml());
+          String pageContent = getPageContent(document, null, outputFormat);
 
           Map<String, String> pageMap = new HashMap<String, String>();
           pageMap.put("url", document.baseUri());
@@ -83,7 +87,7 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
           pageMap.put("content", pageContent);
 
           return createPageResponse(
-              JSONUtils.convertToJSON(pageMap),
+              JSONUtils.convertToJSON(pageMap, true),
               new HashMap<String, Object>() {{
                 put("url", url);
               }},

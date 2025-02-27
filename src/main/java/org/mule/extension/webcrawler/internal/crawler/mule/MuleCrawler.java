@@ -25,10 +25,10 @@ public class MuleCrawler extends Crawler {
   public MuleCrawler(WebCrawlerConnection connection, String originalUrl, int maxDepth, boolean restrictToPath,
                      int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber,
                      boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
-                     boolean rawHtml, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
+                     Constants.OutputFormat outputFormat, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     super(connection, originalUrl, maxDepth, restrictToPath, delayMillis, enforceRobotsTxt, downloadImages,
-          maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, rawHtml, getMetaTags,
+          maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, outputFormat, getMetaTags,
           regexUrlsFilterLogic, regexUrls);
   }
 
@@ -124,7 +124,7 @@ public class MuleCrawler extends Crawler {
         }
 
         // get page contents
-        pageData.put("content", PageHelper.getPageContent(document, contentTags, rawHtml));
+        pageData.put("content", PageHelper.getPageContent(document, contentTags, outputFormat));
 
         // save gathered data of page to file
         String filename = PageHelper.savePageContents(pageData, downloadPath, title);
