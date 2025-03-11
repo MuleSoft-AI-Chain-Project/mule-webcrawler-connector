@@ -8,7 +8,7 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
 		<ms-webcrawler:http-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
 	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" enforceRobotsTxt="true" delayMillis="${webcrawler.delay}">
-		<ms-webcrawler:web-driver-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
+		<ms-webcrawler:web-driver-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" waitDuration="5000"/>
 	</ms-webcrawler:config>
   <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
 	<apikit:config outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" doc:name="Router" doc:id="567555e0-5621-4d8c-8322-d2a43b94d25d" name="webcrawler-connector-operations-api-config" api="api/webcrawler-connector-operations-api.raml"/>

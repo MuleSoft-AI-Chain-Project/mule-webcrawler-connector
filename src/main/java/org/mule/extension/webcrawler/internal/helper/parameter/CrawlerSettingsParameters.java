@@ -15,7 +15,7 @@ public class CrawlerSettingsParameters {
 
   @Parameter
   @Alias("delayMillis")
-  @DisplayName("Delay (millisecs)")
+  @DisplayName("Delay between pages (millisecs)")
   @Summary("The delay introduced between each request.")
   @Placement(order = 1)
   @Expression(ExpressionSupport.SUPPORTED)

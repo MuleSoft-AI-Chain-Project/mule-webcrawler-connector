@@ -25,8 +25,10 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+
 @Alias("web-driver")
-@DisplayName("Web Driver")
+@DisplayName("WebDriver")
 public class WebDriverConnectionProvider implements CachedConnectionProvider<WebDriverConnection>, Startable, Stoppable {
 
   private static Logger LOGGER = LoggerFactory.getLogger(WebDriverConnectionProvider.class);
@@ -51,11 +53,31 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
   @Optional
   private String referrer;
 
+  @Parameter
+  @Alias("waitDuration")
+  @DisplayName("Wait duration (millisecs)")
+  @Summary("The time to wait on page load")
+  @Placement(order = 1, tab = "WebDriver Wait")
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Example("1000")
+  @Optional
+  private long waitDuration;
+
+  @Parameter
+  @Alias("waitUntilXPath")
+  @DisplayName("Wait until XPath")
+  @Summary("The XPath to wait for")
+  @Placement(order = 2, tab = "WebDriver Wait")
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Example("//body")
+  @Optional
+  private String waitUntilXPath;
+
   private WebDriver driver;
 
   @Override
   public WebDriverConnection connect() throws ConnectionException {
-    return new WebDriverConnection(driver,userAgent, referrer);
+    return new WebDriverConnection(driver,userAgent, referrer, waitDuration, waitUntilXPath);
   }
 
   @Override
