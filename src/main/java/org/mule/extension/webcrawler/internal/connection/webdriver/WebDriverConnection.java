@@ -26,15 +26,11 @@ public class WebDriverConnection implements WebCrawlerConnection {
     private WebDriver driver;
     private String userAgent;
     private String referrer;
-    private long waitDuration;
-    private String waitUntilXPath;
 
-    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, long waitDuration, String waitUntilXPath) {
+    public WebDriverConnection(WebDriver driver, String userAgent, String referrer) {
         this.driver = driver;
         this.userAgent = userAgent;
         this.referrer = referrer;
-        this.waitDuration = waitDuration;
-        this.waitUntilXPath = waitUntilXPath;
     }
 
     public String getUserAgent() {
@@ -44,16 +40,17 @@ public class WebDriverConnection implements WebCrawlerConnection {
     public String getReferrer() {
         return referrer;
     }
-    @Override
-    public CompletableFuture<InputStream> getPageSource(String url) {
 
-        return getPageSource(url, this.referrer);
+    @Override
+    public CompletableFuture<InputStream> getPageSource(String url, Long waitDuration, String waitUntilXPath) {
+
+        return getPageSource(url, this.referrer, waitDuration, waitUntilXPath);
     }
 
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer) {
+    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitDuration, String waitUntilXPath) {
 
-        LOGGER.debug(String.format("Retrieving page source for url %s using webdriver", url));
+        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, waitDuration));
         return CompletableFuture.supplyAsync(() -> {
             // Set the referrer header
             if (currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
@@ -72,7 +69,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
             // Load the dynamic page
             driver.get(url);
 
-            if(waitDuration > 0L) {
+            if(waitDuration != null && waitDuration.longValue() > 0L) {
 
                 if(waitUntilXPath != null && waitUntilXPath.compareTo("") != 0) {
 

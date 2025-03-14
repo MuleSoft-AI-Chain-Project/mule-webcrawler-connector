@@ -43,14 +43,20 @@ public class HttpConnection implements WebCrawlerConnection {
     return true;
   }
 
-  public CompletableFuture<InputStream> getPageSource(String url) {
+  @Override
+  public CompletableFuture<InputStream> getPageSource(String url, Long waitDuration, String waitUntilXPath) {
 
-    return getPageSource(url, this.referrer);
+    return getPageSource(url, this.referrer, waitDuration, waitUntilXPath);
   }
 
-  public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer) {
+  @Override
+  public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitDuration, String waitUntilXPath) {
 
-    LOGGER.debug(String.format("Retrieving page source for url %s using http client", url));
+    LOGGER.debug(String.format("Retrieving page source for url %s using http client (wait %s millisec)", url, waitDuration));
+    if(waitDuration != null && waitDuration.longValue() > 0L) {
+
+      throw new RuntimeException("Wait duration is not supported for HttpConnection");
+    }
 
     HttpRequestBuilder requestBuilder = HttpRequest.builder()
         .method("GET")

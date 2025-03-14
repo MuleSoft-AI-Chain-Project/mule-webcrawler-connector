@@ -53,31 +53,11 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
   @Optional
   private String referrer;
 
-  @Parameter
-  @Alias("waitDuration")
-  @DisplayName("Wait duration (millisecs)")
-  @Summary("The time to wait on page load")
-  @Placement(order = 1, tab = "WebDriver Wait")
-  @Expression(ExpressionSupport.SUPPORTED)
-  @Example("1000")
-  @Optional
-  private long waitDuration;
-
-  @Parameter
-  @Alias("waitUntilXPath")
-  @DisplayName("Wait until XPath")
-  @Summary("The XPath to wait for")
-  @Placement(order = 2, tab = "WebDriver Wait")
-  @Expression(ExpressionSupport.SUPPORTED)
-  @Example("//body")
-  @Optional
-  private String waitUntilXPath;
-
   private WebDriver driver;
 
   @Override
   public WebDriverConnection connect() throws ConnectionException {
-    return new WebDriverConnection(driver,userAgent, referrer, waitDuration, waitUntilXPath);
+    return new WebDriverConnection(driver,userAgent, referrer);
   }
 
   @Override

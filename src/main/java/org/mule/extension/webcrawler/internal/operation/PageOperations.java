@@ -52,6 +52,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+      @ConfigOverride
+          @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
@@ -67,7 +73,7 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(connection, url);
+      Document document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
@@ -102,6 +108,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
           @Config WebCrawlerConfiguration configuration,
+          @ConfigOverride
+              @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+          @ConfigOverride
+              @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @Alias("maxImageNumber") @DisplayName("Max number of images")
@@ -126,7 +138,7 @@ public class PageOperations {
               WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
         }
 
-        document = PageHelper.getDocument(connection, url);
+        document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
@@ -170,6 +182,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   downloadWebsiteDocuments(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+      @ConfigOverride
+          @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
@@ -193,7 +211,7 @@ public class PageOperations {
       Document document = null;
 
       try {
-        document = PageHelper.getDocument(connection, url);
+        document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
 
@@ -238,6 +256,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
+          @ConfigOverride
+              @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+          @ConfigOverride
+              @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
@@ -254,7 +278,7 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(connection, url);
+      Document document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
@@ -288,6 +312,12 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
+          @ConfigOverride
+              @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+          @ConfigOverride
+              @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -307,7 +337,7 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document = PageHelper.getDocument(connection, url);
+      Document document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

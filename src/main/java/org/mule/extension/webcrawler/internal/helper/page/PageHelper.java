@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
@@ -36,10 +37,14 @@ public class PageHelper {
 
   private static final ConcurrentHashMap<String, String> robotsTxtCache = new ConcurrentHashMap<>();
 
-  public static Document getDocument(WebCrawlerConnection connection, String url) throws IOException {
+  public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
+                                     WebCrawlerConnection connection,
+                                     String url,
+                                     Long waitDuration,
+                                     String waitUntilXPath) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s", url));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, waitDuration, waitUntilXPath).get()) { // Blocks until complete
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       return Jsoup.parse(pageSource, url);
     } catch (InterruptedException | ExecutionException e) {
@@ -47,10 +52,15 @@ public class PageHelper {
     }
   }
 
-  public static Document getDocument(WebCrawlerConnection connection, String url, String referrer) throws IOException {
+  public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
+                                     WebCrawlerConnection connection,
+                                     String url,
+                                     String referrer,
+                                     Long waitDuration,
+                                     String waitUntilXPath) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s and referer %s", url, referrer));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, waitDuration, waitUntilXPath).get()) { // Blocks until complete
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       return Jsoup.parse(pageSource, url);
     } catch (InterruptedException | ExecutionException e) {

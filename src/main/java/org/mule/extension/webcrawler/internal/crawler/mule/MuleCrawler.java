@@ -3,6 +3,7 @@ package org.mule.extension.webcrawler.internal.crawler.mule;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
+import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
@@ -22,12 +23,12 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_IMAGES_FOLDER = "images/";
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
-  public MuleCrawler(WebCrawlerConnection connection, String originalUrl, int maxDepth, boolean restrictToPath,
-                     int delayMillis, boolean enforceRobotsTxt, boolean downloadImages, int maxImageNumber,
+  public MuleCrawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String originalUrl, Long waitDuration,
+                     String waitUntilXPath, int maxDepth, boolean restrictToPath, boolean downloadImages, int maxImageNumber,
                      boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
                      Constants.OutputFormat outputFormat, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    super(connection, originalUrl, maxDepth, restrictToPath, delayMillis, enforceRobotsTxt, downloadImages,
+    super(configuration, connection, originalUrl, waitDuration, waitUntilXPath, maxDepth, restrictToPath, downloadImages,
           maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, outputFormat, getMetaTags,
           regexUrlsFilterLogic, regexUrls);
   }
@@ -47,7 +48,7 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if(enforceRobotsTxt && !PageHelper.canCrawl(url, connection.getUserAgent())) {
+    if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
       LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
@@ -73,7 +74,7 @@ public class MuleCrawler extends Crawler {
     try {
 
       // add delay
-      Utils.addDelay(delayMillis);
+      Utils.addDelay(configuration.getCrawlerSettingsParameters().getDelayMillis());
 
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(currentDepth).add(url);
@@ -81,7 +82,7 @@ public class MuleCrawler extends Crawler {
       SiteNode siteNode = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(connection, url, referrer);
+      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitDuration, waitUntilXPath);
 
       // check if url contents have been downloaded before ie applied globally (at all
       // depths). Note, we don't want to do this globally for CrawlType.LINK because
@@ -178,7 +179,7 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if(enforceRobotsTxt && !PageHelper.canCrawl(url, connection.getUserAgent())) {
+    if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
       LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
@@ -204,7 +205,7 @@ public class MuleCrawler extends Crawler {
     try {
 
       // add delay
-      Utils.addDelay(delayMillis);
+      Utils.addDelay(configuration.getCrawlerSettingsParameters().getDelayMillis());
 
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(currentDepth).add(url);
@@ -212,7 +213,7 @@ public class MuleCrawler extends Crawler {
       SiteNode node = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(connection, url, referrer);
+      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitDuration, waitUntilXPath);
 
       node = new SiteNode(url, currentDepth, referrer);
       LOGGER.debug("Found url: " + url);
@@ -326,13 +327,13 @@ public class MuleCrawler extends Crawler {
           return null;
         }
 
-        if(enforceRobotsTxt && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
+        if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
 
           LOGGER.debug(String.format("SKIPPING %s due to robots.txt.", rootURL));
           return null;
         }
 
-        document = PageHelper.getDocument(connection, currentNode.getUrl(), currentNode.getReferrer());
+        document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(), waitDuration, waitUntilXPath);
 
         if(currentNode.getCurrentDepth() < maxDepth) {
 

@@ -8,6 +8,6 @@ public interface WebCrawlerConnection {
   String getUserAgent();
   String getReferrer();
 
-  CompletableFuture<InputStream> getPageSource(String url, String currentReferrer);
-  CompletableFuture<InputStream> getPageSource(String url);
+  CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitDuration, String waitUntilXPath);
+  CompletableFuture<InputStream> getPageSource(String url, Long waitDuration, String waitUntilXPath);
 }

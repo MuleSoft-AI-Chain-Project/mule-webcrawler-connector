@@ -37,6 +37,9 @@ types:
         type: string
         default: http
         required: false
+      waitDuration:
+        type: number
+        required: false
     responses:
       200:
         description: Page content retrieved successfully
@@ -50,6 +53,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitDuration:
+        type: number
         required: false
     responses:
       200:
@@ -67,6 +73,9 @@ types:
         required: false
       depth:
         type: integer
+      waitDuration:
+        type: number
+        required: false
     responses:
       200:
         description: Node generated successfully
@@ -83,6 +92,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitDuration:
+        type: number
         required: false
     responses:
       200:
@@ -101,6 +113,9 @@ types:
         type: string
         default: http
         required: false
+      waitDuration:
+        type: number
+        required: false
     responses:
       200:
         description: Images downloaded successfully
@@ -117,6 +132,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitDuration:
+        type: number
         required: false
     responses:
       200:
@@ -140,6 +158,9 @@ types:
         type: string
         default: http
         required: false
+      waitDuration:
+        type: number
+        required: false
     responses:
       200:
         description: Website crawled successfully
@@ -159,6 +180,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitDuration:
+        type: number
         required: false
     responses:
       200:

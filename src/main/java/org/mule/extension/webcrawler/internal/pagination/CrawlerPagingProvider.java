@@ -57,8 +57,8 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
       if(crawler == null) {
 
         crawler = Crawler.builder()
+            .configuration(configuration)
             .connection(connection)
-            .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
             .outputFormat(outputFormat)
             .rootURL(url)
             .maxDepth(targetPagesParameters.getMaxDepth())
