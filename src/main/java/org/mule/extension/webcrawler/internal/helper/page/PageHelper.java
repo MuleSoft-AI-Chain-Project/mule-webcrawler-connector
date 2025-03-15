@@ -40,13 +40,14 @@ public class PageHelper {
   public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
                                      WebCrawlerConnection connection,
                                      String url,
-                                     Long waitDuration,
-                                     String waitUntilXPath) throws IOException {
+                                     Long waitOnPageLoad,
+                                     String waitForXPath) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s", url));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, waitDuration, waitUntilXPath).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, waitOnPageLoad, waitForXPath).get()) { // Blocks until complete
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
-      return Jsoup.parse(pageSource, url);
+      Document document = Jsoup.parse(pageSource, url);
+      return document;
     } catch (InterruptedException | ExecutionException e) {
       throw new IOException("Error fetching page source", e);
     }
@@ -56,13 +57,14 @@ public class PageHelper {
                                      WebCrawlerConnection connection,
                                      String url,
                                      String referrer,
-                                     Long waitDuration,
-                                     String waitUntilXPath) throws IOException {
+                                     Long waitOnPageLoad,
+                                     String waitForXPath) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s and referer %s", url, referrer));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, waitDuration, waitUntilXPath).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, waitOnPageLoad, waitForXPath).get()) { // Blocks until complete
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
-      return Jsoup.parse(pageSource, url);
+      Document document = Jsoup.parse(pageSource, url);
+      return document;
     } catch (InterruptedException | ExecutionException e) {
       throw new IOException(String.format("Error fetching page source for %s", url), e);
     }
@@ -289,7 +291,10 @@ public class PageHelper {
     return false;
   }
 
-  public static String getPageContent(Document document, List<String> tags, Constants.OutputFormat outputFormat) {
+  public static String getPageContent(
+      Document document,
+      List<String> tags,
+      Constants.OutputFormat outputFormat) {
 
     switch(outputFormat) {
       case TEXT:

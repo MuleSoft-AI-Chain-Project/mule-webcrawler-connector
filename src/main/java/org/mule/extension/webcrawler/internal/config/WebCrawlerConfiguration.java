@@ -20,7 +20,7 @@ public class WebCrawlerConfiguration {
   @ParameterGroup(name= "Crawler Options")
   private CrawlerOptions crawlerOptions;
 
-  @ParameterGroup(name= "Page Load Options")
+  @ParameterGroup(name= "Page Load Options (WebDriver)")
   private PageLoadOptions pageLoadOptions;
 
   public CrawlerOptions getCrawlerOptions() {

@@ -37,6 +37,15 @@ public class PageLoadOptions {
   @Optional(defaultValue = "false")
   private boolean extractShadowDom;
 
+  @Parameter
+  @Alias("shadowHostXPath")
+  @DisplayName("Shadow Host(s) XPath")
+  @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Example("//results")
+  @Optional
+  private String shadowHostXPath;
+
   public Long getWaitOnPageLoad() {
     return waitOnPageLoad;
   }
@@ -59,5 +68,13 @@ public class PageLoadOptions {
 
   public void setExtractShadowDom(boolean extractShadowDom) {
     this.extractShadowDom = extractShadowDom;
+  }
+
+  public String getShadowHostXPath() {
+    return shadowHostXPath;
+  }
+
+  public void setShadowHostXPath(String shadowHostXPath) {
+    this.shadowHostXPath = shadowHostXPath;
   }
 }

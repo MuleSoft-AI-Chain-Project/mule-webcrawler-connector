@@ -24,8 +24,8 @@ public abstract class Crawler {
   protected WebCrawlerConfiguration configuration;
   protected WebCrawlerConnection connection;
   protected String rootURL;
-  protected Long waitDuration;
-  protected String waitUntilXPath;
+  protected Long waitOnPageLoad;
+  protected String waitForXPath;
   protected int maxDepth;
   protected boolean restrictToPath;
   protected boolean downloadImages;
@@ -39,16 +39,16 @@ public abstract class Crawler {
   protected RegexUrlsFilterLogic regexUrlsFilterLogic;
   protected List<String> regexUrls;
 
-  public Crawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String rootURL, Long waitDuration,
-                 String waitUntilXPath, int maxDepth, boolean restrictToPath, boolean downloadImages, int maxImageNumber, boolean downloadDocuments,
+  public Crawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String rootURL, Long waitOnPageLoad,
+                 String waitForXPath, int maxDepth, boolean restrictToPath, boolean downloadImages, int maxImageNumber, boolean downloadDocuments,
                  int maxDocumentNumber, String downloadPath, List<String> contentTags, Constants.OutputFormat outputFormat, boolean getMetaTags,
                  RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     this.configuration = configuration;
     this.connection = connection;
     this.rootURL = rootURL;
-    this.waitDuration = waitDuration;
-    this.waitUntilXPath = waitUntilXPath;
+    this.waitOnPageLoad = waitOnPageLoad;
+    this.waitForXPath = waitForXPath;
     this.maxDepth = maxDepth;
     this.restrictToPath = restrictToPath;
     this.downloadImages = downloadImages;
@@ -77,8 +77,8 @@ public abstract class Crawler {
     private WebCrawlerConfiguration configuration;
     private WebCrawlerConnection connection;
     private String rootURL;
-    private Long waitDuration;
-    private String waitUntilXPath;
+    private Long waitOnPageLoad;
+    private String waitForXPath;
     private int maxDepth;
     private boolean restrictToPath = false;
     private boolean downloadImages;
@@ -107,13 +107,13 @@ public abstract class Crawler {
       return this;
     }
 
-    public Crawler.Builder waitDuration(Long waitDuration) {
-      this.waitDuration = waitDuration;
+    public Crawler.Builder waitOnPageLoad(Long waitOnPageLoad) {
+      this.waitOnPageLoad = waitOnPageLoad;
       return this;
     }
 
-    public Crawler.Builder waitUntilXPath(String waitUntilXPath) {
-      this.waitUntilXPath = waitUntilXPath;
+    public Crawler.Builder waitForXPath(String waitForXPath) {
+      this.waitForXPath = waitForXPath;
       return this;
     }
 
@@ -183,7 +183,7 @@ public abstract class Crawler {
 
       try {
 
-        crawler = new MuleCrawler(configuration, connection, rootURL, waitDuration, waitUntilXPath, maxDepth, restrictToPath,
+        crawler = new MuleCrawler(configuration, connection, rootURL, waitOnPageLoad, waitForXPath, maxDepth, restrictToPath,
                                   downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
                                   downloadPath, contentTags, outputFormat, getMetaTags, regexUrlsFilterLogic, regexUrls);
 

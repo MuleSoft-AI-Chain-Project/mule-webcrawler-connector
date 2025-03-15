@@ -71,10 +71,10 @@ public class CrawlOperations {
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
           @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-          @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -137,10 +137,10 @@ public class CrawlOperations {
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
           @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-          @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
@@ -174,10 +174,10 @@ public class CrawlOperations {
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
           @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-          @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {

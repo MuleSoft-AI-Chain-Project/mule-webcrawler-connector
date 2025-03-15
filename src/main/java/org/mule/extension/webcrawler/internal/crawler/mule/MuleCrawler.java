@@ -23,12 +23,12 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_IMAGES_FOLDER = "images/";
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
-  public MuleCrawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String originalUrl, Long waitDuration,
-                     String waitUntilXPath, int maxDepth, boolean restrictToPath, boolean downloadImages, int maxImageNumber,
+  public MuleCrawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String originalUrl, Long waitOnPageLoad,
+                     String waitForXPath, int maxDepth, boolean restrictToPath, boolean downloadImages, int maxImageNumber,
                      boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
                      Constants.OutputFormat outputFormat, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    super(configuration, connection, originalUrl, waitDuration, waitUntilXPath, maxDepth, restrictToPath, downloadImages,
+    super(configuration, connection, originalUrl, waitOnPageLoad, waitForXPath, maxDepth, restrictToPath, downloadImages,
           maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, outputFormat, getMetaTags,
           regexUrlsFilterLogic, regexUrls);
   }
@@ -82,7 +82,7 @@ public class MuleCrawler extends Crawler {
       SiteNode siteNode = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitDuration, waitUntilXPath);
+      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitOnPageLoad, waitForXPath);
 
       // check if url contents have been downloaded before ie applied globally (at all
       // depths). Note, we don't want to do this globally for CrawlType.LINK because
@@ -213,7 +213,7 @@ public class MuleCrawler extends Crawler {
       SiteNode node = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitDuration, waitUntilXPath);
+      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitOnPageLoad, waitForXPath);
 
       node = new SiteNode(url, currentDepth, referrer);
       LOGGER.debug("Found url: " + url);
@@ -333,7 +333,8 @@ public class MuleCrawler extends Crawler {
           return null;
         }
 
-        document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(), waitDuration, waitUntilXPath);
+        document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
+                                          waitOnPageLoad, waitForXPath);
 
         if(currentNode.getCurrentDepth() < maxDepth) {
 

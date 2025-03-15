@@ -1,5 +1,7 @@
 package org.mule.extension.webcrawler.internal.connection.webdriver;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -14,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -42,15 +45,15 @@ public class WebDriverConnection implements WebCrawlerConnection {
     }
 
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, Long waitDuration, String waitUntilXPath) {
+    public CompletableFuture<InputStream> getPageSource(String url, Long waitOnPageLoad, String waitForXPath) {
 
-        return getPageSource(url, this.referrer, waitDuration, waitUntilXPath);
+        return getPageSource(url, this.referrer, waitOnPageLoad, waitForXPath);
     }
 
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitDuration, String waitUntilXPath) {
+    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitOnPageLoad, String waitForXPath) {
 
-        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, waitDuration));
+        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, waitOnPageLoad));
         return CompletableFuture.supplyAsync(() -> {
             // Set the referrer header
             if (currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
@@ -69,52 +72,143 @@ public class WebDriverConnection implements WebCrawlerConnection {
             // Load the dynamic page
             driver.get(url);
 
-            if(waitDuration != null && waitDuration.longValue() > 0L) {
-
-                if(waitUntilXPath != null && waitUntilXPath.compareTo("") != 0) {
-
-                    LOGGER.debug(String.format("Wait until %s for %s milliseconds", waitUntilXPath, waitDuration));
-
-                    try {
-
-                        new FluentWait<>(driver)
-                            .withTimeout(Duration.ofMillis(waitDuration))  // Waits up to 5 seconds
-                            .pollingEvery(Duration.ofMillis(500))  // Checks every 500ms
-                            .ignoring(NoSuchElementException.class)
-                            .until(new Function<WebDriver, Boolean>() {
-
-                                public Boolean apply(WebDriver webDriver) {
-                                    try {
-                                        // Attempt to find the element by XPath
-                                        WebElement element = webDriver.findElement(By.xpath(waitUntilXPath));
-                                        return element != null;  // Return true when the element is found in the DOM
-                                    } catch (NoSuchElementException e) {
-                                        // Return false if the element is not found
-                                        return false;
-                                    }
-                                }
-                            });
-                    } catch (TimeoutException e) {
-
-                        LOGGER.warn(String.format("Element %s not found within the timeout period %s", waitUntilXPath, waitDuration));
-                    }
-                } else {
-
-                    LOGGER.debug(String.format("Wait for %s milliseconds", waitDuration));
-                    try {
-
-                        Thread.sleep(waitDuration);
-                    } catch (InterruptedException e) {
-
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
+            // Wait for the page to load
+            waitOnPageLoad(waitOnPageLoad, waitForXPath);
 
             // Retrieve the page source
             String pageSource = driver.getPageSource();
             // Convert the page source to InputStream
             return new ByteArrayInputStream(pageSource.getBytes(StandardCharsets.UTF_8));
         });
+    }
+
+    /**
+     * Waits for the page to load by either waiting for a specific element to appear or sleeping for a specified duration.
+     *
+     * @param waitOnPageLoad The time in milliseconds to wait for the page to load.
+     * @param waitForXPath The XPath expression to wait for before proceeding.
+     */
+    private void waitOnPageLoad(Long waitOnPageLoad, String waitForXPath) {
+
+        if(waitOnPageLoad != null && waitOnPageLoad.longValue() > 0L) {
+
+            if(waitForXPath != null && waitForXPath.compareTo("") != 0) {
+
+                LOGGER.debug(String.format("Wait until %s for %s milliseconds", waitForXPath, waitOnPageLoad));
+
+                try {
+
+                    new FluentWait<>(driver)
+                        .withTimeout(Duration.ofMillis(waitOnPageLoad))  // Waits up to 5 seconds
+                        .pollingEvery(Duration.ofMillis(500))  // Checks every 500ms
+                        .ignoring(NoSuchElementException.class)
+                        .until(new Function<WebDriver, Boolean>() {
+
+                            public Boolean apply(WebDriver webDriver) {
+                                try {
+                                    // Attempt to find the element by XPath
+                                    WebElement element = webDriver.findElement(By.xpath(waitForXPath));
+                                    return element != null;  // Return true when the element is found in the DOM
+                                } catch (NoSuchElementException e) {
+                                    // Return false if the element is not found
+                                    return false;
+                                }
+                            }
+                        });
+                } catch (TimeoutException e) {
+
+                    LOGGER.warn(String.format("Element %s not found within the timeout period %s", waitForXPath, waitOnPageLoad));
+                }
+            } else {
+
+                LOGGER.debug(String.format("Wait for %s milliseconds", waitOnPageLoad));
+                try {
+
+                    Thread.sleep(waitOnPageLoad);
+                } catch (InterruptedException e) {
+
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Recursively injects all shadow DOMs inside a specified XPath into the Jsoup document.
+     *
+     * @param driver The WebDriver instance used to interact with the web page.
+     * @param jsExecutor The JavascriptExecutor instance used to execute JavaScript in the web page.
+     * @param document The Jsoup Document instance representing the web page.
+     * @param shadowHostXPath The XPath expression used to locate shadow host elements in the web page.
+     */
+    private void injectAllShadowDOMs(WebDriver driver,
+                                     JavascriptExecutor jsExecutor,
+                                     Document document,
+                                     String shadowHostXPath) {
+
+        // Find all shadow hosts using the provided XPath
+        List<WebElement> shadowHosts = driver.findElements(By.xpath(shadowHostXPath));
+
+        // Loop through each shadow host element
+        for (WebElement shadowHost : shadowHosts) {
+            // Check if the element has a shadow root
+            Boolean hasShadowRoot = (Boolean) jsExecutor.executeScript("return arguments[0].shadowRoot !== null", shadowHost);
+            if (hasShadowRoot) {
+
+                // Extract the shadow content as HTML
+                String shadowContent = (String) jsExecutor.executeScript("return arguments[0].shadowRoot.innerHTML;", shadowHost);
+
+                // Find the corresponding Jsoup element by XPath (or tag name)
+                String tagName = shadowHost.getTagName();
+                String jsoupXPath = tagName; // Convert tag name to XPath
+
+                // Select the first matching element in Jsoup
+                Element jsoupElement = document.selectFirst(jsoupXPath);
+                if (jsoupElement != null) {
+                    // Append the shadow content inside the Jsoup element without overwriting
+                    jsoupElement.append(shadowContent);
+                }
+
+                // Recursively inject shadow DOM content from nested shadow roots
+                injectNestedShadowDOMs(driver, jsExecutor, document, shadowHost);
+            }
+        }
+    }
+
+    /**
+     * Recursively injects nested shadow DOMs inside an existing shadow root.
+     *
+     * @param driver The WebDriver instance used to interact with the web page.
+     * @param jsExecutor The JavascriptExecutor instance used to execute JavaScript in the web page.
+     * @param document The Jsoup Document instance representing the web page.
+     * @param shadowHost The WebElement representing the shadow host element.
+     */
+    private void injectNestedShadowDOMs(WebDriver driver,
+                                               JavascriptExecutor jsExecutor,
+                                               Document document,
+                                               WebElement shadowHost) {
+
+        // Execute JavaScript to get the shadow root and avoid casting issues
+        String shadowRootContent = (String) jsExecutor.executeScript(
+            "return arguments[0].shadowRoot ? arguments[0].shadowRoot.innerHTML : null;", shadowHost);
+
+        if (shadowRootContent != null) {
+
+            // Find the corresponding Jsoup element by tag name
+            String tagName = shadowHost.getTagName();
+            Element jsoupElement = document.selectFirst(tagName);
+            if (jsoupElement != null) {
+                jsoupElement.append(shadowRootContent); // Inject the shadow root content into Jsoup
+            }
+
+            // Recursively inject nested shadow roots (if any)
+            List<WebElement> nestedElements = (List<WebElement>) jsExecutor.executeScript(
+                "return Array.from(arguments[0].shadowRoot.querySelectorAll('*'))", shadowHost);
+
+            for (WebElement nestedElement : nestedElements) {
+                // Recursively process deeper shadow roots
+                injectNestedShadowDOMs(driver, jsExecutor, document, nestedElement);
+            }
+        }
     }
 }
