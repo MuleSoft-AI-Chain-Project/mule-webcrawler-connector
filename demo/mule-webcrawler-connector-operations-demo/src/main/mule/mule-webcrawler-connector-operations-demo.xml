@@ -7,7 +7,7 @@ http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/m
   <ms-webcrawler:config name="HTTP_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="d36512c8-0a20-43c2-8178-b71740130f0f" enforceRobotsTxt="true" delayMillis="${webcrawler.delay}">
 		<ms-webcrawler:http-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
-	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" enforceRobotsTxt="true" delayMillis="${webcrawler.delay}" waitDuration="5000">
+	  <ms-webcrawler:config name="WebDriver_Configuration" doc:name="MuleSoft WebCrawler Connector Crawl config" doc:id="e4bd8ac3-4415-4042-8d21-e46bad64709c" enforceRobotsTxt="true" delayMillis="${webcrawler.delay}" waitOnPageLoad="5000">
 		<ms-webcrawler:web-driver-connection userAgent="${webcrawler.userAgent}" referrer="${webcrawler.referrer}" />
 	</ms-webcrawler:config>
   <configuration-properties doc:name="Configuration properties" doc:id="6614e823-3321-4ea6-b067-eb0afcc1d6e2" file="config.properties" />
@@ -164,7 +164,7 @@ output application/json
 	<flow doc:id="672f483e-9723-4b98-afb2-4fe26ac9c01f" name="get:\page:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="8e851b32-b3e1-4d88-920e-56d55d6f6956" >
 			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
-				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]" waitDuration="#[attributes.queryParams.waitDuration]"/>
+				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]"/>
 			</when>
 			<otherwise >
 				<ms-webcrawler:page-content config-ref="HTTP_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[HTTP] [Page] Get content" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]">
@@ -175,7 +175,7 @@ output application/json
   <flow doc:id="0606793a-d005-42a1-bad2-4b50dd7f5085" name="get:\insights:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="56db7772-a4ce-47fc-897c-2f2c08bf6fe3">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:page-insights doc:name="[WebDriver] [Page] Get insights" doc:id="b4a2b508-7cf8-4843-bf46-159228f12a0e" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" waitDuration="#[attributes.queryParams.waitDuration]"/>
+				<ms-webcrawler:page-insights doc:name="[WebDriver] [Page] Get insights" doc:id="b4a2b508-7cf8-4843-bf46-159228f12a0e" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]"/>
 			</when>
 			<otherwise >
 				<ms-webcrawler:page-insights config-ref="HTTP_Configuration" doc:id="03a24bad-a29a-413d-a6b2-397222013497" doc:name="[HTTP] [Page] Get insights" url="#[attributes.queryParams.url]">
@@ -186,7 +186,7 @@ output application/json
   <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="get:\sitemap:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="51bd87fb-ad97-42f1-b69e-91f6151027ad">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:crawl-links-as-sitemap doc:name="[WebDriver] [Crawl] Get links as sitemap" doc:id="f2bb58e3-5e20-4578-97fe-f17e39f26427" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" waitDuration="#[attributes.queryParams.waitDuration]">
+				<ms-webcrawler:crawl-links-as-sitemap doc:name="[WebDriver] [Crawl] Get links as sitemap" doc:id="f2bb58e3-5e20-4578-97fe-f17e39f26427" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]">
 					<ms-webcrawler:regex-urls >
 						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 						<ms-webcrawler:regex-url value="javascript:void(0);" />
@@ -206,7 +206,7 @@ output application/json
 	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\metatag:webcrawler-connector-operations-api-config">
 		<choice doc:name="Choice" doc:id="e69fbf73-5f99-49f2-9426-42e80694100f">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:page-meta-tags doc:name="[WebDriver] [Page] Get meta tags" doc:id="4dab9a59-66cc-4095-9cff-af3485238d8a" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" waitDuration="#[attributes.queryParams.waitDuration]"/>
+				<ms-webcrawler:page-meta-tags doc:name="[WebDriver] [Page] Get meta tags" doc:id="4dab9a59-66cc-4095-9cff-af3485238d8a" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]"/>
 			</when>
 			<otherwise >
 				<ms-webcrawler:page-meta-tags doc:id="35947767-2a91-442d-a6ab-f1a3f38ee8d9" doc:name="[HTTP] [Page] Get meta tags" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration"></ms-webcrawler:page-meta-tags>
@@ -216,7 +216,7 @@ output application/json
   <flow doc:id="0ec8037e-2960-4433-b6c2-fffeecf352a8" name="get:\image:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="87f3bb6d-bbb1-40c8-ab26-6c1c89c2a221">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:page-download-image doc:name="[WebDriver] [Page] Download image" doc:id="4af986f4-7378-4807-b470-1a8effa09acf" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxImageNumber="50" downloadPath="#[attributes.queryParams.downloadLocation]" waitDuration="#[attributes.queryParams.waitDuration]"/>
+				<ms-webcrawler:page-download-image doc:name="[WebDriver] [Page] Download image" doc:id="4af986f4-7378-4807-b470-1a8effa09acf" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxImageNumber="50" downloadPath="#[attributes.queryParams.downloadLocation]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]"/>
 			</when>
 			<otherwise >
 				<ms-webcrawler:page-download-image doc:id="8337992c-f226-40fa-9feb-83afe8bd29a4" doc:name="[HTTP] [Page] Download image" downloadPath="#[attributes.queryParams.downloadLocation]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" maxImageNumber="50"></ms-webcrawler:page-download-image>
@@ -226,7 +226,7 @@ output application/json
   <flow name="get:\document:webcrawler-connector-operations-api-config" doc:id="780b240a-a4a9-410c-879f-173df7312650" >
 		<choice doc:name="Choice" doc:id="8d8274bf-8924-45db-8928-91735ee79920">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:page-download-document doc:name="[WebDriver] [Page] Download document" doc:id="6a733dd1-3a05-4643-a39c-1cab4555f011" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDocumentNumber="50" downloadPath="#[attributes.queryParams.downloadLocation]" waitDuration="#[attributes.queryParams.waitDuration]"/>
+				<ms-webcrawler:page-download-document doc:name="[WebDriver] [Page] Download document" doc:id="6a733dd1-3a05-4643-a39c-1cab4555f011" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDocumentNumber="50" downloadPath="#[attributes.queryParams.downloadLocation]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]"/>
 			</when>
 			<otherwise >
 				<ms-webcrawler:page-download-document doc:name="[HTTP] [Page] Download document" doc:id="3ba449eb-43d8-4e20-b75e-62af9c1f68c7" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" config-ref="HTTP_Configuration" maxDocumentNumber="50" />
@@ -236,7 +236,7 @@ output application/json
 	<flow doc:id="4f26482b-d4f4-47cc-9689-85e6fb50eb2e" name="get:\crawl-full-scan:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="dd2ca71d-007d-48f2-bd03-d2057abd965d">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:crawl-website-full-scan doc:name="[WebDriver] [Crawl] Website (Full Scan)" doc:id="47d56237-9e9d-42c6-8c9b-9613ae6accd5" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" getMetaTags="true" downloadImages="true" downloadDocuments="true" outputFormat="#[attributes.queryParams.outputFormat]" waitDuration="#[attributes.queryParams.waitDuration]">
+				<ms-webcrawler:crawl-website-full-scan doc:name="[WebDriver] [Crawl] Website (Full Scan)" doc:id="47d56237-9e9d-42c6-8c9b-9613ae6accd5" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" getMetaTags="true" downloadImages="true" downloadDocuments="true" outputFormat="#[attributes.queryParams.outputFormat]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]">
 					<ms-webcrawler:regex-urls >
 						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 					</ms-webcrawler:regex-urls>
@@ -254,7 +254,7 @@ output application/json
 	<flow name="get:\crawl-streaming:webcrawler-connector-operations-api-config" doc:id="7ec4d25e-1eb3-4b6c-9dbc-9743ddd36f01">
 		<choice doc:name="Choice" doc:id="4f93626b-f19d-458d-9043-a41126cda290">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
-				<ms-webcrawler:crawl-website-streaming doc:name="[WebDriver] [Crawl] Website (Streaming)" doc:id="aa390ac4-c168-47c7-9dfc-073e177d227b" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" outputFormat="#[attributes.queryParams.outputFormat]" waitDuration="#[attributes.queryParams.waitDuration]">
+				<ms-webcrawler:crawl-website-streaming doc:name="[WebDriver] [Crawl] Website (Streaming)" doc:id="aa390ac4-c168-47c7-9dfc-073e177d227b" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" outputFormat="#[attributes.queryParams.outputFormat]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]">
 				</ms-webcrawler:crawl-website-streaming>
 				<ee:transform doc:name="Transform Message" doc:id="ed94bdba-19b2-48ee-ac1d-2eee0514c944" >
 					<ee:message >

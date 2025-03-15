@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>com.mulesoft.connectors</groupId>
 		    <artifactId>mule4-webcrawler-connector</artifactId>
-		    <version>0.3.10-SNAPSHOT</version>
+		    <version>0.3.12-SNAPSHOT</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>

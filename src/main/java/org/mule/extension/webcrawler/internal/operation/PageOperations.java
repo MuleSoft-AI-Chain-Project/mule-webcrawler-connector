@@ -53,11 +53,11 @@ public class PageOperations {
       getMetaTags(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
-          @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-          @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
       @ConfigOverride
-          @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
@@ -65,7 +65,7 @@ public class PageOperations {
 
       LOGGER.info("Get meta tags");
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -73,7 +73,7 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
+      Document document = PageHelper.getDocument(configuration, connection, url, waitOnPageLoad, waitForXPath);
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
@@ -109,11 +109,11 @@ public class PageOperations {
       downloadWebsiteImages(
           @Config WebCrawlerConfiguration configuration,
           @ConfigOverride
-              @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-              @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+              @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
           @ConfigOverride
-              @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
+              @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @Alias("maxImageNumber") @DisplayName("Max number of images")
@@ -130,7 +130,7 @@ public class PageOperations {
 
       try {
 
-        if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+        if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
             !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
           throw new ModuleException(
@@ -138,7 +138,7 @@ public class PageOperations {
               WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
         }
 
-        document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
+        document = PageHelper.getDocument(configuration, connection, url, waitOnPageLoad, waitForXPath);
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
@@ -183,11 +183,11 @@ public class PageOperations {
   downloadWebsiteDocuments(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
-          @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-          @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
       @ConfigOverride
-          @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
@@ -198,7 +198,7 @@ public class PageOperations {
 
     try {
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -211,7 +211,7 @@ public class PageOperations {
       Document document = null;
 
       try {
-        document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
+        document = PageHelper.getDocument(configuration, connection, url, waitOnPageLoad, waitForXPath);
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
 
@@ -257,11 +257,11 @@ public class PageOperations {
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
           @ConfigOverride
-              @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-              @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+              @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
           @ConfigOverride
-              @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
+              @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
@@ -270,7 +270,7 @@ public class PageOperations {
 
       LOGGER.info("Analyze page");
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -278,7 +278,7 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
+      Document document = PageHelper.getDocument(configuration, connection, url, waitOnPageLoad, waitForXPath);
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
@@ -313,11 +313,11 @@ public class PageOperations {
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
           @ConfigOverride
-              @Alias("waitDuration") @DisplayName("Wait duration (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
-              @Placement(order = 1, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitDuration,
+              @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
           @ConfigOverride
-              @Alias("waitUntilXPath") @DisplayName("Wait until XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Wait on Page Load") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitUntilXPath,
+              @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -327,7 +327,7 @@ public class PageOperations {
 
       LOGGER.info("Get page content");
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -337,7 +337,7 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document = PageHelper.getDocument(configuration, connection, url, waitDuration, waitUntilXPath);
+      Document document = PageHelper.getDocument(configuration, connection, url, waitOnPageLoad, waitForXPath);
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

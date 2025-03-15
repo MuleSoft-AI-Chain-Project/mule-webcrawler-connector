@@ -48,7 +48,7 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
+    if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
       LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
@@ -74,7 +74,7 @@ public class MuleCrawler extends Crawler {
     try {
 
       // add delay
-      Utils.addDelay(configuration.getCrawlerSettingsParameters().getDelayMillis());
+      Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(currentDepth).add(url);
@@ -179,7 +179,7 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
+    if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
       LOGGER.debug("SKIPPING due to robots.txt: " + url);
       return null;
     }
@@ -205,7 +205,7 @@ public class MuleCrawler extends Crawler {
     try {
 
       // add delay
-      Utils.addDelay(configuration.getCrawlerSettingsParameters().getDelayMillis());
+      Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
       // Mark the URL as visited for this depth
       visitedLinksByDepth.get(currentDepth).add(url);
@@ -327,7 +327,7 @@ public class MuleCrawler extends Crawler {
           return null;
         }
 
-        if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
+        if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
 
           LOGGER.debug(String.format("SKIPPING %s due to robots.txt.", rootURL));
           return null;

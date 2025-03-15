@@ -1,4 +1,4 @@
-package org.mule.extension.webcrawler.internal.helper.parameter;
+package org.mule.extension.webcrawler.internal.config;
 
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
@@ -9,9 +9,8 @@ import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
-import org.mule.runtime.extension.api.annotation.values.OfValues;
 
-public class CrawlerSettingsParameters {
+public class CrawlerOptions {
 
   @Parameter
   @Alias("delayMillis")
