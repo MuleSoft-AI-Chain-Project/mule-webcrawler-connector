@@ -10,6 +10,7 @@ import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
+import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +39,13 @@ public class MuleCrawler extends Crawler {
   @Override
   public SiteNode crawl() {
 
+    String rootURLCleaned = URLUtils.removeFragment(rootURL);
+
     visitedLinksGlobal = new HashSet<>();
     visitedLinksByDepth = new HashMap<>();
-    return crawl(rootURL, 0, connection.getReferrer());
+    visitedLinksByDepth.put(rootURLCleaned, 0);
+
+    return crawl(rootURLCleaned, 0, connection.getReferrer());
   }
 
   private SiteNode crawl(String url, int currentDepth, String referrer) {
@@ -55,31 +60,11 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if (restrictToPath) {
-      // Restrict crawling to URLs under the original URL only
-      if (!url.startsWith(rootURL)) {
-
-        LOGGER.debug("SKIPPING due to strict crawling: " + url);
-        return null;
-      }
-    }
-
-    // Initialize the set for the current depth if not already present
-    visitedLinksByDepth.putIfAbsent(currentDepth, new HashSet<>());
-
-    // Check if this URL has already been visited at this depth
-    if (visitedLinksByDepth.get(currentDepth).contains(url)) {
-      return null;
-    }
-
     // crawl & extract current page
     try {
 
       // add delay
       Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
-
-      // Mark the URL as visited for this depth
-      visitedLinksByDepth.get(currentDepth).add(url);
 
       SiteNode siteNode = null;
 
@@ -148,17 +133,39 @@ public class MuleCrawler extends Crawler {
         Set<String> links = getPageLinks(document);
 
         if (links != null) {
+
+          LOGGER.debug(String.format("Found %d links on page: %s", links.size(), url));
+
           for (String childURL : links) {
 
-            // Recursively crawl the link and add as a child
-            SiteNode childSiteNode = crawl(childURL, currentDepth + 1, url);
-            if (childSiteNode != null) {
+            String childURLCleaned = URLUtils.removeFragment(childURL);
 
-              siteNode.addChild(childSiteNode);
+            // Check if this URL has already been visited at this depth
+            if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
+                visitedLinksByDepth.get(childURLCleaned) > currentDepth+1) {
+
+              // Mark the URL as visited for this depth
+              visitedLinksByDepth.put(childURLCleaned, currentDepth+1);
+
+              SiteNode childNode = null;
+
+              // Recursively crawl the link and add as a child
+              if(currentDepth < maxDepth) {
+
+                childNode = crawl(childURLCleaned, currentDepth +1, url);
+              }
+
+              if(childNode == null) {
+
+                childNode = new SiteNode(childURLCleaned, currentDepth +1, url) ;
+              }
+
+              siteNode.addChild(childNode);
             }
           }
         }
       }
+
       return siteNode;
 
     } catch (Exception e) {
@@ -170,9 +177,12 @@ public class MuleCrawler extends Crawler {
   @Override
   public SiteNode map() {
 
-    visitedLinksGlobal = new HashSet<>();
+    String rootURLCleaned = URLUtils.removeFragment(rootURL);
+
     visitedLinksByDepth = new HashMap<>();
-    return map(rootURL, 0, connection.getReferrer());
+    visitedLinksByDepth.put(rootURLCleaned, 0);
+
+    return map(rootURLCleaned, 0, connection.getReferrer());
   }
 
   private SiteNode map(String url, int currentDepth, String referrer) {
@@ -187,31 +197,11 @@ public class MuleCrawler extends Crawler {
       return null;
     }
 
-    if (restrictToPath) {
-      // Restrict crawling to URLs under the original URL only
-      if (!url.startsWith(rootURL)) {
-
-        LOGGER.debug("SKIPPING due to strict crawling: " + url);
-        return null;
-      }
-    }
-
-    // Initialize the set for the current depth if not already present
-    visitedLinksByDepth.putIfAbsent(currentDepth, new HashSet<>());
-
-    // Check if this URL has already been visited at this depth
-    if (visitedLinksByDepth.get(currentDepth).contains(url)) {
-      return null;
-    }
-
     // map current page
     try {
 
       // add delay
       Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
-
-      // Mark the URL as visited for this depth
-      visitedLinksByDepth.get(currentDepth).add(url);
 
       SiteNode node = null;
 
@@ -233,14 +223,28 @@ public class MuleCrawler extends Crawler {
 
           for (String childURL : links) {
 
-            SiteNode childNode;
+            String childURLCleaned = URLUtils.removeFragment(childURL);
 
-            // Recursively crawl the link and add as a child
-            childNode = currentDepth < maxDepth ?
-                map(childURL, currentDepth +1, url) :
-                new SiteNode(childURL, currentDepth +1, url);
+            // Check if this URL has already been visited at this depth
+            if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
+                visitedLinksByDepth.get(childURLCleaned) > currentDepth+1) {
 
-            if (childNode != null) {
+              // Mark the URL as visited for this depth
+              visitedLinksByDepth.put(childURLCleaned, currentDepth+1);
+
+              SiteNode childNode = null;
+
+              // Recursively crawl the link and add as a child
+              if(currentDepth < maxDepth) {
+
+                childNode = map(childURLCleaned, currentDepth +1, url);
+              }
+
+              if(childNode == null) {
+
+                childNode = new SiteNode(childURLCleaned, currentDepth +1, url) ;
+              }
+
               node.addChild(childNode);
             }
           }
@@ -295,10 +299,13 @@ public class MuleCrawler extends Crawler {
 
         super();
 
-        visitedLinksGlobal = new HashSet<>();
+        String rootURLCleaned = URLUtils.removeFragment(rootURL);
 
-        if(rootURL != null) {
-          siteNodeQueue.add(new SiteNode(rootURL, 0, connection.getReferrer()));
+        visitedLinksByDepth = new HashMap<>();
+        visitedLinksByDepth.put(rootURLCleaned, 0);
+
+        if(rootURLCleaned != null) {
+          siteNodeQueue.add(new SiteNode(rootURLCleaned, 0, connection.getReferrer()));
         } else {
           throw new IllegalArgumentException("Root URL cannot be null.");
         }
@@ -322,9 +329,11 @@ public class MuleCrawler extends Crawler {
       Document document = null;
       try {
 
+        String currentUrlCleaned = URLUtils.removeFragment(currentNode.getUrl());
 
         // Check if this URL has already been visited at this depth
-        if (visitedLinksGlobal.contains(currentNode.getUrl())) {
+        if (visitedLinksByDepth.containsKey(currentUrlCleaned) &&
+              visitedLinksByDepth.get(currentUrlCleaned) <= currentNode.getCurrentDepth()) {
 
           LOGGER.debug(String.format("SKIPPING %s since already visited.", rootURL));
           return null;
@@ -349,7 +358,17 @@ public class MuleCrawler extends Crawler {
 
             for (String childURL : links) {
 
-              siteNodeQueue.add(new SiteNode(childURL, currentNode.getCurrentDepth() + 1, currentNode.getUrl()));
+              String childURLCleaned = URLUtils.removeFragment(childURL);
+
+              // Check if this URL has already been visited at this depth
+              if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
+                  visitedLinksByDepth.get(childURLCleaned) > currentNode.getCurrentDepth()+1) {
+
+                // Mark the URL as visited for this depth
+                visitedLinksByDepth.put(childURLCleaned, currentNode.getCurrentDepth() + 1);
+
+                siteNodeQueue.add(new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl()));
+              }
             }
           }
         }
@@ -357,7 +376,6 @@ public class MuleCrawler extends Crawler {
         throw new RuntimeException(e);
       }
 
-      visitedLinksGlobal.add(currentNode.getUrl());
       return document;
     }
   }
