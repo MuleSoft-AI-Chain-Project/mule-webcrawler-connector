@@ -2,6 +2,7 @@ package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONArray;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
+import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
@@ -52,6 +53,18 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getMetaTags(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+      @ConfigOverride
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
@@ -59,7 +72,7 @@ public class PageOperations {
 
       LOGGER.info("Get meta tags");
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -67,7 +80,8 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(connection, url);
+      Document document = PageHelper.getDocument(configuration, connection, url,
+         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
@@ -102,6 +116,18 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       downloadWebsiteImages(
           @Config WebCrawlerConfiguration configuration,
+          @ConfigOverride
+              @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+          @ConfigOverride
+              @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @ConfigOverride
+              @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+          @ConfigOverride
+              @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @Alias("maxImageNumber") @DisplayName("Max number of images")
@@ -118,7 +144,7 @@ public class PageOperations {
 
       try {
 
-        if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+        if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
             !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
           throw new ModuleException(
@@ -126,7 +152,9 @@ public class PageOperations {
               WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
         }
 
-        document = PageHelper.getDocument(connection, url);
+        document = PageHelper.getDocument(configuration, connection, url,
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
@@ -170,6 +198,18 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   downloadWebsiteDocuments(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+      @ConfigOverride
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
@@ -180,7 +220,7 @@ public class PageOperations {
 
     try {
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -193,7 +233,8 @@ public class PageOperations {
       Document document = null;
 
       try {
-        document = PageHelper.getDocument(connection, url);
+        document = PageHelper.getDocument(configuration, connection, url,
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
         documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
 
@@ -238,6 +279,18 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
+          @ConfigOverride
+              @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+          @ConfigOverride
+              @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @ConfigOverride
+              @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+          @ConfigOverride
+              @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
@@ -246,7 +299,7 @@ public class PageOperations {
 
       LOGGER.info("Analyze page");
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -254,7 +307,8 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(connection, url);
+      Document document = PageHelper.getDocument(configuration, connection, url,
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
       return ResponseHelper.createResponse(
           JSONUtils.convertToJSON(
@@ -288,6 +342,18 @@ public class PageOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
+          @ConfigOverride
+              @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+              @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+          @ConfigOverride
+              @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @ConfigOverride
+              @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+          @ConfigOverride
+              @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -297,7 +363,7 @@ public class PageOperations {
 
       LOGGER.info("Get page content");
 
-      if(configuration.getCrawlerSettingsParameters().isEnforceRobotsTxt() &&
+      if(configuration.getCrawlerOptions().isEnforceRobotsTxt() &&
           !PageHelper.canCrawl(url, connection.getUserAgent())) {
 
         throw new ModuleException(
@@ -307,7 +373,8 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document = PageHelper.getDocument(connection, url);
+      Document document = PageHelper.getDocument(configuration, connection, url,
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

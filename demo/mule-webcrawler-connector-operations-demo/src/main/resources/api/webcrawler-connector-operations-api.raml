@@ -37,6 +37,18 @@ types:
         type: string
         default: http
         required: false
+      waitOnPageLoad:
+        type: number
+        required: false
+      waitForXPath:
+        type: string
+        required: false
+      extractShadowDom:
+        type: boolean
+        required: false
+      shadowDomHostXPath:
+        type: string
+        required: false
     responses:
       200:
         description: Page content retrieved successfully
@@ -50,6 +62,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitOnPageLoad:
+        type: number
         required: false
     responses:
       200:
@@ -67,6 +82,9 @@ types:
         required: false
       depth:
         type: integer
+      waitOnPageLoad:
+        type: number
+        required: false
     responses:
       200:
         description: Node generated successfully
@@ -83,6 +101,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitOnPageLoad:
+        type: number
         required: false
     responses:
       200:
@@ -101,6 +122,9 @@ types:
         type: string
         default: http
         required: false
+      waitOnPageLoad:
+        type: number
+        required: false
     responses:
       200:
         description: Images downloaded successfully
@@ -117,6 +141,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitOnPageLoad:
+        type: number
         required: false
     responses:
       200:
@@ -140,6 +167,9 @@ types:
         type: string
         default: http
         required: false
+      waitOnPageLoad:
+        type: number
+        required: false
     responses:
       200:
         description: Website crawled successfully
@@ -159,6 +189,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      waitOnPageLoad:
+        type: number
         required: false
     responses:
       200:
