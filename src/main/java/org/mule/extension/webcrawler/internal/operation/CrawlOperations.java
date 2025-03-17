@@ -75,6 +75,12 @@ public class CrawlOperations {
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
           @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -141,6 +147,12 @@ public class CrawlOperations {
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
           @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
@@ -178,6 +190,12 @@ public class CrawlOperations {
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
           @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {

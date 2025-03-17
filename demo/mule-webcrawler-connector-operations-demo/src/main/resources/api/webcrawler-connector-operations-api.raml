@@ -40,6 +40,15 @@ types:
       waitOnPageLoad:
         type: number
         required: false
+      waitForXPath:
+        type: string
+        required: false
+      extractShadowDom:
+        type: boolean
+        required: false
+      shadowDomHostXPath:
+        type: string
+        required: false
     responses:
       200:
         description: Page content retrieved successfully

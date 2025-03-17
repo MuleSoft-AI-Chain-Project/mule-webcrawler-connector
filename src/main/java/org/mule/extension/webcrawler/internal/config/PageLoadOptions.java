@@ -46,6 +46,17 @@ public class PageLoadOptions {
   @Optional
   private String shadowHostXPath;
 
+  public PageLoadOptions() {
+
+  }
+
+  public PageLoadOptions(Long waitOnPageLoad, String waitForXPath, boolean extractShadowDom, String shadowHostXPath) {
+    this.waitOnPageLoad = waitOnPageLoad;
+    this.waitForXPath = waitForXPath;
+    this.extractShadowDom = extractShadowDom;
+    this.shadowHostXPath = shadowHostXPath;
+  }
+
   public Long getWaitOnPageLoad() {
     return waitOnPageLoad;
   }

@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.connection.http;
 
+import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
@@ -44,16 +45,16 @@ public class HttpConnection implements WebCrawlerConnection {
   }
 
   @Override
-  public CompletableFuture<InputStream> getPageSource(String url, Long waitDuration, String waitUntilXPath) {
+  public CompletableFuture<InputStream> getPageSource(String url, PageLoadOptions pageLoadOptions) {
 
-    return getPageSource(url, this.referrer, waitDuration, waitUntilXPath);
+    return getPageSource(url, this.referrer, pageLoadOptions);
   }
 
   @Override
-  public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitDuration, String waitUntilXPath) {
+  public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
 
-    LOGGER.debug(String.format("Retrieving page source for url %s using http client (wait %s millisec)", url, waitDuration));
-    if(waitDuration != null && waitDuration.longValue() > 0L) {
+    LOGGER.debug(String.format("Retrieving page source for url %s using http client (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
+    if(pageLoadOptions.getWaitOnPageLoad() != null && pageLoadOptions.getWaitOnPageLoad().longValue() > 0L) {
 
       throw new RuntimeException("Wait duration is not supported for HttpConnection");
     }

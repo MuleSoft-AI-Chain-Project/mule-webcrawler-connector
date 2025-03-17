@@ -3,6 +3,7 @@ package org.mule.extension.webcrawler.internal.crawler.mule;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
+import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
@@ -24,13 +25,14 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
   public MuleCrawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String originalUrl, Long waitOnPageLoad,
-                     String waitForXPath, int maxDepth, boolean restrictToPath, boolean downloadImages, int maxImageNumber,
-                     boolean downloadDocuments, int maxDocumentNumber, String downloadPath, List<String> contentTags,
-                     Constants.OutputFormat outputFormat, boolean getMetaTags, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
+                     String waitForXPath, boolean extractShadowDom, String shadowHostXPath, int maxDepth, boolean restrictToPath,
+                     boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber, String downloadPath,
+                     List<String> contentTags, Constants.OutputFormat outputFormat, boolean getMetaTags,
+                     RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
-    super(configuration, connection, originalUrl, waitOnPageLoad, waitForXPath, maxDepth, restrictToPath, downloadImages,
-          maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath, contentTags, outputFormat, getMetaTags,
-          regexUrlsFilterLogic, regexUrls);
+    super(configuration, connection, originalUrl, waitOnPageLoad, waitForXPath,  extractShadowDom, shadowHostXPath,
+          maxDepth, restrictToPath, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath,
+          contentTags, outputFormat, getMetaTags, regexUrlsFilterLogic, regexUrls);
   }
 
   @Override
@@ -82,7 +84,8 @@ public class MuleCrawler extends Crawler {
       SiteNode siteNode = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitOnPageLoad, waitForXPath);
+      Document document = PageHelper.getDocument(configuration, connection, url, referrer,
+         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
       // check if url contents have been downloaded before ie applied globally (at all
       // depths). Note, we don't want to do this globally for CrawlType.LINK because
@@ -213,8 +216,8 @@ public class MuleCrawler extends Crawler {
       SiteNode node = null;
 
       // get page as a html document
-      Document document = PageHelper.getDocument(configuration, connection, url, referrer, waitOnPageLoad, waitForXPath);
-
+      Document document = PageHelper.getDocument(configuration, connection, url, referrer,
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
       node = new SiteNode(url, currentDepth, referrer);
       LOGGER.debug("Found url: " + url);
 
@@ -334,7 +337,7 @@ public class MuleCrawler extends Crawler {
         }
 
         document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
-                                          waitOnPageLoad, waitForXPath);
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
         if(currentNode.getCurrentDepth() < maxDepth) {
 

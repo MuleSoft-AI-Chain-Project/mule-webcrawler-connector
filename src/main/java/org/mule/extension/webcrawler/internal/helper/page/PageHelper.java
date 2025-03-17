@@ -6,8 +6,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.connection.webdriver.WebDriverConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
@@ -40,13 +42,18 @@ public class PageHelper {
   public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
                                      WebCrawlerConnection connection,
                                      String url,
-                                     Long waitOnPageLoad,
-                                     String waitForXPath) throws IOException {
+                                     PageLoadOptions pageLoadOptions) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s", url));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, waitOnPageLoad, waitForXPath).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, pageLoadOptions).get()) { // Blocks until complete
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       Document document = Jsoup.parse(pageSource, url);
+
+      // Apply page load options to WebDriver connections
+      if(connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
+        ((WebDriverConnection)connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
+      }
+
       return document;
     } catch (InterruptedException | ExecutionException e) {
       throw new IOException("Error fetching page source", e);
@@ -57,13 +64,18 @@ public class PageHelper {
                                      WebCrawlerConnection connection,
                                      String url,
                                      String referrer,
-                                     Long waitOnPageLoad,
-                                     String waitForXPath) throws IOException {
+                                     PageLoadOptions pageLoadOptions) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s and referer %s", url, referrer));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, waitOnPageLoad, waitForXPath).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, pageLoadOptions).get()) { // Blocks until complete
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       Document document = Jsoup.parse(pageSource, url);
+
+      // Apply page load options to WebDriver connections
+      if(connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
+        ((WebDriverConnection)connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
+      }
+
       return document;
     } catch (InterruptedException | ExecutionException e) {
       throw new IOException(String.format("Error fetching page source for %s", url), e);

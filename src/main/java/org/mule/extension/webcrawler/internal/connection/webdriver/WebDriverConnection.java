@@ -2,6 +2,7 @@ package org.mule.extension.webcrawler.internal.connection.webdriver;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -45,15 +46,15 @@ public class WebDriverConnection implements WebCrawlerConnection {
     }
 
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, Long waitOnPageLoad, String waitForXPath) {
+    public CompletableFuture<InputStream> getPageSource(String url, PageLoadOptions pageLoadOptions) {
 
-        return getPageSource(url, this.referrer, waitOnPageLoad, waitForXPath);
+        return getPageSource(url, this.referrer, pageLoadOptions);
     }
 
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, Long waitOnPageLoad, String waitForXPath) {
+    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
 
-        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, waitOnPageLoad));
+        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
         return CompletableFuture.supplyAsync(() -> {
             // Set the referrer header
             if (currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
@@ -73,7 +74,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
             driver.get(url);
 
             // Wait for the page to load
-            waitOnPageLoad(waitOnPageLoad, waitForXPath);
+            waitOnPageLoad(pageLoadOptions.getWaitOnPageLoad(), pageLoadOptions.getWaitForXPath());
 
             // Retrieve the page source
             String pageSource = driver.getPageSource();
@@ -136,15 +137,15 @@ public class WebDriverConnection implements WebCrawlerConnection {
     /**
      * Recursively injects all shadow DOMs inside a specified XPath into the Jsoup document.
      *
-     * @param driver The WebDriver instance used to interact with the web page.
-     * @param jsExecutor The JavascriptExecutor instance used to execute JavaScript in the web page.
      * @param document The Jsoup Document instance representing the web page.
      * @param shadowHostXPath The XPath expression used to locate shadow host elements in the web page.
      */
-    private void injectAllShadowDOMs(WebDriver driver,
-                                     JavascriptExecutor jsExecutor,
-                                     Document document,
+    public void injectAllShadowDOMs(Document document,
                                      String shadowHostXPath) {
+
+        JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
+
+        if(shadowHostXPath == null) shadowHostXPath = "//*";
 
         // Find all shadow hosts using the provided XPath
         List<WebElement> shadowHosts = driver.findElements(By.xpath(shadowHostXPath));
@@ -170,7 +171,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
                 }
 
                 // Recursively inject shadow DOM content from nested shadow roots
-                injectNestedShadowDOMs(driver, jsExecutor, document, shadowHost);
+                injectNestedShadowDOMs(jsExecutor, document, shadowHost);
             }
         }
     }
@@ -178,15 +179,13 @@ public class WebDriverConnection implements WebCrawlerConnection {
     /**
      * Recursively injects nested shadow DOMs inside an existing shadow root.
      *
-     * @param driver The WebDriver instance used to interact with the web page.
      * @param jsExecutor The JavascriptExecutor instance used to execute JavaScript in the web page.
      * @param document The Jsoup Document instance representing the web page.
      * @param shadowHost The WebElement representing the shadow host element.
      */
-    private void injectNestedShadowDOMs(WebDriver driver,
-                                               JavascriptExecutor jsExecutor,
-                                               Document document,
-                                               WebElement shadowHost) {
+    private void injectNestedShadowDOMs(JavascriptExecutor jsExecutor,
+                                       Document document,
+                                       WebElement shadowHost) {
 
         // Execute JavaScript to get the shadow root and avoid casting issues
         String shadowRootContent = (String) jsExecutor.executeScript(
@@ -207,7 +206,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
 
             for (WebElement nestedElement : nestedElements) {
                 // Recursively process deeper shadow roots
-                injectNestedShadowDOMs(driver, jsExecutor, document, nestedElement);
+                injectNestedShadowDOMs(jsExecutor, document, nestedElement);
             }
         }
     }
