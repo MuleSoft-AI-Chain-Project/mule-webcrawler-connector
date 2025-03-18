@@ -354,10 +354,10 @@ public class MuleCrawler extends Crawler {
 
               // Check if this URL has already been visited at this depth
               if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
-                  visitedLinksByDepth.get(childURLCleaned) > currentNode.getCurrentDepth()+1) {
+                  visitedLinksByDepth.get(childURLCleaned) > currentNode.getCurrentDepth()) {
 
                 // Mark the URL as visited for this depth
-                visitedLinksByDepth.put(childURLCleaned, currentNode.getCurrentDepth() + 1);
+                visitedLinksByDepth.put(childURLCleaned, currentNode.getCurrentDepth());
 
                 siteNodeQueue.add(new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl()));
               }
