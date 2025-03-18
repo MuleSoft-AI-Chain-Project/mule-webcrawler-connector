@@ -19,7 +19,7 @@ public abstract class Crawler {
   private static final Logger LOGGER = LoggerFactory.getLogger(Crawler.class);
 
   protected Set<String> visitedLinksGlobal;
-  protected Map<Integer, Set<String>> visitedLinksByDepth;
+  protected Map<String, Integer> visitedLinksByDepth;
 
   protected WebCrawlerConfiguration configuration;
   protected WebCrawlerConnection connection;
