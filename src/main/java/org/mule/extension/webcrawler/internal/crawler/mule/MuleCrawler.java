@@ -302,7 +302,6 @@ public class MuleCrawler extends Crawler {
         String rootURLCleaned = URLUtils.removeFragment(rootURL);
 
         visitedLinksByDepth = new HashMap<>();
-        visitedLinksByDepth.put(rootURLCleaned, 0);
 
         if(rootURLCleaned != null) {
           siteNodeQueue.add(new SiteNode(rootURLCleaned, 0, connection.getReferrer()));
@@ -329,13 +328,14 @@ public class MuleCrawler extends Crawler {
       Document document = null;
       try {
 
-        String currentUrlCleaned = URLUtils.removeFragment(currentNode.getUrl());
-
         if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
 
           LOGGER.debug(String.format("SKIPPING %s due to robots.txt.", rootURL));
           return null;
         }
+
+        // Mark the URL as visited for this depth
+        visitedLinksByDepth.put(currentNode.getUrl(), currentNode.getCurrentDepth());
 
         document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
@@ -354,10 +354,7 @@ public class MuleCrawler extends Crawler {
 
               // Check if this URL has already been visited at this depth
               if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
-                  visitedLinksByDepth.get(childURLCleaned) > currentNode.getCurrentDepth()) {
-
-                // Mark the URL as visited for this depth
-                visitedLinksByDepth.put(childURLCleaned, currentNode.getCurrentDepth());
+                  visitedLinksByDepth.get(childURLCleaned) > currentNode.getCurrentDepth() + 1) {
 
                 siteNodeQueue.add(new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl()));
               }
