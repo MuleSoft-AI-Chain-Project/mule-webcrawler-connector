@@ -184,13 +184,13 @@ public class MuleCrawler extends Crawler {
 
       SiteNode node = null;
 
+      // Mark the URL as visited for this depth
+      visitedLinksByDepth.put(url, currentDepth);
+
       // get page as a html document
       Document document = PageHelper.getDocument(configuration, connection, url, referrer,
             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
       node = new SiteNode(url, currentDepth, referrer);
-
-      // Mark the URL as visited for this depth
-      visitedLinksByDepth.put(url, currentDepth);
 
       LOGGER.debug("Found url: " + url);
 
@@ -283,7 +283,10 @@ public class MuleCrawler extends Crawler {
 
         String rootURLCleaned = URLUtils.removeFragment(rootURL);
 
-        visitedLinksByDepth = new HashMap<>();
+        visitedLinksGlobal = new HashSet<>();
+
+        // Mark the URL as visited for this depth
+        visitedLinksGlobal.add(rootURLCleaned);
 
         if(rootURLCleaned != null) {
           siteNodeQueue.add(new SiteNode(rootURLCleaned, 0, connection.getReferrer()));
@@ -316,9 +319,6 @@ public class MuleCrawler extends Crawler {
           return null;
         }
 
-        // Mark the URL as visited for this depth
-        visitedLinksByDepth.put(currentNode.getUrl(), currentNode.getCurrentDepth());
-
         document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
@@ -335,9 +335,9 @@ public class MuleCrawler extends Crawler {
               String childURLCleaned = URLUtils.removeFragment(childURL);
 
               // Check if this URL has already been visited at this depth
-              if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
-                  visitedLinksByDepth.get(childURLCleaned) > currentNode.getCurrentDepth() + 1) {
+              if (!visitedLinksGlobal.contains(childURLCleaned)) {
 
+                visitedLinksGlobal.add(childURLCleaned);
                 siteNodeQueue.add(new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl()));
               }
             }
