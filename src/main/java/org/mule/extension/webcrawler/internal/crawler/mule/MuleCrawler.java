@@ -331,14 +331,6 @@ public class MuleCrawler extends Crawler {
 
         String currentUrlCleaned = URLUtils.removeFragment(currentNode.getUrl());
 
-        // Check if this URL has already been visited at this depth
-        if (visitedLinksByDepth.containsKey(currentUrlCleaned) &&
-              visitedLinksByDepth.get(currentUrlCleaned) <= currentNode.getCurrentDepth()) {
-
-          LOGGER.debug(String.format("SKIPPING %s since already visited.", rootURL));
-          return null;
-        }
-
         if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
 
           LOGGER.debug(String.format("SKIPPING %s due to robots.txt.", rootURL));
