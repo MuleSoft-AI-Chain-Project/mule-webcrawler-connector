@@ -117,6 +117,9 @@ public class MuleCrawler extends Crawler {
         // Create a new pageNode for this URL
         siteNode = new SiteNode(url, currentDepth, filename);
 
+      } else {
+
+        siteNode = new SiteNode(url, currentDepth, "already visited");
       }
 
       // If not at max depth, find and crawl the links on the page
