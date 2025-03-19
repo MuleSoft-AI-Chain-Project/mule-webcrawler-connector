@@ -13,18 +13,18 @@ import org.mule.extension.webcrawler.internal.helper.parameter.CrawlerTargetPage
 import org.mule.extension.webcrawler.internal.metadata.CrawlWebSiteStreamingOutputTypeMetadataResolver;
 import org.mule.extension.webcrawler.internal.pagination.CrawlerPagingProvider;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
+import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.extension.api.annotation.Alias;
+import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.OutputResolver;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
-import org.mule.runtime.extension.api.annotation.param.Config;
-import org.mule.runtime.extension.api.annotation.param.Connection;
-import org.mule.runtime.extension.api.annotation.param.MediaType;
-import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
+import org.mule.runtime.extension.api.annotation.param.*;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.extension.api.runtime.streaming.PagingProvider;
@@ -69,6 +69,18 @@ public class CrawlOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
       crawlWebsiteFullScan(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+      @ConfigOverride
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -82,8 +94,8 @@ public class CrawlOperations {
       LOGGER.debug("\n\n" + targetContentParameters.toString() + "\n");
 
       Crawler crawler = Crawler.builder()
+          .configuration(configuration)
           .connection(connection)
-          .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
           .outputFormat(outputFormat)
           .rootURL(url)
           .downloadPath(downloadPath)
@@ -129,6 +141,18 @@ public class CrawlOperations {
   public PagingProvider<WebCrawlerConnection, Result<CursorProvider, ResponseAttributes>>
   crawlWebsiteStreaming(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+      @ConfigOverride
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters,
@@ -160,6 +184,18 @@ public class CrawlOperations {
   public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
   getSiteMap(
       @Config WebCrawlerConfiguration configuration,
+      @ConfigOverride
+          @Alias("waitOnPageLoad") @DisplayName("Wait on page load (millisecs)") @Summary("The time to wait on page load (not available for HTTP connection)")
+          @Placement(order = 1, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("1000") @Optional Long waitOnPageLoad,
+      @ConfigOverride
+          @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @ConfigOverride
+          @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+      @ConfigOverride
+          @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
+          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Website URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @ParameterGroup(name = "Target Pages") CrawlerTargetPagesParameters targetPagesParameters) {
@@ -169,8 +205,8 @@ public class CrawlOperations {
       LOGGER.info("Generate sitemap");
 
       Crawler crawler = Crawler.builder()
+          .configuration(configuration)
           .connection(connection)
-          .delayMillis(configuration.getCrawlerSettingsParameters().getDelayMillis())
           .rootURL(url)
           .restrictToPath(targetPagesParameters.isRestrictToPath())
           .maxDepth(targetPagesParameters.getMaxDepth())
