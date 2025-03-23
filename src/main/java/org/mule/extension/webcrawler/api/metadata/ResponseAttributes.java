@@ -13,28 +13,17 @@ import static org.mule.runtime.extension.api.annotation.param.MediaType.APPLICAT
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ResponseAttributes  implements Serializable {
-
-  private final String url;
-  private final String title;
+public class ResponseAttributes implements Serializable {
 
   /**
    * Additional attributes not explicitly defined as fields in this class.
    */
-  private final HashMap<String, Object> otherAttributes;
+  protected final HashMap<String, Object> otherAttributes;
 
   public ResponseAttributes(HashMap<String, Object> requestAttributes) {
 
-    this.url = requestAttributes.containsKey("url") ? (String) requestAttributes.remove("url") : null;
-    this.title = requestAttributes.containsKey("title") ? (String) requestAttributes.remove("title") : null;
     this.otherAttributes = requestAttributes;
   }
-
-  public String getUrl() {
-    return url;
-  }
-
-    public String getTitle() { return title; }
 
   /**
    * Gets additional attributes of the document.

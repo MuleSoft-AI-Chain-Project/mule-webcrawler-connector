@@ -1,6 +1,7 @@
 package org.mule.extension.webcrawler.internal.operation;
 
-import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
+import org.mule.extension.webcrawler.api.metadata.PageResponseAttributes;
+import org.mule.extension.webcrawler.api.metadata.SitemapResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
@@ -20,6 +21,7 @@ import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.metadata.OutputResolver;
 import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputJsonType;
+import org.mule.runtime.extension.api.annotation.metadata.fixed.OutputXmlType;
 import org.mule.runtime.extension.api.annotation.param.*;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
@@ -36,8 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
-import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
-import static org.mule.runtime.extension.api.annotation.param.MediaType.APPLICATION_JSON;
+import static org.mule.runtime.extension.api.annotation.param.MediaType.*;
 
 /**
  * This class is a container for operations, every public method in this class
@@ -66,7 +67,7 @@ public class CrawlOperations {
   @DisplayName("[Crawl] Website (Full Scan)")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/CrawlWebSiteFullScan.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, PageResponseAttributes>
       crawlWebsiteFullScan(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
@@ -115,7 +116,7 @@ public class CrawlOperations {
 
       Crawler.SiteNode rootNode = crawler.crawl();
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(rootNode, true),
           new HashMap<String, Object>() {{
             put("url", url);
@@ -138,7 +139,7 @@ public class CrawlOperations {
   @DisplayName("[Crawl] Website (Streaming)")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputResolver(output = CrawlWebSiteStreamingOutputTypeMetadataResolver.class)
-  public PagingProvider<WebCrawlerConnection, Result<CursorProvider, ResponseAttributes>>
+  public PagingProvider<WebCrawlerConnection, Result<CursorProvider, PageResponseAttributes>>
   crawlWebsiteStreaming(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
@@ -176,12 +177,12 @@ public class CrawlOperations {
   /**
    * Retrieve internal links as a site map from the specified url and depth.
    */
-  @MediaType(value = APPLICATION_JSON, strict = false)
-  @Alias("crawl-links-as-sitemap")
-  @DisplayName("[Crawl] Get links as sitemap")
+  @MediaType(value = APPLICATION_XML, strict = false)
+  @Alias("get-sitemap")
+  @DisplayName("[Crawl] Get sitemap")
   @Throws(WebCrawlerErrorTypeProvider.class)
-  @OutputJsonType(schema = "api/metadata/CrawlGetLinksAsSitemap.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  @OutputXmlType(schema = "api/metadata/sitemap.xsd", qname = "{http://www.sitemaps.org/schemas/sitemap/0.9}urlset")
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, SitemapResponseAttributes>
   getSiteMap(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
@@ -215,11 +216,15 @@ public class CrawlOperations {
           .build();
 
       Crawler.SiteNode root = crawler.map();
+      String sitemapXmlString = Crawler.SitemapGenerator.generateSitemapXml(root);
+      int count = sitemapXmlString.split("<url>", -1).length - 1;
 
-      return ResponseHelper.createResponse(
-          JSONUtils.convertToJSON(root, true),
+      return ResponseHelper.createSitemapResponse(
+          sitemapXmlString,
           new HashMap<String, Object>() {{
             put("url", url);
+            put("count", count);
+            put("depth", targetPagesParameters.getMaxDepth());
           }}
       );
 

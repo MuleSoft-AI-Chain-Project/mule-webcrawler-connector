@@ -186,21 +186,22 @@ output application/json
   <flow doc:id="2aa3107d-93e5-4834-a835-22f7de0ec25b" name="get:\sitemap:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="51bd87fb-ad97-42f1-b69e-91f6151027ad">
 			<when expression='#[attributes.queryParams.connection == "webdriver"]' >
-				<ms-webcrawler:crawl-links-as-sitemap doc:name="[WebDriver] [Crawl] Get links as sitemap" doc:id="f2bb58e3-5e20-4578-97fe-f17e39f26427" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]" restrictToPath="true">
+				<ms-webcrawler:get-sitemap doc:name="[WebDriver] [Crawl] Get links as sitemap" doc:id="f2bb58e3-5e20-4578-97fe-f17e39f26427" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" maxDepth="#[attributes.queryParams.depth]" regexUrlsFilterLogic="EXCLUDE" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]" restrictToPath="true">
 					<ms-webcrawler:regex-urls >
 						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 						<ms-webcrawler:regex-url value="javascript:void(0);" />
 					</ms-webcrawler:regex-urls>
-				</ms-webcrawler:crawl-links-as-sitemap>
+				</ms-webcrawler:get-sitemap>
 			</when>
 			<otherwise >
-				<ms-webcrawler:crawl-links-as-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" regexUrlsFilterLogic="INCLUDE"  restrictToPath="true">
+				<ms-webcrawler:get-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" regexUrlsFilterLogic="INCLUDE"  restrictToPath="true">
 			<ms-webcrawler:regex-urls>
-						<ms-webcrawler:regex-url value="^https://docs\.nvidia\.com/cuda(?!.*\.png$).*" />
+						<ms-webcrawler:regex-url value="^https://docs\.nvidia\.com/cuda(?!.*\.(png|jpg|svg)$).*" />
 			</ms-webcrawler:regex-urls>
-		</ms-webcrawler:crawl-links-as-sitemap>
+		</ms-webcrawler:get-sitemap>
 			</otherwise>
 		</choice>
+		<logger level="INFO" doc:name="Log response attributes" doc:id="f8e50931-ac5c-4f4b-b2ae-ff4bf86bdb8d" message='#[%dw 2.0&#10;output text/plain&#10;---&#10;"\n" ++ write(attributes, "application/json")]' />
   </flow>
 	<flow doc:id="1f42ce64-408f-4003-906a-49948233c8aa" name="get:\metatag:webcrawler-connector-operations-api-config">
 		<choice doc:name="Choice" doc:id="e69fbf73-5f99-49f2-9426-42e80694100f">

@@ -2,6 +2,7 @@ package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONObject;
 import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
+import org.mule.extension.webcrawler.api.metadata.SearchResponseAttributes;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
@@ -39,7 +40,7 @@ public class SearchOperations {
   @DisplayName("[Search] Google")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/SearchGoogle.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, SearchResponseAttributes>
       googleSearch(
           @DisplayName("Search Query") @Placement(order = 1) @Example("apple inc") String query,
           @DisplayName("API Key") @Placement(order = 2) @Example("your_api_key_here") String apiKey) throws IOException {
@@ -52,7 +53,7 @@ public class SearchOperations {
 
       JSONObject jsonResponse = new JSONObject(responseBody);
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createSearchResponse(
           jsonResponse.toString(),
           new HashMap<String, Object>() {{
             put("query", query);
