@@ -18,8 +18,8 @@ public abstract class Crawler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Crawler.class);
 
+  protected Queue<SiteNode> siteNodeQueue;
   protected Set<String> visitedLinksGlobal;
-  protected Map<String, Integer> visitedLinksByDepth;
 
   protected WebCrawlerConfiguration configuration;
   protected WebCrawlerConnection connection;
@@ -263,6 +263,10 @@ public abstract class Crawler {
       return filename;
     }
 
+    public void setFilename(String filename) {
+      this.filename = filename;
+    }
+
     public List<SiteNode> getChildren() {
       return children;
     }
@@ -313,6 +317,10 @@ public abstract class Crawler {
   public DocumentIterator documentIterator() { return new DocumentIterator(); }
 
   public class DocumentIterator implements Iterator<Document> {
+
+    public DocumentIterator() {
+      siteNodeQueue = new LinkedList<>();
+    }
 
     @Override
     public boolean hasNext() {
