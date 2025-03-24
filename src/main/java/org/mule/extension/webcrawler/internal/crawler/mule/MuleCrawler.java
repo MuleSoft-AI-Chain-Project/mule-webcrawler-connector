@@ -39,65 +39,50 @@ public class MuleCrawler extends Crawler {
   @Override
   public SiteNode crawl() {
 
+    siteNodeQueue = new LinkedList<>();
+    visitedLinksGlobal = new HashSet<>();
+
     String rootURLCleaned = URLUtils.removeFragment(rootURL);
 
-    visitedLinksGlobal = new HashSet<>();
-    visitedLinksByDepth = new HashMap<>();
+    SiteNode rootNode = new SiteNode(rootURLCleaned, 0, connection.getReferrer());
+    siteNodeQueue.add(rootNode);
+    visitedLinksGlobal.add(rootURLCleaned);
 
-    return crawl(rootURLCleaned, 0, connection.getReferrer());
-  }
+    while(!siteNodeQueue.isEmpty()) {
 
-  private SiteNode crawl(String url, int currentDepth, String referrer) {
+      try {
 
-    if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
-      LOGGER.debug("SKIPPING due to robots.txt: " + url);
-      return null;
-    }
+        SiteNode currentNode = siteNodeQueue.poll();
 
-    // crawl & extract current page
-    try {
+        if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
+          LOGGER.debug("SKIPPING url due to robots.txt: " + currentNode.getUrl());
+          return null;
+        }
 
-      // add delay
-      Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
+        LOGGER.debug("CRAWLING url: " + currentNode.getUrl());
 
-      SiteNode currentNode = null;
+        // add delay
+        Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
-      visitedLinksByDepth.put(url, currentDepth);
-
-      // get page as a html document
-      Document document = PageHelper.getDocument(configuration, connection, url, referrer,
-         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
-
-      // check if url contents have been downloaded before ie applied globally (at all
-      // depths). Note, we don't want to do this globally for CrawlType.LINK because
-      // we want a link to be unique only at the depth level and not globally (at all
-      // depths)
-      if (!visitedLinksGlobal.contains(url)) {
-
-        // add url to urlContentFetched to indicate content has been fetched.
-        visitedLinksGlobal.add(url);
+        Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
+                                                   new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
         // Create Map to hold all data for the current page - this will be serialized to
         // JSON and saved to file
         JSONObject pageData = new JSONObject();
 
-        LOGGER.debug("Fetching content for : " + url);
+        pageData.put("url", currentNode.getUrl());
+        pageData.put("title", document.title());
 
-        String title = document.title();
-
-        pageData.put("url", url);
-        pageData.put("title", title);
-
-        // check if need to download images in the current page
         if (downloadImages) {
 
-          LOGGER.debug("Downloading images for : " + url);
+          LOGGER.debug("Downloading images for : " + currentNode.getUrl());
           pageData.put("imageFiles", PageHelper.downloadWebsiteImages(document, downloadPath, CRAWLED_IMAGES_FOLDER, maxImageNumber));
         }
 
         if (downloadDocuments) {
 
-          LOGGER.debug("Downloading documents for : " + url);
+          LOGGER.debug("Downloading documents for : " + currentNode.getUrl());
           pageData.put("documentFiles", PageHelper.downloadFiles(document, downloadPath, CRAWLED_DOCUMENTS_FOLDER, maxDocumentNumber));
         }
 
@@ -112,122 +97,102 @@ public class MuleCrawler extends Crawler {
         pageData.put("content", PageHelper.getPageContent(document, contentTags, outputFormat));
 
         // save gathered data of page to file
-        String filename = PageHelper.savePageContents(pageData, downloadPath, title);
+        String filename = PageHelper.savePageContents(pageData, downloadPath, document.title());
 
-        // Create a new pageNode for this URL
-        currentNode = new SiteNode(url, currentDepth, filename);
+        // Update filename in the current node
+        currentNode.setFilename(filename);
 
-      } else {
+        // If not at max depth, find and crawl the links on the page
+        if (currentNode.getCurrentDepth() < maxDepth) {
 
-        currentNode = new SiteNode(url, currentDepth, "already visited");
-      }
+          // get all links on the current page
+          Set<String> links = getPageLinks(document);
+          if (links != null && !links.isEmpty()) {
 
-      // If not at max depth, find and crawl the links on the page
-      if (currentDepth < maxDepth) {
+            LOGGER.debug(String.format("Found %d links on page: %s", links.size(), currentNode.getUrl()));
 
-        // get all links on the current page
-        Set<String> links = getPageLinks(document);
+            for (String childURL : links) {
 
-        if (links != null) {
+              String childURLCleaned = URLUtils.removeFragment(childURL);
 
-          LOGGER.debug(String.format("Found %d links on page: %s", links.size(), url));
+              // Check if this URL has already been visited at this depth
+              if (!visitedLinksGlobal.contains(childURLCleaned)) {
 
-          for (String childURL : links) {
-
-            String childURLCleaned = URLUtils.removeFragment(childURL);
-
-            // Check if this URL has already been visited at this depth
-            if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
-                visitedLinksByDepth.get(childURLCleaned) > currentDepth+1) {
-
-              SiteNode childNode = crawl(childURLCleaned, currentDepth +1, url);
-
-              if(childNode != null) {
-
-                currentNode.addChild(childNode);
+                visitedLinksGlobal.add(childURLCleaned);
+                SiteNode childNode = new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl());
+                siteNodeQueue.add(childNode);
+                currentNode.getChildren().add(childNode);
               }
             }
           }
         }
+      } catch (Exception e) {
+        LOGGER.error(e.toString());
       }
-
-      return currentNode;
-
-    } catch (Exception e) {
-      LOGGER.error(e.toString());
     }
-    return null;
+    return rootNode;
   }
 
   @Override
   public SiteNode map() {
 
+    siteNodeQueue = new LinkedList<>();
+    visitedLinksGlobal = new HashSet<>();
+
     String rootURLCleaned = URLUtils.removeFragment(rootURL);
 
-    visitedLinksByDepth = new HashMap<>();
+    SiteNode rootNode = new SiteNode(rootURLCleaned, 0, connection.getReferrer());
+    siteNodeQueue.add(rootNode);
+    visitedLinksGlobal.add(rootURLCleaned);
 
-    return map(rootURLCleaned, 0, connection.getReferrer());
-  }
+    while(!siteNodeQueue.isEmpty()) {
 
-  private SiteNode map(String url, int currentDepth, String referrer) {
+      try {
 
-    if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(url, connection.getUserAgent())) {
-      LOGGER.debug("SKIPPING due to robots.txt: " + url);
-      return null;
-    }
+        SiteNode currentNode = siteNodeQueue.poll();
 
-    // map current page
-    try {
+        if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
+          LOGGER.debug("SKIPPING url due to robots.txt: " + currentNode.getUrl());
+          return null;
+        }
 
-      // add delay
-      Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
+        LOGGER.debug("MAPPING url: " + currentNode.getUrl());
 
-      SiteNode currentNode = null;
+        // add delay
+        Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
-      // Mark the URL as visited for this depth
-      visitedLinksByDepth.put(url, currentDepth);
+        // If not at max depth, find and crawl the links on the page
+        if (currentNode.getCurrentDepth() < maxDepth) {
 
-      // get page as a html document
-      currentNode = new SiteNode(url, currentDepth, referrer);
+          Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
+             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
-      LOGGER.debug("Mapping url: " + url);
+          // get all links on the current page
+          Set<String> links = getPageLinks(document);
+          if (links != null && !links.isEmpty()) {
 
-      // If not at max depth, find and crawl the links on the page
-      if (currentDepth < maxDepth) {
+            LOGGER.debug(String.format("Found %d links on page: %s", links.size(), currentNode.getUrl()));
 
-        Document document = PageHelper.getDocument(configuration, connection, url, referrer,
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+            for (String childURL : links) {
 
-        // get all links on the current page
-        Set<String> links = getPageLinks(document);
+              String childURLCleaned = URLUtils.removeFragment(childURL);
 
-        if (links != null) {
+              // Check if this URL has already been visited at this depth
+              if (!visitedLinksGlobal.contains(childURLCleaned)) {
 
-          LOGGER.debug(String.format("Found %d links on page: %s", links.size(), url));
-
-          for (String childURL : links) {
-
-            String childURLCleaned = URLUtils.removeFragment(childURL);
-
-            // Check if this URL has already been visited at this depth
-            if (!visitedLinksByDepth.containsKey(childURLCleaned) ||
-                visitedLinksByDepth.get(childURLCleaned) > currentDepth+1) {
-
-              SiteNode childNode = map(childURLCleaned, currentDepth +1, url);
-
-              if(childNode != null) {
-
-                currentNode.addChild(childNode);
+                visitedLinksGlobal.add(childURLCleaned);
+                SiteNode childNode = new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl());
+                siteNodeQueue.add(childNode);
+                currentNode.getChildren().add(childNode);
               }
             }
           }
         }
+      } catch (Exception e) {
+        LOGGER.error(e.toString());
       }
-      return currentNode;
-    } catch (Exception e) {
-      LOGGER.error(e.toString());
     }
-    return null;
+    return rootNode;
   }
 
   private Set<String> getPageLinks(Document document) {
@@ -265,8 +230,6 @@ public class MuleCrawler extends Crawler {
   }
 
   public class DocumentIterator extends Crawler.DocumentIterator {
-
-    private final Queue<SiteNode> siteNodeQueue = new LinkedList<>();
 
     public DocumentIterator () {
 

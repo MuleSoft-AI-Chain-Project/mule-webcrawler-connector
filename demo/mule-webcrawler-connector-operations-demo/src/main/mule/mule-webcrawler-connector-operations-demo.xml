@@ -194,10 +194,8 @@ output application/json
 				</ms-webcrawler:get-sitemap>
 			</when>
 			<otherwise >
-				<ms-webcrawler:get-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" regexUrlsFilterLogic="EXCLUDE"  restrictToPath="true">
+				<ms-webcrawler:get-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" restrictToPath="true">
 			<ms-webcrawler:regex-urls >
-						<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
-						<ms-webcrawler:regex-url value="javascript:void(0);" />
 					</ms-webcrawler:regex-urls>
 		</ms-webcrawler:get-sitemap>
 			</otherwise>
@@ -244,7 +242,7 @@ output application/json
 				</ms-webcrawler:crawl-website-full-scan>
 			</when>
 			<otherwise>
-				<ms-webcrawler:crawl-website-full-scan config-ref="HTTP_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[HTTP] [Crawl] Website (Full Scan)" downloadDocuments="true" downloadImages="true" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" getMetaTags="true" regexUrlsFilterLogic="EXCLUDE" outputFormat="#[attributes.queryParams.outputFormat]">
+				<ms-webcrawler:crawl-website-full-scan config-ref="HTTP_Configuration" doc:id="2b0e71c5-123e-4c01-8e9f-3d5a128bd86d" doc:name="[HTTP] [Crawl] Website (Full Scan)" downloadPath="#[attributes.queryParams.downloadLocation]" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" regexUrlsFilterLogic="EXCLUDE" outputFormat="#[attributes.queryParams.outputFormat]" restrictToPath="true">
 			<ms-webcrawler:regex-urls>
 				<ms-webcrawler:regex-url value="https://www\.googletagmanager\.com/.*" />
 			</ms-webcrawler:regex-urls>
