@@ -229,6 +229,8 @@ public abstract class Crawler {
     private String referrer;
     private String filename;
     private List<SiteNode> children;
+    @JsonIgnore
+    private SiteNode parent;
 
     public SiteNode(String url, int currentDepth, String referrer) {
 
@@ -236,6 +238,15 @@ public abstract class Crawler {
       this.currentDepth = currentDepth;
       this.referrer = referrer;
       this.children = new ArrayList<>();
+    }
+
+    public SiteNode(String url, int currentDepth, String referrer, SiteNode parent) {
+
+      this.url = url;
+      this.currentDepth = currentDepth;
+      this.referrer = referrer;
+      this.children = new ArrayList<>();
+      this.parent = parent;
     }
 
     public SiteNode(String url, int currentDepth, String referrer, String filename) {
@@ -273,6 +284,10 @@ public abstract class Crawler {
 
     public void addChild(SiteNode child) {
       this.children.add(child);
+    }
+
+    public SiteNode getParent() {
+      return parent;
     }
   }
 

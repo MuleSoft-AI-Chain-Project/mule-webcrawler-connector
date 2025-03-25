@@ -3,7 +3,6 @@ package org.mule.extension.webcrawler.internal.connection.http;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.runtime.api.connection.ConnectionException;
-import org.mule.runtime.extension.api.runtime.operation.Result;
 import org.mule.runtime.http.api.client.HttpClient;
 import org.mule.runtime.http.api.client.HttpRequestOptions;
 import org.mule.runtime.http.api.domain.message.request.HttpRequest;
@@ -11,7 +10,6 @@ import org.mule.runtime.http.api.domain.message.request.HttpRequestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.ws.http.HTTPException;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
@@ -84,6 +82,43 @@ public class HttpConnection implements WebCrawlerConnection {
           } else {
             throw new RuntimeException(String.format("%s: %s",response.getStatusCode(), response.getReasonPhrase()));
           }
+        })
+        .exceptionally(e -> {
+          throw new RuntimeException(e);
+        });
+  }
+
+  @Override
+  public CompletableFuture<Integer> getUrlStatusCode(String url) {
+    return getUrlStatusCode(url, this.referrer);
+  }
+
+  @Override
+  public CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer) {
+
+    LOGGER.debug(String.format("Checking url status for %s using http client", url));
+
+    HttpRequestBuilder requestBuilder = HttpRequest.builder()
+        .method("HEAD")
+        .uri(url);
+
+    if (this.userAgent != null) {
+      requestBuilder.addHeader("User-Agent", this.userAgent);
+    }
+
+    if (currentReferrer != null) {
+      requestBuilder.addHeader("Referrer", currentReferrer);
+    }
+
+    HttpRequest request = requestBuilder.build();
+
+    HttpRequestOptions options = HttpRequestOptions.builder()
+        .responseTimeout(timeout != 0 ? timeout : 10000)
+        .build();
+
+    return httpClient.sendAsync(request, options)
+        .thenApply(response -> {
+          return response.getStatusCode();
         })
         .exceptionally(e -> {
           throw new RuntimeException(e);

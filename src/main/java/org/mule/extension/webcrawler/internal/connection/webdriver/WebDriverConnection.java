@@ -210,4 +210,39 @@ public class WebDriverConnection implements WebCrawlerConnection {
             }
         }
     }
+
+    @Override
+    public CompletableFuture<Integer> getUrlStatusCode(String url) {
+        return getUrlStatusCode(url, this.referrer);
+    }
+
+    @Override
+    public CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer) {
+
+        LOGGER.debug(String.format("Checking status for url %s using webdriver", url));
+        return CompletableFuture.supplyAsync(() -> {
+            // Set the referrer header
+            if (currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
+
+                try{
+                    // Use Chrome DevTools Protocol (CDP) to set the referrer dynamically
+                    DevTools devTools = ((ChromeDriver) driver).getDevTools();
+                    devTools.createSession();
+                    devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
+                    devTools.send(Network.setExtraHTTPHeaders(new Headers(Map.of("Referer", currentReferrer))));
+                } catch (Exception e) {
+
+                    LOGGER.debug("Error while trying to set referer for web driver");
+                }
+            }
+            // Load the dynamic page
+            driver.get(url);
+
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            Object status = js.executeScript("return fetch(arguments[0], { method: 'HEAD' })" +
+                                                 ".then(response => response.status)" +
+                                                 ".catch(() => 0);", url);
+            return status instanceof Long ? ((Long) status).intValue() : 500;
+        });
+    }
 }

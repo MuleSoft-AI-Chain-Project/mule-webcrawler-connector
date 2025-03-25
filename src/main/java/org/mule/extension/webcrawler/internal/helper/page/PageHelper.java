@@ -82,6 +82,26 @@ public class PageHelper {
     }
   }
 
+  public static boolean isURLValid(WebCrawlerConfiguration webCrawlerConfiguration,
+                                   WebCrawlerConnection connection,
+                                   String url,
+                                   String referrer){
+
+    LOGGER.debug(String.format("Retrieving status code for url %s and referer %s", url, referrer));
+    try {
+
+      Integer urlStatusCode = connection.getUrlStatusCode(url, referrer).get();
+      if(urlStatusCode != 200) {
+        LOGGER.debug(String.format("URL %s is not valid. Status code: %d", url, urlStatusCode));
+      }
+      return urlStatusCode == 200;
+
+    } catch (InterruptedException | ExecutionException e) {
+      LOGGER.error(String.format("Error while checking statur for url %s", url), e);
+      return false;
+    }
+  }
+
   public static JSONArray getPageMetaTags(Document document) {
     // Create a JSONArray to hold the structured meta tags
     JSONArray metaTagArray = new JSONArray();

@@ -10,6 +10,9 @@ public interface WebCrawlerConnection {
   String getUserAgent();
   String getReferrer();
 
+  CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer);
+  CompletableFuture<Integer> getUrlStatusCode(String url);
+
   CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions);
   CompletableFuture<InputStream> getPageSource(String url, PageLoadOptions pageLoadOptions);
 }
