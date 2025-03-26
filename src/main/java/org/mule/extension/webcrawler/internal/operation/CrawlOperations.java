@@ -216,7 +216,7 @@ public class CrawlOperations {
           .build();
 
       Crawler.SiteNode root = crawler.map();
-      String sitemapXmlString = Crawler.SitemapGenerator.generateSitemapXml(root);
+      String sitemapXmlString = root != null ? Crawler.SitemapGenerator.generateSitemapXml(root) : "";
       int count = sitemapXmlString.split("<url>", -1).length - 1;
 
       return ResponseHelper.createSitemapResponse(

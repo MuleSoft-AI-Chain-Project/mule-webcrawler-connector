@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.crawler.mule;
 
+import org.apache.maven.model.Site;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
@@ -145,11 +146,20 @@ public class MuleCrawler extends Crawler {
     siteNodeQueue.add(rootNode);
     visitedLinksGlobal.add(rootURLCleaned);
 
+    if(maxDepth == 0) {
+
+      if (!PageHelper.isURLValid(configuration, connection, rootNode.getUrl(), rootNode.getReferrer())) {
+
+        return null;
+      }
+    }
+
     while(!siteNodeQueue.isEmpty()) {
 
+      SiteNode currentNode = null;
       try {
 
-        SiteNode currentNode = siteNodeQueue.poll();
+        currentNode = siteNodeQueue.poll();
 
         if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
           LOGGER.debug("SKIPPING url due to robots.txt: " + currentNode.getUrl());
@@ -161,11 +171,28 @@ public class MuleCrawler extends Crawler {
         // add delay
         Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
+        if(currentNode.getCurrentDepth() == maxDepth) {
+
+          if(PageHelper.isURLValid(configuration, connection, currentNode.getUrl(), currentNode.getReferrer())) {
+
+            // Add as child to parent node only if valid
+            SiteNode parentNode = currentNode.getParent();
+            if(parentNode != null) parentNode.addChild(currentNode);
+          } else {
+
+            LOGGER.debug(String.format("SKIPPING %s due to invalid URL", currentNode.getUrl()));
+          }
+        }
+
         // If not at max depth, find and crawl the links on the page
         if (currentNode.getCurrentDepth() < maxDepth) {
 
           Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
              new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+
+          // Add as child to parent node only if valid
+          SiteNode parentNode = currentNode.getParent();
+          if(parentNode != null) parentNode.addChild(currentNode);
 
           // get all links on the current page
           Set<String> links = getPageLinks(document);
@@ -181,15 +208,22 @@ public class MuleCrawler extends Crawler {
               if (!visitedLinksGlobal.contains(childURLCleaned)) {
 
                 visitedLinksGlobal.add(childURLCleaned);
-                SiteNode childNode = new SiteNode(childURLCleaned, currentNode.getCurrentDepth() + 1, currentNode.getUrl());
+                SiteNode childNode = new SiteNode(childURLCleaned,
+                                                  currentNode.getCurrentDepth() + 1,
+                                                  currentNode.getUrl(),
+                                                  currentNode);
+
                 siteNodeQueue.add(childNode);
-                currentNode.getChildren().add(childNode);
               }
             }
           }
         }
       } catch (Exception e) {
         LOGGER.error(e.toString());
+        if(currentNode == null || currentNode.getCurrentDepth() == 0) {
+
+            return null;
+        }
       }
     }
     return rootNode;
