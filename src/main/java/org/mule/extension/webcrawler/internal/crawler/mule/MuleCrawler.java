@@ -231,13 +231,25 @@ public class MuleCrawler extends Crawler {
 
   private Set<String> getPageLinks(Document document) {
 
+    Map<String, Object> pageInsights = (Map<String, Object>)
+        PageHelper.getPageInsights(
+            document,
+            null,
+            restrictToPath ? Constants.PageInsightType.INTERNALLINKS : Constants.PageInsightType.ALL,
+            regexUrlsFilterLogic,
+            regexUrls
+        );
+
+    return getPageLinks(pageInsights);
+  }
+
+  private Set<String> getPageLinks(Map<String, Object> pageInsights) {
+
     // get all links on the current page
     Set<String> links = new HashSet<>();
 
     if(restrictToPath) {
 
-      Map<String, Object> pageInsights = (Map<String, Object>)
-          PageHelper.getPageInsights(document, null, Constants.PageInsightType.INTERNALLINKS, regexUrlsFilterLogic, regexUrls);
       Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
 
       if (linksMap != null) {
@@ -245,8 +257,6 @@ public class MuleCrawler extends Crawler {
       }
     } else {
 
-      Map<String, Object> pageInsights = (Map<String, Object>)
-          PageHelper.getPageInsights(document, null, Constants.PageInsightType.ALL, regexUrlsFilterLogic, regexUrls);
       Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
 
       if (linksMap != null) {
@@ -254,6 +264,28 @@ public class MuleCrawler extends Crawler {
         links.addAll((Set<String>) linksMap.get("external"));
         links.addAll((Set<String>) linksMap.get("iframe"));
       }
+    }
+    return links;
+  }
+
+  private Set<String> getDocumentLinks(Document document) {
+
+    // get all links on the current page
+    Set<String> links = new HashSet<>();
+
+    Map<String, Object> pageInsights = (Map<String, Object>)
+        PageHelper.getPageInsights(
+            document,
+            null,
+            Constants.PageInsightType.DOCUMENTLINKS,
+            null,
+            null
+        );
+
+    Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
+
+    if (linksMap != null) {
+      links.addAll((Set<String>) linksMap.get("documents"));
     }
     return links;
   }
