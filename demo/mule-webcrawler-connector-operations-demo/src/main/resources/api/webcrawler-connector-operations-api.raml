@@ -87,10 +87,17 @@ types:
         required: false
     responses:
       200:
-        description: Node generated successfully
+        description: Sitemap generated successfully
         body:
-          application/json:
-            type: Node
+          application/xml:
+            example: |
+              <?xml version="1.0" encoding="UTF-8"?>
+              <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                <url>
+                  <loc>http://example.com/</loc>
+                  <priority>1.0</priority>
+                </url>
+              </urlset>
 
 /metatag:
   get:

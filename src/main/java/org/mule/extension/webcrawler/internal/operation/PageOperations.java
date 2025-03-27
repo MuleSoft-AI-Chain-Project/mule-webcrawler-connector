@@ -1,7 +1,7 @@
 package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONArray;
-import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
+import org.mule.extension.webcrawler.api.metadata.PageResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
@@ -14,6 +14,7 @@ import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetContentParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
+import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
@@ -50,7 +51,7 @@ public class PageOperations {
   @DisplayName("[Page] Get meta tags")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/PageGetMetaTags.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, PageResponseAttributes>
       getMetaTags(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
@@ -85,7 +86,7 @@ public class PageOperations {
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createPageResponse(
           PageHelper.getPageMetaTags(document).toString(),
           new HashMap<String, Object>() {{
             put("url", url);
@@ -113,7 +114,7 @@ public class PageOperations {
   @DisplayName("[Page] Download image")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/PageDownloadImage.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, PageResponseAttributes>
       downloadWebsiteImages(
           @Config WebCrawlerConfiguration configuration,
           @ConfigOverride
@@ -170,7 +171,7 @@ public class PageOperations {
 
       if(document != null) attributes.put("title", document.title());
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createPageResponse(
           imagesJSONArray.toString(),
           attributes
       );
@@ -195,7 +196,7 @@ public class PageOperations {
   @DisplayName("[Page] Download document")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/PageDownloadDocument.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, PageResponseAttributes>
   downloadWebsiteDocuments(
       @Config WebCrawlerConfiguration configuration,
       @ConfigOverride
@@ -233,15 +234,24 @@ public class PageOperations {
       Document document = null;
 
       try {
-        document = PageHelper.getDocument(configuration, connection, url,
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
-        documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
+        if(URLUtils.isDocumentUrl(url)) {
 
-      } catch (UnsupportedMimeTypeException e) {
-        // url provided is direct link to image, so download single image
+          documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
+        } else {
 
-        documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
+          document = PageHelper.getDocument(configuration, connection, url,
+                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+
+          documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
+        }
+
+      } catch (Exception e) {
+
+        throw new ModuleException(
+            String.format("Error while downloading document(s) from '%s'.", url),
+            WebCrawlerErrorType.DOWNLOAD_DOCUMENTS_OPERATION_FAILURE,
+            e);
       }
 
       HashMap<String, Object> attributes = new HashMap<String, Object>() {{
@@ -250,7 +260,7 @@ public class PageOperations {
 
       if(document != null) attributes.put("title", document.title());
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createPageResponse(
           documentsJSONArray.toString(),
           attributes
       );
@@ -276,7 +286,7 @@ public class PageOperations {
   @DisplayName("[Page] Get insights")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/PageGetInsights.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, PageResponseAttributes>
       getPageInsights(
           @Config WebCrawlerConfiguration configuration,
           @ConfigOverride
@@ -310,7 +320,7 @@ public class PageOperations {
       Document document = PageHelper.getDocument(configuration, connection, url,
           new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(
               PageHelper.getPageInsights(document, targetContentParameters.getTags(), Constants.PageInsightType.ALL)
           ),
@@ -339,7 +349,7 @@ public class PageOperations {
   @DisplayName("[Page] Get content")
   @Throws(WebCrawlerErrorTypeProvider.class)
   @OutputJsonType(schema = "api/metadata/PageGetContent.json")
-  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, ResponseAttributes>
+  public org.mule.runtime.extension.api.runtime.operation.Result<InputStream, PageResponseAttributes>
       getPageContent(
           @Config WebCrawlerConfiguration configuration,
           @ConfigOverride
@@ -384,7 +394,7 @@ public class PageOperations {
       contents.put("title", document.title());
       contents.put("content", content);
 
-      return ResponseHelper.createResponse(
+      return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(contents),
           new HashMap<String, Object>() {{
             put("url", url);

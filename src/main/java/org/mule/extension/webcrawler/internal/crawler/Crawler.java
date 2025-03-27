@@ -18,8 +18,8 @@ public abstract class Crawler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Crawler.class);
 
+  protected Queue<SiteNode> siteNodeQueue;
   protected Set<String> visitedLinksGlobal;
-  protected Map<String, Integer> visitedLinksByDepth;
 
   protected WebCrawlerConfiguration configuration;
   protected WebCrawlerConnection connection;
@@ -229,6 +229,8 @@ public abstract class Crawler {
     private String referrer;
     private String filename;
     private List<SiteNode> children;
+    @JsonIgnore
+    private SiteNode parent;
 
     public SiteNode(String url, int currentDepth, String referrer) {
 
@@ -236,6 +238,15 @@ public abstract class Crawler {
       this.currentDepth = currentDepth;
       this.referrer = referrer;
       this.children = new ArrayList<>();
+    }
+
+    public SiteNode(String url, int currentDepth, String referrer, SiteNode parent) {
+
+      this.url = url;
+      this.currentDepth = currentDepth;
+      this.referrer = referrer;
+      this.children = new ArrayList<>();
+      this.parent = parent;
     }
 
     public SiteNode(String url, int currentDepth, String referrer, String filename) {
@@ -263,6 +274,10 @@ public abstract class Crawler {
       return filename;
     }
 
+    public void setFilename(String filename) {
+      this.filename = filename;
+    }
+
     public List<SiteNode> getChildren() {
       return children;
     }
@@ -270,11 +285,57 @@ public abstract class Crawler {
     public void addChild(SiteNode child) {
       this.children.add(child);
     }
+
+    public SiteNode getParent() {
+      return parent;
+    }
+  }
+
+  public static class SitemapGenerator {
+
+    public static String generateSitemapXml(SiteNode rootNode) {
+      StringBuilder xml = new StringBuilder();
+      xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+      xml.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+
+      appendUrl(xml, rootNode);
+
+      xml.append("</urlset>");
+      return xml.toString();
+    }
+
+    private static void appendUrl(StringBuilder xml, SiteNode node) {
+      xml.append("  <url>\n");
+      xml.append("    <loc>").append(escapeXml(node.getUrl())).append("</loc>\n");
+      xml.append("    <priority>").append(calculatePriority(node.getCurrentDepth())).append("</priority>\n");
+      xml.append("  </url>\n");
+
+      for (SiteNode child : node.getChildren()) {
+        appendUrl(xml, child);
+      }
+    }
+
+    private static String escapeXml(String text) {
+      return text.replace("&", "&amp;")
+          .replace("<", "&lt;")
+          .replace(">", "&gt;")
+          .replace("\"", "&quot;")
+          .replace("'", "&apos;");
+    }
+
+    private static String calculatePriority(int depth) {
+      double priority = Math.max(0.0, Math.min(1.0, 1.0 - (depth * 0.1)));
+      return String.format("%.1f", priority);
+    }
   }
 
   public DocumentIterator documentIterator() { return new DocumentIterator(); }
 
   public class DocumentIterator implements Iterator<Document> {
+
+    public DocumentIterator() {
+      siteNodeQueue = new LinkedList<>();
+    }
 
     @Override
     public boolean hasNext() {

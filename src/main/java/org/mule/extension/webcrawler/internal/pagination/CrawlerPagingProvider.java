@@ -1,8 +1,7 @@
 package org.mule.extension.webcrawler.internal.pagination;
 
-import org.json.JSONObject;
 import org.jsoup.nodes.Document;
-import org.mule.extension.webcrawler.api.metadata.ResponseAttributes;
+import org.mule.extension.webcrawler.api.metadata.PageResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
@@ -24,7 +23,7 @@ import java.util.*;
 import static org.mule.extension.webcrawler.internal.helper.ResponseHelper.createPageResponse;
 import static org.mule.extension.webcrawler.internal.helper.page.PageHelper.getPageContent;
 
-public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnection, Result<CursorProvider, ResponseAttributes>> {
+public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnection, Result<CursorProvider, PageResponseAttributes>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerPagingProvider.class);
 
@@ -50,7 +49,7 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
   }
 
   @Override
-  public List<Result<CursorProvider, ResponseAttributes>> getPage(WebCrawlerConnection connection) {
+  public List<Result<CursorProvider, PageResponseAttributes>> getPage(WebCrawlerConnection connection) {
 
     try {
 
