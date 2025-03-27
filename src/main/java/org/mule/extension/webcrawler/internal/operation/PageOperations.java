@@ -14,6 +14,7 @@ import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetContentParameters;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
+import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
@@ -233,15 +234,24 @@ public class PageOperations {
       Document document = null;
 
       try {
-        document = PageHelper.getDocument(configuration, connection, url,
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
-        documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
+        if(URLUtils.isDocumentUrl(url)) {
 
-      } catch (UnsupportedMimeTypeException e) {
-        // url provided is direct link to image, so download single image
+          documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
+        } else {
 
-        documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
+          document = PageHelper.getDocument(configuration, connection, url,
+                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+
+          documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
+        }
+
+      } catch (Exception e) {
+
+        throw new ModuleException(
+            String.format("Error while downloading document(s) from '%s'.", url),
+            WebCrawlerErrorType.DOWNLOAD_DOCUMENTS_OPERATION_FAILURE,
+            e);
       }
 
       HashMap<String, Object> attributes = new HashMap<String, Object>() {{
