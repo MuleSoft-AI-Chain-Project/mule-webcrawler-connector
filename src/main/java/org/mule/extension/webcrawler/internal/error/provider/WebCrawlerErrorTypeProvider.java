@@ -20,6 +20,7 @@ public class WebCrawlerErrorTypeProvider implements ErrorTypeProvider {
         WEBCRAWLER_OPERATIONS_FAILURE,
         SEARCH_OPERATIONS_FAILURE,
         PAGE_OPERATIONS_FAILURE,
+        DOWNLOAD_DOCUMENTS_OPERATION_FAILURE,
         CRAWL_OPERATIONS_FAILURE,
         CRAWL_ON_PAGE_DISALLOWED_ERROR
     )));
