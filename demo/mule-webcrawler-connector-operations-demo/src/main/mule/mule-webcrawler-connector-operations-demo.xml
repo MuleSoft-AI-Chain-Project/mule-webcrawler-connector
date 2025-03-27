@@ -194,9 +194,9 @@ output application/json
 				</ms-webcrawler:get-sitemap>
 			</when>
 			<otherwise >
-				<ms-webcrawler:get-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" restrictToPath="true" regexUrlsFilterLogic="INCLUDE">
+				<ms-webcrawler:get-sitemap doc:id="8968bf17-5c26-4f6a-a066-da5c0f17f6d2" doc:name="[HTTP] [Crawl] Get links as sitemap" maxDepth="#[attributes.queryParams.depth]" url="#[attributes.queryParams.url]" config-ref="HTTP_Configuration" regexUrlsFilterLogic="INCLUDE" restrictToPath="true">
 			<ms-webcrawler:regex-urls >
-						<ms-webcrawler:regex-url value="^https://docs\.nvidia\.com/cuda(?!.*\.(png|jpg|svg)$).*" />
+						<ms-webcrawler:regex-url value="^https://docs\.nvidia\.com(?!.*\.(png|jpg|svg)$).*" />
 					</ms-webcrawler:regex-urls>
 		</ms-webcrawler:get-sitemap>
 			</otherwise>

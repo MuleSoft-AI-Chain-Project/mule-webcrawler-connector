@@ -57,7 +57,7 @@ public class MuleCrawler extends Crawler {
 
         if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
           LOGGER.debug("SKIPPING url due to robots.txt: " + currentNode.getUrl());
-          return null;
+          continue;
         }
 
         LOGGER.debug("CRAWLING url: " + currentNode.getUrl());
@@ -163,7 +163,7 @@ public class MuleCrawler extends Crawler {
 
         if(configuration.getCrawlerOptions().isEnforceRobotsTxt() && !PageHelper.canCrawl(currentNode.getUrl(), connection.getUserAgent())) {
           LOGGER.debug("SKIPPING url due to robots.txt: " + currentNode.getUrl());
-          return null;
+          continue;
         }
 
         LOGGER.debug("MAPPING url: " + currentNode.getUrl());
@@ -277,9 +277,7 @@ public class MuleCrawler extends Crawler {
         PageHelper.getPageInsights(
             document,
             null,
-            Constants.PageInsightType.DOCUMENTLINKS,
-            null,
-            null
+            Constants.PageInsightType.DOCUMENTLINKS
         );
 
     Map<String, Object> linksMap = (Map<String, Object>) pageInsights.get("links");
