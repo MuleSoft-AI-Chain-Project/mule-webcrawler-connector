@@ -184,16 +184,19 @@ public class URLUtils {
   }
 
   /**
-   * Removes the fragment part of a URL.
+   * Clean a URL.
    *
    * @param url The URL string.
    * @return The URL without the fragment part.
    */
-  public static String removeFragment(String url) {
+  public static String cleanURL(String url) {
+
     try {
       URI uri = new URI(url);
       return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toString();
+
     } catch (URISyntaxException e) {
+
       throw new IllegalArgumentException("Invalid URL: " + url, e);
     }
   }
