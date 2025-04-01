@@ -192,8 +192,14 @@ public class URLUtils {
   public static String cleanURL(String url) {
 
     try {
+
+      // If the URL contains "##", normalize it to a single "#"
+      if (url.contains("##")) {
+        url = url.replaceAll("##+", "#");  // Replace multiple ## with a single #
+      }
+
       URI uri = new URI(url);
-      return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toString();
+      return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toASCIIString();
 
     } catch (URISyntaxException e) {
 
