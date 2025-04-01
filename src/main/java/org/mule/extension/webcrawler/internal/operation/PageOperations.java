@@ -60,12 +60,14 @@ public class PageOperations {
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
           @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @Alias("javascript") @DisplayName("Javascript") @Summary("Javascript code to be execute on page load after wait and before shadow DOM extraction")
+          @Placement(order = 3, tab = "Page Load Options (WebDriver)") @Optional @Content String javascript,
       @ConfigOverride
           @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+          @Placement(order = 4, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
       @ConfigOverride
           @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+          @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
@@ -82,7 +84,7 @@ public class PageOperations {
       }
 
       Document document = PageHelper.getDocument(configuration, connection, url,
-         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
@@ -123,12 +125,14 @@ public class PageOperations {
           @ConfigOverride
               @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
               @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @Alias("javascript") @DisplayName("Javascript") @Summary("Javascript code to be execute on page load after wait and before shadow DOM extraction")
+              @Placement(order = 3, tab = "Page Load Options (WebDriver)") @Optional @Content String javascript,
           @ConfigOverride
               @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+              @Placement(order = 4, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
           @ConfigOverride
               @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+              @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @Alias("maxImageNumber") @DisplayName("Max number of images")
@@ -154,7 +158,7 @@ public class PageOperations {
         }
 
         document = PageHelper.getDocument(configuration, connection, url,
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
@@ -205,12 +209,14 @@ public class PageOperations {
       @ConfigOverride
           @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
           @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+      @Alias("javascript") @DisplayName("Javascript") @Summary("Javascript code to be execute on page load after wait and before shadow DOM extraction")
+      @   Placement(order = 3, tab = "Page Load Options (WebDriver)") @Optional @Content String javascript,
       @ConfigOverride
           @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+          @Placement(order = 4, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
       @ConfigOverride
           @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
-          @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+          @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
@@ -241,7 +247,7 @@ public class PageOperations {
         } else {
 
           document = PageHelper.getDocument(configuration, connection, url,
-                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
           documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
         }
@@ -295,12 +301,14 @@ public class PageOperations {
           @ConfigOverride
               @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
               @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @Alias("javascript") @DisplayName("Javascript") @Summary("Javascript code to be execute on page load after wait and before shadow DOM extraction")
+              @Placement(order = 3, tab = "Page Load Options (WebDriver)") @Optional @Content String javascript,
           @ConfigOverride
               @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+              @Placement(order = 4, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
           @ConfigOverride
               @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+              @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
@@ -318,7 +326,7 @@ public class PageOperations {
       }
 
       Document document = PageHelper.getDocument(configuration, connection, url,
-          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
       return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(
@@ -358,12 +366,14 @@ public class PageOperations {
           @ConfigOverride
               @Alias("waitForXPath") @DisplayName("Wait for XPath") @Summary("The XPath to wait for (not available for HTTP connection)")
               @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//body") @Optional String waitForXPath,
+          @Alias("javascript") @DisplayName("Javascript") @Summary("Javascript code to be execute on page load after wait and before shadow DOM extraction")
+              @Placement(order = 3, tab = "Page Load Options (WebDriver)") @Optional @Content String javascript,
           @ConfigOverride
               @Alias("extractShadowDom") @DisplayName("Extract Shadow DOM") @Summary("Extract the Shadow DOM content (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
+              @Placement(order = 4, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional boolean extractShadowDom,
           @ConfigOverride
               @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
-              @Placement(order = 2, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+              @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -384,7 +394,7 @@ public class PageOperations {
       Map<String, String> contents = new HashMap<String, String>();
 
       Document document = PageHelper.getDocument(configuration, connection, url,
-          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

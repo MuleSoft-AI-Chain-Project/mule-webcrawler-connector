@@ -161,10 +161,15 @@ output application/json
             </on-error-propagate>
         </error-handler>
 	</flow>
-	<flow doc:id="672f483e-9723-4b98-afb2-4fe26ac9c01f" name="get:\page:webcrawler-connector-operations-api-config">
+	<flow doc:id="672f483e-9723-4b98-afb2-4fe26ac9c01f" name="post:\page:webcrawler-connector-operations-api-config">
     <choice doc:name="Choice" doc:id="8e851b32-b3e1-4d88-920e-56d55d6f6956" >
 			<when expression='#[attributes.queryParams.connection == "webdriver"]'>
-				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]" waitForXPath="#[attributes.queryParams.waitForXPath]" extractShadowDom="#[attributes.queryParams.extractShadowDom]" shadowHostXPath="#[attributes.queryParams.shadowDomHostXPath]"/>
+				<ms-webcrawler:page-content doc:name="[WebDriver] [Page] Get content" doc:id="ad864297-4db5-4ad3-acd9-24447e4260fa" config-ref="WebDriver_Configuration" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]" waitOnPageLoad="#[attributes.queryParams.waitOnPageLoad]" waitForXPath="#[attributes.queryParams.waitForXPath]" extractShadowDom="#[attributes.queryParams.extractShadowDom]" shadowHostXPath="#[attributes.queryParams.shadowDomHostXPath]">
+					<ms-webcrawler:javascript ><![CDATA[#[(payload default {}).javascript default ""]]]></ms-webcrawler:javascript>
+					<ms-webcrawler:tags >
+						<ms-webcrawler:tag value='#[attributes.queryParams.tag default "html"]' />
+					</ms-webcrawler:tags>
+				</ms-webcrawler:page-content>
 			</when>
 			<otherwise >
 				<ms-webcrawler:page-content config-ref="HTTP_Configuration" doc:id="0f920158-d57c-4025-8b43-97c49b5d86a5" doc:name="[HTTP] [Page] Get content" url="#[attributes.queryParams.url]" outputFormat="#[attributes.queryParams.outputFormat]">

@@ -46,6 +46,8 @@ public class PageLoadOptions {
   @Optional
   private String shadowHostXPath;
 
+  private String javascript;
+
   public PageLoadOptions() {
 
   }
@@ -55,6 +57,14 @@ public class PageLoadOptions {
     this.waitForXPath = waitForXPath;
     this.extractShadowDom = extractShadowDom;
     this.shadowHostXPath = shadowHostXPath;
+  }
+
+  public PageLoadOptions(Long waitOnPageLoad, String waitForXPath, boolean extractShadowDom, String shadowHostXPath, String javascript) {
+    this.waitOnPageLoad = waitOnPageLoad;
+    this.waitForXPath = waitForXPath;
+    this.extractShadowDom = extractShadowDom;
+    this.shadowHostXPath = shadowHostXPath;
+    this.javascript = javascript;
   }
 
   public Long getWaitOnPageLoad() {
@@ -88,4 +98,8 @@ public class PageLoadOptions {
   public void setShadowHostXPath(String shadowHostXPath) {
     this.shadowHostXPath = shadowHostXPath;
   }
+
+  public String getJavascript() { return javascript; }
+
+  public void setJavascript(String javascript) { this.javascript = javascript; }
 }
