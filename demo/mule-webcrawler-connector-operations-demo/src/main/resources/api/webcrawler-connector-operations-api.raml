@@ -24,7 +24,7 @@ types:
     additionalProperties: false
     
 /page:
-  get:
+  post:
     queryParameters:
       url:
         type: string
@@ -36,6 +36,9 @@ types:
       connection:
         type: string
         default: http
+        required: false
+      tag:
+        type: string
         required: false
       waitOnPageLoad:
         type: number
@@ -49,6 +52,17 @@ types:
       shadowDomHostXPath:
         type: string
         required: false
+    body:
+      application/json:
+        type: object
+        properties:
+          javascript:
+            displayName: Javascript (WebDriver)
+            type: string
+            required: false
+            example:
+              document.querySelector('button[type="submit"], input[type="submit"]')?.click();
+        default: {}
     responses:
       200:
         description: Page content retrieved successfully
