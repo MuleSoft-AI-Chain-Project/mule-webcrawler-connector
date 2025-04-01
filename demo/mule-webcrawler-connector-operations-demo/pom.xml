@@ -32,9 +32,9 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.mulesoft.connectors</groupId>
+			<groupId>io.github.mulesoft-ai-chain-project</groupId>
 		    <artifactId>mule4-webcrawler-connector</artifactId>
-		    <version>0.3.34-SNAPSHOT</version>
+		    <version>0.3.40</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>
