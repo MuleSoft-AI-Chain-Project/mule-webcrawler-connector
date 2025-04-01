@@ -1,9 +1,12 @@
 package org.mule.extension.webcrawler.internal.connection.webdriver;
 
+import com.fasterxml.jackson.databind.Module;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
+import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
+import org.mule.sdk.api.exception.ModuleException;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
@@ -46,12 +49,6 @@ public class WebDriverConnection implements WebCrawlerConnection {
     }
 
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, PageLoadOptions pageLoadOptions) {
-
-        return getPageSource(url, this.referrer, pageLoadOptions);
-    }
-
-    @Override
     public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
 
         LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
@@ -75,6 +72,11 @@ public class WebDriverConnection implements WebCrawlerConnection {
 
             // Wait for the page to load
             waitOnPageLoad(pageLoadOptions.getWaitOnPageLoad(), pageLoadOptions.getWaitForXPath());
+
+            if (pageLoadOptions.getJavascript() != null && !pageLoadOptions.getJavascript().isEmpty()) {
+                LOGGER.debug(String.format("Executing javascript %s", pageLoadOptions.getJavascript()));
+                executeScript(pageLoadOptions.getJavascript());
+            }
 
             // Retrieve the page source
             String pageSource = driver.getPageSource();
@@ -211,9 +213,15 @@ public class WebDriverConnection implements WebCrawlerConnection {
         }
     }
 
-    @Override
-    public CompletableFuture<Integer> getUrlStatusCode(String url) {
-        return getUrlStatusCode(url, this.referrer);
+    /**
+     * Executes the provided JavaScript code using the WebDriver's JavaScriptExecutor.
+     *
+     * @param script The JavaScript code to execute.
+     */
+    private void executeScript(String script) {
+
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            js.executeScript(script);
     }
 
     @Override

@@ -184,16 +184,25 @@ public class URLUtils {
   }
 
   /**
-   * Removes the fragment part of a URL.
+   * Clean a URL.
    *
    * @param url The URL string.
    * @return The URL without the fragment part.
    */
-  public static String removeFragment(String url) {
+  public static String cleanURL(String url) {
+
     try {
+
+      // If the URL contains "##", normalize it to a single "#"
+      if (url.contains("##")) {
+        url = url.replaceAll("##+", "#");  // Replace multiple ## with a single #
+      }
+
       URI uri = new URI(url);
-      return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toString();
+      return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toASCIIString();
+
     } catch (URISyntaxException e) {
+
       throw new IllegalArgumentException("Invalid URL: " + url, e);
     }
   }

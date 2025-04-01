@@ -1,6 +1,5 @@
 package org.mule.extension.webcrawler.internal.crawler.mule;
 
-import org.apache.maven.model.Site;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
@@ -10,9 +9,11 @@ import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
+import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,7 @@ public class MuleCrawler extends Crawler {
     siteNodeQueue = new LinkedList<>();
     visitedLinksGlobal = new HashSet<>();
 
-    String rootURLCleaned = URLUtils.removeFragment(rootURL);
+    String rootURLCleaned = URLUtils.cleanURL(rootURL);
 
     SiteNode rootNode = new SiteNode(rootURLCleaned, 0, connection.getReferrer());
     siteNodeQueue.add(rootNode);
@@ -114,7 +115,7 @@ public class MuleCrawler extends Crawler {
 
             for (String childURL : links) {
 
-              String childURLCleaned = URLUtils.removeFragment(childURL);
+              String childURLCleaned = URLUtils.cleanURL(childURL);
 
               // Check if this URL has already been visited at this depth
               if (!visitedLinksGlobal.contains(childURLCleaned)) {
@@ -140,7 +141,7 @@ public class MuleCrawler extends Crawler {
     siteNodeQueue = new LinkedList<>();
     visitedLinksGlobal = new HashSet<>();
 
-    String rootURLCleaned = URLUtils.removeFragment(rootURL);
+    String rootURLCleaned = URLUtils.cleanURL(rootURL);
 
     SiteNode rootNode = new SiteNode(rootURLCleaned, 0, connection.getReferrer());
     siteNodeQueue.add(rootNode);
@@ -202,7 +203,7 @@ public class MuleCrawler extends Crawler {
 
             for (String childURL : links) {
 
-              String childURLCleaned = URLUtils.removeFragment(childURL);
+              String childURLCleaned = URLUtils.cleanURL(childURL);
 
               // Check if this URL has already been visited at this depth
               if (!visitedLinksGlobal.contains(childURLCleaned)) {
@@ -222,7 +223,10 @@ public class MuleCrawler extends Crawler {
         LOGGER.error(e.toString());
         if(currentNode == null || currentNode.getCurrentDepth() == 0) {
 
-            return null;
+            throw new ModuleException(
+                e.toString(),
+                WebCrawlerErrorType.WEBCRAWLER_OPERATIONS_FAILURE,
+                e);
         }
       }
     }
@@ -299,7 +303,7 @@ public class MuleCrawler extends Crawler {
 
         super();
 
-        String rootURLCleaned = URLUtils.removeFragment(rootURL);
+        String rootURLCleaned = URLUtils.cleanURL(rootURL);
 
         visitedLinksGlobal = new HashSet<>();
 
@@ -350,7 +354,7 @@ public class MuleCrawler extends Crawler {
 
             for (String childURL : links) {
 
-              String childURLCleaned = URLUtils.removeFragment(childURL);
+              String childURLCleaned = URLUtils.cleanURL(childURL);
 
               // Check if this URL has already been visited at this depth
               if (!visitedLinksGlobal.contains(childURLCleaned)) {

@@ -43,12 +43,6 @@ public class HttpConnection implements WebCrawlerConnection {
   }
 
   @Override
-  public CompletableFuture<InputStream> getPageSource(String url, PageLoadOptions pageLoadOptions) {
-
-    return getPageSource(url, this.referrer, pageLoadOptions);
-  }
-
-  @Override
   public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
 
     LOGGER.debug(String.format("Retrieving page source for url %s using http client (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
@@ -86,11 +80,6 @@ public class HttpConnection implements WebCrawlerConnection {
         .exceptionally(e -> {
           throw new RuntimeException(e);
         });
-  }
-
-  @Override
-  public CompletableFuture<Integer> getUrlStatusCode(String url) {
-    return getUrlStatusCode(url, this.referrer);
   }
 
   @Override

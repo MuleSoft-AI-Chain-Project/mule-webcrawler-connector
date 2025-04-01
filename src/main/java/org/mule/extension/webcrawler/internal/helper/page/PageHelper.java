@@ -44,20 +44,7 @@ public class PageHelper {
                                      String url,
                                      PageLoadOptions pageLoadOptions) throws IOException {
 
-    LOGGER.debug(String.format("Retrieving JSoup Document for url %s", url));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, pageLoadOptions).get()) { // Blocks until complete
-      String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
-      Document document = Jsoup.parse(pageSource, url);
-
-      // Apply page load options to WebDriver connections
-      if(connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
-        ((WebDriverConnection)connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
-      }
-
-      return document;
-    } catch (InterruptedException | ExecutionException e) {
-      throw new IOException("Error fetching page source", e);
-    }
+    return getDocument(webCrawlerConfiguration, connection, url, connection.getReferrer(), pageLoadOptions);
   }
 
   public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
@@ -72,11 +59,14 @@ public class PageHelper {
       Document document = Jsoup.parse(pageSource, url);
 
       // Apply page load options to WebDriver connections
-      if(connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
-        ((WebDriverConnection)connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
+      if (connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
+        ((WebDriverConnection) connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
       }
 
       return document;
+    } catch (ModuleException me) {
+      throw me;
+
     } catch (InterruptedException | ExecutionException e) {
       throw new IOException(String.format("Error fetching page source for %s", url), e);
     }
