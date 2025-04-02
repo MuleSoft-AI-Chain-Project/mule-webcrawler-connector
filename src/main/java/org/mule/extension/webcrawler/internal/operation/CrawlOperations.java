@@ -113,6 +113,7 @@ public class CrawlOperations {
           .build();
 
       LOGGER.debug("Start website crawling");
+      LOGGER.debug(crawler.toString());
 
       Crawler.SiteNode rootNode = crawler.crawl();
 
