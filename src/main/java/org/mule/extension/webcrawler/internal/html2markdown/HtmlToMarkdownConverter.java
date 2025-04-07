@@ -5,8 +5,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HtmlToMarkdownConverter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HtmlToMarkdownConverter.class);
 
     private final ElementConverterRegistry converterRegistry;
     private final int maxDepth;
@@ -27,6 +31,7 @@ public class HtmlToMarkdownConverter {
 
     private String convertElement(Element element, int depth) {
         if (depth > maxDepth) {
+            LOGGER.warn("Depth for URI {} is too large; review markdown output", element.baseUri());
             return ""; // Stop processing if depth exceeds the limit
         }
 
@@ -46,12 +51,5 @@ public class HtmlToMarkdownConverter {
             }
         }
         return markdown.toString();
-    }
-
-    public static void main(String[] args) {
-        String html = "<div><h1>Hello</h1><p>This is a <strong><span>nested</span> paragraph</strong>.</p><ul><li>Item 1<ul><li>Sub-item</li></ul></li><li>Item 2</li></ul></div>";
-        HtmlToMarkdownConverter converter = new HtmlToMarkdownConverter(3); // Set max depth to 3
-        String markdown = converter.convert(html);
-        System.out.println(markdown);
     }
 }
