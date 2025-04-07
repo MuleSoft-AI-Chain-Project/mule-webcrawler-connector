@@ -172,18 +172,6 @@
 			<artifactId>commons-compress</artifactId>
 			<version>1.24.0</version>
 		</dependency>
-		<!-- Html 2 Markdown -->
-		<dependency>
-			<groupId>com.vladsch.flexmark</groupId>
-			<artifactId>flexmark-html2md-converter</artifactId>
-			<version>0.64.8</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.jsoup</groupId>
-					<artifactId>jsoup</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 	</dependencies>
 
 	<repositories>
