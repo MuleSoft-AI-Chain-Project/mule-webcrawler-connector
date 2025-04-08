@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mulesoft.connectors</groupId>
     <artifactId>mule4-webcrawler-connector</artifactId>
-    <version>0.3.41-SNAPSHOT</version>
+    <version>0.3.50</version>
     <packaging>mule-extension</packaging>
     <name>MuleSoft WebCrawler Connector - Mule 4</name>
 	<description>The MuleSoft WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
