@@ -77,6 +77,33 @@ public abstract class Crawler {
     return new Crawler.Builder();
   }
 
+  @Override
+  public String toString() {
+    return "Crawler{" +
+        "siteNodeQueue=" + siteNodeQueue +
+        ", visitedLinksGlobal=" + visitedLinksGlobal +
+        ", configuration=" + configuration +
+        ", connection=" + connection +
+        ", rootURL='" + rootURL + '\'' +
+        ", waitOnPageLoad=" + waitOnPageLoad +
+        ", waitForXPath='" + waitForXPath + '\'' +
+        ", extractShadowDom=" + extractShadowDom +
+        ", shadowHostXPath='" + shadowHostXPath + '\'' +
+        ", maxDepth=" + maxDepth +
+        ", restrictToPath=" + restrictToPath +
+        ", downloadImages=" + downloadImages +
+        ", maxImageNumber=" + maxImageNumber +
+        ", downloadDocuments=" + downloadDocuments +
+        ", maxDocumentNumber=" + maxDocumentNumber +
+        ", downloadPath='" + downloadPath + '\'' +
+        ", contentTags=" + contentTags +
+        ", outputFormat=" + outputFormat +
+        ", getMetaTags=" + getMetaTags +
+        ", regexUrlsFilterLogic=" + regexUrlsFilterLogic +
+        ", regexUrls=" + regexUrls +
+        '}';
+  }
+
   public static class Builder {
 
     private WebCrawlerConfiguration configuration;

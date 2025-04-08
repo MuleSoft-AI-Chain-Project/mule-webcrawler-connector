@@ -353,37 +353,38 @@ public class PageHelper {
   }
 
   /**
-   * Extracts and returns the HTML content of specific elements from an HTML document based on given tags. If no tags are
-   * provided, returns the entire raw HTML content of the document.
+   * Extracts the HTML content from a given Jsoup Document based on a prioritized list of tags.
+   * It iterates through the provided list of CSS selectors (`tags`) in sequence.
+   * The method returns the outer HTML of the first element found that matches any of the selectors.
+   * If none of the provided tags match any elements in the document, the method returns the entire
+   * HTML content of the document.
    *
-   * @param document the HTML document to extract content from
-   * @param tags     a list of CSS selectors specifying which elements to extract; if null or empty, extracts the full document's
-   *                 HTML
-   * @return a String containing the concatenated HTML content of the matching elements, or the full document's HTML if no tags
-   * are provided
+   * @param document The Jsoup Document to extract content from.
+   * @param tags     A List of CSS selector strings (tags) to search for, in order of priority.
+   * If this list is null or empty, the entire document HTML is returned.
+   * @return The outer HTML of the first matched element, or the entire document HTML if no tags match.
    */
-  private static String getPageRawHtmlContent(Document document, List<String> tags) {
-    StringBuilder collectedHtml = new StringBuilder();
-    Set<Element> selectedElements = new HashSet<>();
-
+  public static String getPageRawHtmlContent(Document document, List<String> tags) {
     if (tags != null && !tags.isEmpty()) {
       for (String selector : tags) {
         Elements elements = document.select(selector);
-        for (Element element : elements) {
-          // Only add the element if it's not inside an already selected one
-          if (!isNestedInsideAnotherSelected(element, selectedElements)) {
-            collectedHtml.append(element.outerHtml()).append("\n");
-            selectedElements.add(element);
-          }
+        if (!elements.isEmpty()) {
+          return elements.first().outerHtml(); // Return the HTML of the first matched element
         }
       }
-    } else {
-      collectedHtml.append(document.html());
     }
-
-    return collectedHtml.toString().trim();
+    return document.html(); // Return the full HTML if no tags matched
   }
 
+  /**
+   * Checks if a given Jsoup Element is nested (is a descendant) within any of the Elements present
+   * in the provided Set of selected Elements. This method iterates through the `selectedElements`
+   * and uses the {@link #isDescendant(Element, Element)} method to determine the nesting relationship.
+   *
+   * @param element          The Jsoup Element to check for nesting.
+   * @param selectedElements A Set of Jsoup Elements that have already been selected.
+   * @return `true` if the `element` is a descendant of any Element in `selectedElements`, `false` otherwise.
+   */
   private static boolean isNestedInsideAnotherSelected(Element element, Set<Element> selectedElements) {
     // Check if the element is inside any of the already selected elements (by checking parent hierarchy)
     for (Element selected : selectedElements) {
@@ -394,12 +395,23 @@ public class PageHelper {
     return false;
   }
 
+  /**
+   * Checks if a given Jsoup `element` is a descendant (nested within) of the specified `parent` Jsoup Element.
+   * This method traverses the parent hierarchy of the `element` up to the root, checking if any of the
+   * ancestors are equal to the `parent` element.
+   *
+   * @param parent  The potential ancestor Jsoup Element.
+   * @param element The Jsoup Element to check if it's a descendant of the `parent`.
+   * @return `true` if the `element` is a descendant of the `parent`, `false` otherwise.
+   */
   private static boolean isDescendant(Element parent, Element element) {
     // Check if the element is a descendant of the parent element by traversing its parents
-    for (Element e : element.parents()) {
-      if (e == parent) {
+    Element current = element.parent();
+    while (current != null) {
+      if (current.equals(parent)) {
         return true;
       }
+      current = current.parent();
     }
     return false;
   }

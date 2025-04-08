@@ -6,11 +6,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mulesoft.connectors</groupId>
     <artifactId>mule4-webcrawler-connector</artifactId>
-    <version>0.3.40</version>
+    <version>0.3.50</version>
     <packaging>mule-extension</packaging>
     <name>MuleSoft WebCrawler Connector - Mule 4</name>
 	<description>The MuleSoft WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
-	<url>https://mac-project.ai/docs/mac-webcrawler/connector-overview</url>
+	<url>https://mac-project.ai/docs/ms-webcrawler/connector-overview</url>
 	<scm>
 		<connection>scm:git:git://github.com/MuleSoft-AI-Chain-Project/mule-web-crawler-connector.git</connection>
 		<developerConnection>scm:git:ssh://github.com:MuleSoft-AI-Chain-Project/mule-web-crawler-connector.git</developerConnection>
@@ -171,18 +171,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
 			<version>1.24.0</version>
-		</dependency>
-		<!-- Html 2 Markdown -->
-		<dependency>
-			<groupId>com.vladsch.flexmark</groupId>
-			<artifactId>flexmark-html2md-converter</artifactId>
-			<version>0.64.8</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.jsoup</groupId>
-					<artifactId>jsoup</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 

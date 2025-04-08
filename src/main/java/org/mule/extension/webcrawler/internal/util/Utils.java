@@ -1,12 +1,15 @@
 package org.mule.extension.webcrawler.internal.util;
 
-import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
+import org.mule.extension.webcrawler.internal.html2markdown.HtmlToMarkdownConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Utils {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+
+  // Should be thread-safe as no state is maintained in any of the converter classes
+  private static final HtmlToMarkdownConverter htmlToMarkdownConverter = new HtmlToMarkdownConverter(100);
 
   // Method to count words in a given text
   public static int countWords(String text) {
@@ -41,7 +44,6 @@ public class Utils {
   }
 
   public static String convertHtmlToMarkdown(String html) {
-
-    return FlexmarkHtmlConverter.builder().build().convert(html);
+    return htmlToMarkdownConverter.convert(html);
   }
 }
