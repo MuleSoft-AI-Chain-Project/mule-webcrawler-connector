@@ -3,6 +3,8 @@
 *.iws
 *.iml
 *.ipr
+bin/
+
 
 # VSCode
 .vscode
