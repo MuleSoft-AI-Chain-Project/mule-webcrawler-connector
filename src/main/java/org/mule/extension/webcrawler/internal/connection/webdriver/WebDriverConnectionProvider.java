@@ -57,7 +57,7 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
 
   @Override
   public WebDriverConnection connect() throws ConnectionException {
-    return new WebDriverConnection(driver,userAgent, referrer);
+    return new WebDriverConnection(driver,userAgent, referrer, this);
   }
 
   @Override
@@ -76,7 +76,7 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
     if (driver == null) {
       synchronized (WebDriverConnectionProvider.class) {
         if (driver == null) {
-          driver = setupWebDriver(userAgent);
+          driver = createNewWebDriver();
         }
       }
     }
@@ -92,14 +92,20 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
     }
   }
 
-
-  private WebDriver setupWebDriver(String userAgent) {
+  public WebDriver createNewWebDriver() {
 
     ChromeOptions options = new ChromeOptions();
 
     if (CloudHubChromeConfigurer.isCloudHubDeployment()) {
       CloudHubChromeConfigurer.setup();
       options.setBinary(CloudHubChromeConfigurer.CHROME_LIB_WRAPPER_SCRIPT);
+      // Additional arguments to reduce containerized Chrome memory usage
+      options.addArguments("--blink-settings=imagesEnabled=false"); // Disable image rendering
+      options.addArguments("--disable-software-rasterizer");
+      options.addArguments("--disable-background-networking");
+      options.addArguments("--disable-sync");
+      options.addArguments("--disable-default-apps");
+      options.addArguments("--renderer-process-limit=1");
     } else {
       options.addArguments("--headless"); // NON CH only; CloudHub already uses headless chrome
     }

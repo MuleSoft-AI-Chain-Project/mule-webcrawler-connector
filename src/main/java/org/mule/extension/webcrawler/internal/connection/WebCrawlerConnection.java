@@ -13,4 +13,7 @@ public interface WebCrawlerConnection {
   CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer);
 
   CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions);
+
+  default void restartDriver() {}
+
 }

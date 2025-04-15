@@ -50,6 +50,10 @@ public class MuleCrawler extends Crawler {
     siteNodeQueue.add(rootNode);
     visitedLinksGlobal.add(rootURLCleaned);
 
+    // Restart the driver for each new crawl, mainly to keep memory usage as low
+    // as possible for Chrome and reduce chances of a container OOM kill
+    connection.restartDriver();
+
     while(!siteNodeQueue.isEmpty()) {
 
       try {
@@ -129,7 +133,7 @@ public class MuleCrawler extends Crawler {
           }
         }
       } catch (Exception e) {
-        LOGGER.error(e.toString());
+        LOGGER.error(e.getMessage(), e);
       }
     }
     return rootNode;

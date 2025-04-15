@@ -1,17 +1,22 @@
 package org.mule.extension.webcrawler.internal.connection.webdriver;
 
-import com.fasterxml.jackson.databind.Module;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
-import org.mule.sdk.api.exception.ModuleException;
+import org.mule.extension.webcrawler.internal.helper.webdriver.CloudHubChromeConfigurer;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v132.network.Network;
-import org.openqa.selenium.devtools.v132.network.model.Headers;
+import org.openqa.selenium.devtools.v135.fetch.Fetch;
+import org.openqa.selenium.devtools.v135.page.Page;
+import org.openqa.selenium.devtools.v135.runtime.Runtime;
+import org.openqa.selenium.devtools.v135.overlay.Overlay;
+import org.openqa.selenium.devtools.v135.log.Log;
+import org.openqa.selenium.devtools.v135.network.Network;
+import org.openqa.selenium.devtools.v135.network.model.Headers;
+import org.openqa.selenium.devtools.v135.performance.Performance;
+import org.openqa.selenium.devtools.v135.security.Security;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class WebDriverConnection implements WebCrawlerConnection {
 
@@ -33,11 +37,14 @@ public class WebDriverConnection implements WebCrawlerConnection {
     private WebDriver driver;
     private String userAgent;
     private String referrer;
+    private WebDriverConnectionProvider connectionProvider; // Reference to the provider
+    private DevTools devTools;
 
-    public WebDriverConnection(WebDriver driver, String userAgent, String referrer) {
+    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverConnectionProvider connectionProvider) {
         this.driver = driver;
         this.userAgent = userAgent;
         this.referrer = referrer;
+        this.connectionProvider = connectionProvider;
     }
 
     public String getUserAgent() {
@@ -48,20 +55,57 @@ public class WebDriverConnection implements WebCrawlerConnection {
         return referrer;
     }
 
+    // Method to restart the driver for each new crawl
+    public synchronized void restartDriver() {
+        LOGGER.info("Restarting WebDriver for new crawl");
+        try {
+            if (this.driver != null) {
+                this.driver.quit();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error while quitting the old WebDriver: " + e.getMessage(), e);
+        } finally {
+            this.driver = null;
+        }
+        this.driver = connectionProvider.createNewWebDriver();
+    }
+
+    private void configureDevTools() {
+        devTools = ((ChromeDriver) this.driver).getDevTools();
+        devTools.createSession();
+
+        // Required for setting headers
+        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
+        // Disable cache
+        devTools.send(Network.setCacheDisabled(true));
+        // Disable unnecessary domains for speed
+        devTools.send(Log.disable());
+        devTools.send(Performance.disable());
+        devTools.send(Page.disable());
+        devTools.send(Runtime.disable());
+        // devTools.send(DOM.disable());
+        devTools.send(Overlay.disable());
+        devTools.send(Security.disable());
+        devTools.send(Fetch.disable());
+    }
+
+
     @Override
     public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
-
         LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
         return CompletableFuture.supplyAsync(() -> {
             // Set the referrer header
-            if (currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-
+            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
+            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
                 try{
-                    // Use Chrome DevTools Protocol (CDP) to set the referrer dynamically
-                    DevTools devTools = ((ChromeDriver) driver).getDevTools();
-                    devTools.createSession();
-                    devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
-                    devTools.send(Network.setExtraHTTPHeaders(new Headers(Map.of("Referer", currentReferrer))));
+                    if (devTools == null || devTools.getCdpSession() == null) {
+                        configureDevTools();
+                    }
+                    Map<String, Object> headers = Map.of(
+                            "User-Agent", userAgent,
+                            "Referer", currentReferrer
+                    );
+                    devTools.send(Network.setExtraHTTPHeaders(new Headers(headers)));
                 } catch (Exception e) {
 
                     LOGGER.debug("Error while trying to set referer for web driver");
@@ -70,8 +114,21 @@ public class WebDriverConnection implements WebCrawlerConnection {
             // Load the dynamic page
             driver.get(url);
 
-            // Wait for the page to load
-            waitOnPageLoad(pageLoadOptions.getWaitOnPageLoad(), pageLoadOptions.getWaitForXPath());
+            Long effectiveTimeout = Optional.ofNullable(pageLoadOptions.getWaitOnPageLoad())
+                        .filter(t -> t > 0) // Keep only if greater than 0
+                        .orElse(30000L);    // Default 30 seconds if waitOnPageLoad is null or 0
+
+            // Wait for document.readyState to be complete no matter if XPath is provided or not
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            new FluentWait<>(driver)
+                    .withTimeout(Duration.ofSeconds(effectiveTimeout))
+                    .pollingEvery(Duration.ofMillis(500))
+                    .until(d -> js.executeScript("return document.readyState").equals("complete"));
+
+            // Wait for given XPath to load
+            if (pageLoadOptions.getWaitForXPath() != null && pageLoadOptions.getWaitForXPath().compareTo("") != 0) {
+                waitForXPathLoad(effectiveTimeout, pageLoadOptions.getWaitForXPath());
+            }
 
             if (pageLoadOptions.getJavascript() != null && !pageLoadOptions.getJavascript().isEmpty()) {
                 LOGGER.debug(String.format("Executing javascript %s", pageLoadOptions.getJavascript()));
@@ -85,54 +142,25 @@ public class WebDriverConnection implements WebCrawlerConnection {
         });
     }
 
-    /**
-     * Waits for the page to load by either waiting for a specific element to appear or sleeping for a specified duration.
-     *
-     * @param waitOnPageLoad The time in milliseconds to wait for the page to load.
-     * @param waitForXPath The XPath expression to wait for before proceeding.
-     */
-    private void waitOnPageLoad(Long waitOnPageLoad, String waitForXPath) {
+    private void waitForXPathLoad(Long waitOnPageLoad, String waitForXPath) {
+        LOGGER.debug(String.format("Wait until %s for %s milliseconds", waitForXPath, waitOnPageLoad));
+        try {
+            new FluentWait<>(driver)
+                .withTimeout(Duration.ofSeconds(waitOnPageLoad))
+                .pollingEvery(Duration.ofMillis(500))
+                .until(d -> {
+                    boolean finalElementPresent = false;
+                    try {
+                        driver.findElement(By.xpath(waitForXPath));
+                        finalElementPresent = true;
+                    } catch (NoSuchElementException e) {
+                        // Ignore, element might not be present yet
+                    }
+                    return finalElementPresent;
+                });
+        } catch (TimeoutException e) {
 
-        if(waitOnPageLoad != null && waitOnPageLoad.longValue() > 0L) {
-
-            if(waitForXPath != null && waitForXPath.compareTo("") != 0) {
-
-                LOGGER.debug(String.format("Wait until %s for %s milliseconds", waitForXPath, waitOnPageLoad));
-
-                try {
-
-                    new FluentWait<>(driver)
-                        .withTimeout(Duration.ofMillis(waitOnPageLoad))  // Waits up to 5 seconds
-                        .pollingEvery(Duration.ofMillis(500))  // Checks every 500ms
-                        .ignoring(NoSuchElementException.class)
-                        .until(new Function<WebDriver, Boolean>() {
-
-                            public Boolean apply(WebDriver webDriver) {
-                                try {
-                                    // Attempt to find the element by XPath
-                                    WebElement element = webDriver.findElement(By.xpath(waitForXPath));
-                                    return element != null;  // Return true when the element is found in the DOM
-                                } catch (NoSuchElementException e) {
-                                    // Return false if the element is not found
-                                    return false;
-                                }
-                            }
-                        });
-                } catch (TimeoutException e) {
-
-                    LOGGER.warn(String.format("Element %s not found within the timeout period %s", waitForXPath, waitOnPageLoad));
-                }
-            } else {
-
-                LOGGER.debug(String.format("Wait for %s milliseconds", waitOnPageLoad));
-                try {
-
-                    Thread.sleep(waitOnPageLoad);
-                } catch (InterruptedException e) {
-
-                    throw new RuntimeException(e);
-                }
-            }
+            LOGGER.warn(String.format("Element %s not found within the timeout period %s", waitForXPath, waitOnPageLoad));
         }
     }
 
@@ -230,13 +258,12 @@ public class WebDriverConnection implements WebCrawlerConnection {
         LOGGER.debug(String.format("Checking status for url %s using webdriver", url));
         return CompletableFuture.supplyAsync(() -> {
             // Set the referrer header
-            if (currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-
+            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
+            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
                 try{
-                    // Use Chrome DevTools Protocol (CDP) to set the referrer dynamically
-                    DevTools devTools = ((ChromeDriver) driver).getDevTools();
-                    devTools.createSession();
-                    devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
+                    if (devTools == null || devTools.getCdpSession() == null) {
+                        configureDevTools();
+                    }
                     devTools.send(Network.setExtraHTTPHeaders(new Headers(Map.of("Referer", currentReferrer))));
                 } catch (Exception e) {
 
