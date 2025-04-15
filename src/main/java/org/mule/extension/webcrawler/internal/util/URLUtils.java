@@ -16,6 +16,7 @@ public class URLUtils {
   private static final Set<String> VALID_EXTENSIONS;
   private static final int MAX_EXTENSION_LENGTH = 5; // longest extension is "xlsx"/"pptx"
   private static final Map<String, String> MIME_TYPES = new HashMap<>();
+  private static final Map<String, String> PRESERVE_CHARS = new HashMap<>();
 
   static {
     Set<String> extensions = new HashSet<>();
@@ -46,6 +47,23 @@ public class URLUtils {
     MIME_TYPES.put("rar", "application/vnd.rar");
     MIME_TYPES.put("7z", "application/x-7z-compressed");
     // Add more mappings as needed
+
+    // For URI encoding
+    PRESERVE_CHARS.put("%2F", "/");
+    PRESERVE_CHARS.put("%3A", ":");
+    PRESERVE_CHARS.put("%40", "@");
+    PRESERVE_CHARS.put("%24", "$");
+    PRESERVE_CHARS.put("%2C", ",");
+    PRESERVE_CHARS.put("%3B", ";");
+    PRESERVE_CHARS.put("%28", "(");
+    PRESERVE_CHARS.put("%29", ")");
+    PRESERVE_CHARS.put("%7E", "~");
+    PRESERVE_CHARS.put("%21", "!");
+    PRESERVE_CHARS.put("%27", "'");
+    PRESERVE_CHARS.put("%2A", "*");
+    PRESERVE_CHARS.put("%2D", "-");
+    PRESERVE_CHARS.put("%2E", ".");
+    PRESERVE_CHARS.put("%5F", "_");
   }
 
   /**
@@ -109,7 +127,7 @@ public class URLUtils {
               linkUri.getFragment() != null;
 
     } catch (IllegalArgumentException e) {
-        LOGGER.error("Invalid URL: {}", e.getMessage());
+      LOGGER.error("Invalid URL: {}", e.getMessage());
       return false;
     }
   }
@@ -201,9 +219,44 @@ public class URLUtils {
       URI uri = new URI(url);
       return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toASCIIString();
 
-    } catch (URISyntaxException e) {
+    } catch (URISyntaxException e1) {
+      // Fall back to more aggressive parsing
+      try {
+        // Extract scheme if present
+        int schemeEnd = url.indexOf("://");
+        String scheme = schemeEnd != -1 ? url.substring(0, schemeEnd + 3) : "";
+        String rest = schemeEnd != -1 ? url.substring(schemeEnd + 3) : url;
 
-      throw new IllegalArgumentException("Invalid URL: " + url, e);
+        // Split remaining URL by /, ?, and # and encode each part
+        String[] parts = rest.split("(?<=[/?#])|(?=[/?#])");
+        StringBuilder combined = new StringBuilder(scheme);
+
+        for (String part : parts) {
+          if (part.equals("/") || part.equals("?") || part.equals("#")) {
+            combined.append(part);  // Keep structure characters
+          } else {
+            combined.append(encodeURLComponent(part));
+          }
+        }
+        URI uri = new URI(combined.toString());
+        return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), uri.getQuery(), null).toASCIIString();
+      } catch (URISyntaxException | UnsupportedEncodingException e2) {
+        // Give up at this point, no hope of this being a valid URL
+        throw new IllegalArgumentException("Invalid URL: " + url, e2);
+      }
     }
+  }
+
+  /**
+   * Encodes a single URL component, preserving certain characters
+   */
+  private static String encodeURLComponent(String component) throws UnsupportedEncodingException {
+    String encoded = URLEncoder.encode(component, StandardCharsets.UTF_8.name())
+            .replace("+", "%20");
+    // Replace all encoded characters that should be preserved
+    for (Map.Entry<String, String> entry : PRESERVE_CHARS.entrySet()) {
+      encoded = encoded.replace(entry.getKey(), entry.getValue());
+    }
+    return encoded;
   }
 }
