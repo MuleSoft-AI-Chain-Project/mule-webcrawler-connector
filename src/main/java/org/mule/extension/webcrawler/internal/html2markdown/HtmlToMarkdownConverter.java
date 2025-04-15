@@ -26,7 +26,7 @@ public class HtmlToMarkdownConverter {
         for (Element element : document.body().children()) {
             markdown.append(convertElement(element, 1));
         }
-        return markdown.toString();
+        return limitConsecutiveNewlines(markdown.toString());
     }
 
     private String convertElement(Element element, int depth) {
@@ -51,5 +51,10 @@ public class HtmlToMarkdownConverter {
             }
         }
         return markdown.toString();
+    }
+
+    private String limitConsecutiveNewlines(String text) {
+        // Replace three or more consecutive newline sequences (including whitespace) with exactly two newlines
+        return text.replaceAll("(\\s*\\n){3,}", "\n\n");
     }
 }

@@ -6,6 +6,8 @@ import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Enumeration;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -24,7 +26,7 @@ public class CloudHubChromeConfigurer {
 
     public static final String LATEST_MILESTONE_VERSION_URL =
         "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json";
-    public static final String CHROME_CDP_VERSION = "133";
+    public static final String CHROME_CDP_VERSION = "135";
     public static final String CHROME_DEPENDENCY_RESOURCE_PATH = "/cloudhub-chrome-dependencies.zip";
     public static final String CHROME_DEPENDENCY_LIBS_PATH = "/tmp/chrome-deps-linux64";
     public static final String CHROME_PATH = "/tmp/chrome-headless-shell-linux64";
@@ -78,6 +80,7 @@ public class CloudHubChromeConfigurer {
             } catch (Exception e) {
                 LOGGER.error("Error in Chrome setup", e);
             }
+            startMemoryMonitor();
         }
     }
 
@@ -287,6 +290,50 @@ public class CloudHubChromeConfigurer {
             LOGGER.info("ldd completed successfully.");
         } else {
             LOGGER.error("ldd failed with exit code: {}", exitCode);
+        }
+    }
+
+    private static void startMemoryMonitor() {
+        Timer timer = new Timer("MemoryMonitor", true); // Daemon timer
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                logMemoryStats();
+            }
+        }, 0, 60 * 1000); // every 60 seconds
+    }
+
+    private static void logMemoryStats() {
+        // Java heap
+        long heapUsed = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long heapMax = Runtime.getRuntime().maxMemory();
+
+        // cgroup memory usage (Linux)
+        String memUsage = readCgroupValue("/sys/fs/cgroup/memory/memory.usage_in_bytes");
+        String memLimit = readCgroupValue("/sys/fs/cgroup/memory/memory.limit_in_bytes");
+
+        LOGGER.info(String.format(
+                "[MemoryMonitor] Heap used: %.2f MB / %.2f MB | CGroup used: %.2f MB / %.2f MB%n",
+                heapUsed / (1024.0 * 1024),
+                heapMax / (1024.0 * 1024),
+                parseToMB(memUsage),
+                parseToMB(memLimit)
+        ));
+    }
+
+    private static String readCgroupValue(String path) {
+        try {
+            return new String(Files.readAllBytes(Paths.get(path))).trim();
+        } catch (IOException e) {
+            return "0";
+        }
+    }
+
+    private static double parseToMB(String bytes) {
+        try {
+            return Long.parseLong(bytes) / (1024.0 * 1024);
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
     }
 }
