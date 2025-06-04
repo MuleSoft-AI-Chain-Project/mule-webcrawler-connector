@@ -37,7 +37,9 @@ public class PageHelper {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PageHelper.class);
 
-  private static final ConcurrentHashMap<String, String> robotsTxtCache = new ConcurrentHashMap<>();
+  private static final Map<String, String> robotsTxtCache = new ConcurrentHashMap<>();
+
+  private static final Map<String, Pattern> COMPILED_PATTERN_CACHE = new ConcurrentHashMap<>();
 
   public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
                                      WebCrawlerConnection connection,
@@ -304,7 +306,10 @@ public class PageHelper {
    */
   private static boolean skipUrl(String url, Constants.RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
     if (regexUrlsFilterLogic != null && regexUrls != null && !regexUrls.isEmpty()) {
-      boolean matchesPattern = regexUrls.stream().anyMatch(pattern -> Pattern.matches(pattern, url));
+      boolean matchesPattern = regexUrls.stream().anyMatch(patternStr -> {
+        Pattern pattern = COMPILED_PATTERN_CACHE.computeIfAbsent(patternStr, Pattern::compile);
+        return pattern.matcher(url).matches();
+      });
       if ((regexUrlsFilterLogic == Constants.RegexUrlsFilterLogic.INCLUDE && !matchesPattern) ||
           (regexUrlsFilterLogic == Constants.RegexUrlsFilterLogic.EXCLUDE && matchesPattern)) {
         return true;
