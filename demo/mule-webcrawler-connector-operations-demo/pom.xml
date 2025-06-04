@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>io.github.mulesoft-ai-chain-project</groupId>
 		    <artifactId>mule4-webcrawler-connector</artifactId>
-		    <version>0.3.65</version>
+		    <version>0.3.70</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>

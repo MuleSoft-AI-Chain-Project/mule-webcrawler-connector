@@ -96,6 +96,10 @@ public class CrawlOperations {
 
       Crawler crawler = Crawler.builder()
           .configuration(configuration)
+          .waitOnPageLoad(waitOnPageLoad)
+          .waitForXPath(waitForXPath)
+          .extractShadowDom(extractShadowDom)
+          .shadowHostXPath(shadowHostXPath)
           .connection(connection)
           .outputFormat(outputFormat)
           .rootURL(url)
@@ -162,7 +166,8 @@ public class CrawlOperations {
 
     try {
 
-      return new CrawlerPagingProvider(configuration, url, outputFormat, targetPagesParameters, streamingHelper);
+      return new CrawlerPagingProvider(configuration, waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                                       url, outputFormat, targetPagesParameters, streamingHelper);
 
     } catch (ModuleException me) {
       throw me;
@@ -208,6 +213,10 @@ public class CrawlOperations {
 
       Crawler crawler = Crawler.builder()
           .configuration(configuration)
+          .waitOnPageLoad(waitOnPageLoad)
+          .waitForXPath(waitForXPath)
+          .extractShadowDom(extractShadowDom)
+          .shadowHostXPath(shadowHostXPath)
           .connection(connection)
           .rootURL(url)
           .restrictToPath(targetPagesParameters.isRestrictToPath())
