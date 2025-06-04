@@ -30,18 +30,30 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
   private Crawler crawler;
   private Iterator<Document> documentIterator;
   private WebCrawlerConfiguration configuration;
+  private Long waitOnPageLoad;
+  private String waitForXPath;
+  private boolean extractShadowDom;
+  private String shadowHostXPath;
   private String url;
   private Constants.OutputFormat outputFormat;
   private CrawlerTargetPagesParameters targetPagesParameters;
   private StreamingHelper streamingHelper;
 
   public CrawlerPagingProvider(WebCrawlerConfiguration configuration,
+                               Long waitOnPageLoad,
+                               String waitForXPath,
+                               boolean extractShadowDom,
+                               String shadowHostXPath,
                                String url,
                                Constants.OutputFormat outputFormat,
                                CrawlerTargetPagesParameters targetPagesParameters,
                                StreamingHelper streamingHelper) {
 
     this.configuration = configuration;
+    this.waitOnPageLoad = waitOnPageLoad;
+    this.waitForXPath = waitForXPath;
+    this.extractShadowDom = extractShadowDom;
+    this.shadowHostXPath = shadowHostXPath;
     this.url = url;
     this.outputFormat = outputFormat;
     this.targetPagesParameters = targetPagesParameters;
@@ -57,6 +69,10 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
 
         crawler = Crawler.builder()
             .configuration(configuration)
+            .waitOnPageLoad(waitOnPageLoad)
+            .waitForXPath(waitForXPath)
+            .extractShadowDom(extractShadowDom)
+            .shadowHostXPath(shadowHostXPath)
             .connection(connection)
             .outputFormat(outputFormat)
             .rootURL(url)

@@ -102,4 +102,15 @@ public class PageLoadOptions {
   public String getJavascript() { return javascript; }
 
   public void setJavascript(String javascript) { this.javascript = javascript; }
+
+  @Override
+  public String toString() {
+    return "PageLoadOptions{" +
+        "waitOnPageLoad=" + waitOnPageLoad +
+        ", waitForXPath='" + waitForXPath + '\'' +
+        ", extractShadowDom=" + extractShadowDom +
+        ", shadowHostXPath='" + shadowHostXPath + '\'' +
+        ", javascript='" + javascript + '\'' +
+        '}';
+  }
 }
