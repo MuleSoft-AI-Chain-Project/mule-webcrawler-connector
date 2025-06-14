@@ -294,13 +294,15 @@ public class CloudHubChromeConfigurer {
     }
 
     private static void startMemoryMonitor() {
-        Timer timer = new Timer("MemoryMonitor", true); // Daemon timer
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                logMemoryStats();
-            }
-        }, 0, 60 * 1000); // every 60 seconds
+        if (Boolean.getBoolean("cloudhub.deployment.memoryMonitor")) {
+            Timer timer = new Timer("MemoryMonitor", true); // Daemon timer
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    logMemoryStats();
+                }
+            }, 0, 60 * 1000); // every 60 seconds
+        }
     }
 
     private static void logMemoryStats() {
