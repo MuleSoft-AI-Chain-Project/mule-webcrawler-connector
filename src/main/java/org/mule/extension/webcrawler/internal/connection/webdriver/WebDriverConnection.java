@@ -24,11 +24,16 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static org.mule.extension.webcrawler.internal.helper.webdriver.CloudHubChromeConfigurer.CHROME_WEBDRIVER_LOG_FILE;
 
 public class WebDriverConnection implements WebCrawlerConnection {
 
@@ -94,51 +99,70 @@ public class WebDriverConnection implements WebCrawlerConnection {
     public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
         LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
         return CompletableFuture.supplyAsync(() -> {
-            // Set the referrer header
-            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
-            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-                try{
-                    if (devTools == null || devTools.getCdpSession() == null) {
-                        configureDevTools();
+            try {
+                // Set the referrer header
+                // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
+                if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
+                    try{
+                        if (devTools == null || devTools.getCdpSession() == null) {
+                            configureDevTools();
+                        }
+                        Map<String, Object> headers = Map.of(
+                                "User-Agent", userAgent,
+                                "Referer", currentReferrer
+                        );
+                        devTools.send(Network.setExtraHTTPHeaders(new Headers(headers)));
+                    } catch (Exception e) {
+
+                        LOGGER.debug("Error while trying to set referer for web driver");
                     }
-                    Map<String, Object> headers = Map.of(
-                            "User-Agent", userAgent,
-                            "Referer", currentReferrer
-                    );
-                    devTools.send(Network.setExtraHTTPHeaders(new Headers(headers)));
-                } catch (Exception e) {
-
-                    LOGGER.debug("Error while trying to set referer for web driver");
                 }
+                // Load the dynamic page
+                driver.get(url);
+
+                Long effectiveTimeout = Optional.ofNullable(pageLoadOptions.getWaitOnPageLoad())
+                            .filter(t -> t > 0) // Keep only if greater than 0
+                            .orElse(30000L);    // Default 30 seconds if waitOnPageLoad is null or 0
+
+                // Wait for document.readyState to be complete no matter if XPath is provided or not
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+                new FluentWait<>(driver)
+                        .withTimeout(Duration.ofSeconds(effectiveTimeout))
+                        .pollingEvery(Duration.ofMillis(500))
+                        .until(d -> js.executeScript("return document.readyState").equals("complete"));
+
+                // Wait for given XPath to load
+                if (pageLoadOptions.getWaitForXPath() != null && pageLoadOptions.getWaitForXPath().compareTo("") != 0) {
+                    waitForXPathLoad(effectiveTimeout, pageLoadOptions.getWaitForXPath());
+                }
+
+                if (pageLoadOptions.getJavascript() != null && !pageLoadOptions.getJavascript().isEmpty()) {
+                    LOGGER.debug(String.format("Executing javascript %s", pageLoadOptions.getJavascript()));
+                    executeScript(pageLoadOptions.getJavascript());
+                }
+
+                // Retrieve the page source
+                String pageSource = driver.getPageSource();
+                // Convert the page source to InputStream
+                return new ByteArrayInputStream(pageSource.getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+
+                if(!CloudHubChromeConfigurer.isCloudHubDeploymentChromeDiverLogging()) {
+                    throw e;
+                }
+                // Try reading Chromedriver log file if available
+                try {
+                    Path logFile = Paths.get(CHROME_WEBDRIVER_LOG_FILE); // Adjust path as needed
+                    if (Files.exists(logFile)) {
+                        String logContent = Files.readString(logFile, StandardCharsets.UTF_8);
+                        LOGGER.error("Chromedriver log content:\n{}", logContent);
+                    }
+                } catch (Exception fileEx) {
+                    LOGGER.warn("Unable to read Chromedriver log file: {}", fileEx.getMessage());
+                }
+
+                throw new RuntimeException("Failed to fetch page source for URL " + url, e);
             }
-            // Load the dynamic page
-            driver.get(url);
-
-            Long effectiveTimeout = Optional.ofNullable(pageLoadOptions.getWaitOnPageLoad())
-                        .filter(t -> t > 0) // Keep only if greater than 0
-                        .orElse(30000L);    // Default 30 seconds if waitOnPageLoad is null or 0
-
-            // Wait for document.readyState to be complete no matter if XPath is provided or not
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            new FluentWait<>(driver)
-                    .withTimeout(Duration.ofSeconds(effectiveTimeout))
-                    .pollingEvery(Duration.ofMillis(500))
-                    .until(d -> js.executeScript("return document.readyState").equals("complete"));
-
-            // Wait for given XPath to load
-            if (pageLoadOptions.getWaitForXPath() != null && pageLoadOptions.getWaitForXPath().compareTo("") != 0) {
-                waitForXPathLoad(effectiveTimeout, pageLoadOptions.getWaitForXPath());
-            }
-
-            if (pageLoadOptions.getJavascript() != null && !pageLoadOptions.getJavascript().isEmpty()) {
-                LOGGER.debug(String.format("Executing javascript %s", pageLoadOptions.getJavascript()));
-                executeScript(pageLoadOptions.getJavascript());
-            }
-
-            // Retrieve the page source
-            String pageSource = driver.getPageSource();
-            // Convert the page source to InputStream
-            return new ByteArrayInputStream(pageSource.getBytes(StandardCharsets.UTF_8));
         });
     }
 

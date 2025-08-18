@@ -41,10 +41,17 @@ public class CloudHubChromeConfigurer {
         "exec " + CHROME_WEBDRIVER_PATH + "/chromedriver \"$@\"\n";
     public static final String CHROME_LIB_WRAPPER_SCRIPT = "/tmp/chrome-linux64/chrome-lib-wrapper";
     public static final String CHROME_WEBDRIVER_WRAPPER_SCRIPT = "/tmp/chrome-linux64/chrome-webdriver-wrapper";
+    public static final String CHROME_WEBDRIVER_VERBOSE_LOGGING = "true";
+    public static final String CHROME_WEBDRIVER_LOG_FILE = System.getProperty("mule.home") + "/logs/chromedriver.log";
 
     public static boolean isCloudHubDeployment() {
         // Check if the system property cloudhub.deployment is set to true
         return Boolean.getBoolean("cloudhub.deployment");
+    }
+
+    public static boolean isCloudHubDeploymentChromeDiverLogging() {
+        // Check if the system property cloudhub.deployment.chromeDriverLogging is set to true
+        return Boolean.getBoolean("cloudhub.deployment.chromeDriverLogging");
     }
 
     public static void setup() {
@@ -73,6 +80,12 @@ public class CloudHubChromeConfigurer {
                 extractSoLibs();
 
                 System.setProperty("webdriver.chrome.driver", CHROME_WEBDRIVER_WRAPPER_SCRIPT);
+
+                if(CloudHubChromeConfigurer.isCloudHubDeploymentChromeDiverLogging()) {
+
+                    System.setProperty("webdriver.chrome.verboseLogging", CHROME_WEBDRIVER_VERBOSE_LOGGING);
+                    System.setProperty("webdriver.chrome.logfile", CHROME_WEBDRIVER_LOG_FILE);
+                }
 
                 logVersion(CHROME_LIB_WRAPPER_SCRIPT, CHROME_PATH + "/chrome-headless-shell");
                 logVersion(CHROME_WEBDRIVER_WRAPPER_SCRIPT, CHROME_WEBDRIVER_PATH + "/chromedriver");

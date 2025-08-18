@@ -22,10 +22,14 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.logging.Level;
 
 @Alias("web-driver")
 @DisplayName("WebDriver")
@@ -107,7 +111,15 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
       options.addArguments("--disable-default-apps");
       options.addArguments("--renderer-process-limit=1");
     } else {
-      options.addArguments("--headless"); // NON CH only; CloudHub already uses headless chrome
+      options.addArguments("--headless=new"); // NON CH only; CloudHub already uses headless chrome
+    }
+
+    if(CloudHubChromeConfigurer.isCloudHubDeploymentChromeDiverLogging()) {
+
+      LoggingPreferences logPrefs = new LoggingPreferences();
+      logPrefs.enable(LogType.BROWSER, Level.ALL);
+      logPrefs.enable(LogType.DRIVER, Level.ALL);
+      options.setCapability("goog:loggingPrefs", logPrefs);
     }
 
     options.addArguments("--disable-gpu"); // Disable GPU acceleration
