@@ -22,14 +22,8 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.logging.LogType;
-import org.openqa.selenium.logging.LoggingPreferences;
-import org.openqa.selenium.remote.CapabilityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
-import java.util.logging.Level;
 
 @Alias("web-driver")
 @DisplayName("WebDriver")
@@ -107,21 +101,22 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
       options.addArguments("--blink-settings=imagesEnabled=false"); // Disable image rendering
       options.addArguments("--disable-software-rasterizer");
       options.addArguments("--disable-background-networking");
-      options.addArguments("--disable-sync");
-      options.addArguments("--disable-default-apps");
-      options.addArguments("--renderer-process-limit=1");
-    } else {
-      options.addArguments("--headless=new"); // NON CH only; CloudHub already uses headless chrome
+      //options.addArguments("--disable-sync");
+      //options.addArguments("--disable-default-apps");
+      //options.addArguments("--renderer-process-limit=1");
+      options.addArguments("--remote-debugging-pipe");
+
+      System.setProperty("webdriver.chrome.logfile", System.getProperty("webdriver.chrome.logfile", "/tmp/chrome-debug.log"));
+      System.setProperty("webdriver.chrome.verboseLogging", "true");
+      options.addArguments("--verbose");
+      options.addArguments("--window-size=1920,1080");
+      options.addArguments("--ignore-certificate-errors");
+      options.addArguments("--no-zygote");
+      options.addArguments("--disable-renderer-backgrounding");
     }
 
-    if(CloudHubChromeConfigurer.isCloudHubDeploymentChromeDiverLogging()) {
-
-      LoggingPreferences logPrefs = new LoggingPreferences();
-      logPrefs.enable(LogType.BROWSER, Level.ALL);
-      logPrefs.enable(LogType.DRIVER, Level.ALL);
-      options.setCapability("goog:loggingPrefs", logPrefs);
-    }
-
+    options.addArguments("--headless=new");
+    options.addArguments("--disable-extensions");
     options.addArguments("--disable-gpu"); // Disable GPU acceleration
     options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
     options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources

@@ -8,15 +8,15 @@ import org.mule.extension.webcrawler.internal.helper.webdriver.CloudHubChromeCon
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v135.fetch.Fetch;
-import org.openqa.selenium.devtools.v135.page.Page;
-import org.openqa.selenium.devtools.v135.runtime.Runtime;
-import org.openqa.selenium.devtools.v135.overlay.Overlay;
-import org.openqa.selenium.devtools.v135.log.Log;
-import org.openqa.selenium.devtools.v135.network.Network;
-import org.openqa.selenium.devtools.v135.network.model.Headers;
-import org.openqa.selenium.devtools.v135.performance.Performance;
-import org.openqa.selenium.devtools.v135.security.Security;
+import org.openqa.selenium.devtools.v139.fetch.Fetch;
+import org.openqa.selenium.devtools.v139.page.Page;
+import org.openqa.selenium.devtools.v139.runtime.Runtime;
+import org.openqa.selenium.devtools.v139.overlay.Overlay;
+import org.openqa.selenium.devtools.v139.log.Log;
+import org.openqa.selenium.devtools.v139.network.Network;
+import org.openqa.selenium.devtools.v139.network.model.Headers;
+import org.openqa.selenium.devtools.v139.performance.Performance;
+import org.openqa.selenium.devtools.v139.security.Security;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +80,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
         devTools.createSession();
 
         // Required for setting headers
-        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty()));
+        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
         // Disable cache
         devTools.send(Network.setCacheDisabled(true));
         // Disable unnecessary domains for speed
