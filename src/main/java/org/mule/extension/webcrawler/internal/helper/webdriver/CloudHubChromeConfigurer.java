@@ -35,11 +35,11 @@ public class CloudHubChromeConfigurer {
         "export FONTCONFIG_PATH=/tmp\n" +
         "export XDG_CACHE_HOME=/tmp/chrome/cache\n" +
         "export XDG_CONFIG_HOME=/tmp/chrome/config\n" +
-        "export HOME=/tmp\n" +
+        "export HOME=" + CHROME_DEPENDENCY_LIBS_PATH + "\n" +
         "export NSS_DISABLE_DB=1\n" +
         "export NSS_SDB_USE_CACHE=no\n" +
         "export NSS_DISABLE_UNLOAD=1\n" +
-        "export NSS_TMPDIR=/tmp\n" +
+        "export NSS_TMPDIR=" + CHROME_DEPENDENCY_LIBS_PATH + "\n" +
         "exec " + CHROME_PATH + "/chrome-headless-shell \"$@\"\n";
     public static final String CHROME_WEBDRIVER_PATH = "/tmp/chromedriver-linux64";
     public static String CHROME_WEBDRIVER_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
