@@ -291,36 +291,6 @@ payload.payload]]></ee:set-payload>
 		<ms-webcrawler:search-google doc:id="2f510fd3-bbdc-4b01-b982-55e4b58c0629" doc:name="[Search] Google" query="#[attributes.queryParams.query]" apiKey="#[attributes.headers.'Serper-Api-Key']"></ms-webcrawler:search-google>
   </flow>
 
-  <flow name="get:\download\(filename):webcrawler-connector-operations-api-config">
-
-    <!-- Read the log file -->
-    <choice doc:name="Choice" doc:id="ced77758-f7a1-4d66-b4ed-76aa4a9e8edd" >
-			<when expression='#[attributes.uriParams.filename == "chrome-driver.log"]'>
-				<try doc:name="Try" doc:id="32fd6380-d9c9-4cbc-abae-b0edf90b20dc" >
-					<file:read doc:name="Read ChromeDriver Log" path='#[mule.home ++ "/logs/chromedriver.log"]' />
-					<set-variable variableName="responseHeaders" value="#[{'Content-Disposition': 'attachment; filename=chromedriver.log', 'Content-Type': 'text/plain'}]" doc:name="Set Response Headers" />
-					<ee:transform doc:name="Transform to Response">
-        <ee:message>
-            <ee:set-payload><![CDATA[payload]]></ee:set-payload>
-            <ee:set-attributes><![CDATA[{
-    headers: vars.responseHeaders
-}]]></ee:set-attributes>
-        </ee:message>
-    </ee:transform>
-					<error-handler >
-						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="4b37e8cb-57cf-447b-a6a8-0cd7754c8371" >
-							<logger level="INFO" doc:name="Log error" doc:id="1387c506-17a7-41c3-9925-27d607b6d2ac" message="#[output json&#10;---&#10;{&#10;	error: error.description&#10;}]"/>
-						</on-error-continue>
-					</error-handler>
-				</try>
-			</when>
-		</choice>
-
-    <!-- Set HTTP headers -->
-
-    <!-- Return file with headers -->
-</flow>
-
 
 
 
