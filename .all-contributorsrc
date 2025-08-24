@@ -44,6 +44,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "rhoegg",
+      "name": "Ryan Hoegg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44559?v=4",
+      "profile": "http://hoegg.software/",
+      "contributions": [
+        "code",
+        "platform"
+      ]
     }
   ],
   "contributorsPerLine": 7,
