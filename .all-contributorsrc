@@ -35,6 +35,15 @@
         "platform",
         "doc"
       ]
+    },
+    {
+      "login": "codedbyyogesh",
+      "name": "Yogesh Mudaliar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/87764828?v=4",
+      "profile": "https://github.com/codedbyyogesh",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
