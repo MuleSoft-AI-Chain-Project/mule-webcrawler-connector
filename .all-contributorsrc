@@ -1,0 +1,93 @@
+{
+  "projectName": "MuleSoft-AI-Chain-Project/mule-webcrawler-connector",
+  "projectOwner": "MuleSoft-AI-Chain-Project",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 200,
+  "commit": true,
+  "commitConvention": "angular",
+  "contributors": [
+     {
+       "login": "tbolis-at-mulesoft",
+       "name": "Tommaso Bolis",
+       "avatar_url": "https://avatars.githubusercontent.com/u/95849087?v=4",
+       "profile": "https://github.com/tbolis-at-mulesoft",
+       "contributions": [
+         "code",
+         "test",
+         "review",
+         "platform",
+         "doc"
+       ]
+     },
+    {
+      "login": "shumonsharif",
+      "name": "Shumon Sharif",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13334073?v=4",
+      "profile": "https://github.com/shumonsharif",
+      "contributions": [
+        "code",
+        "test",
+        "review",
+        "platform",
+        "doc"
+      ]
+    },
+    {
+      "login": "amirkhan-ak-sf",
+      "name": "Amir Khan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/86777111?v=4",
+      "profile": "https://www.linkedin.com/in/amir-khan-ak/",
+      "contributions": [
+        "code",
+        "test",
+        "review",
+        "platform",
+        "doc"
+      ]
+    },
+    {
+      "login": "codedbyyogesh",
+      "name": "Yogesh Mudaliar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/87764828?v=4",
+      "profile": "https://github.com/codedbyyogesh",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "rhoegg",
+      "name": "Ryan Hoegg",
+      "avatar_url": "https://avatars.githubusercontent.com/u/44559?v=4",
+      "profile": "http://hoegg.software/",
+      "contributions": [
+        "code",
+        "platform"
+      ]
+    },
+    {
+      "login": "mboss37",
+      "name": "Mihael Bosnjak",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29606687?v=4",
+      "profile": "https://github.com/mboss37",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "saicharan0610",
+      "name": "saicharan0610",
+      "avatar_url": "https://avatars.githubusercontent.com/u/53638266?v=4",
+      "profile": "https://github.com/saicharan0610",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 4,
+  "skipCi": true,
+  "commitType": "docs"
+}

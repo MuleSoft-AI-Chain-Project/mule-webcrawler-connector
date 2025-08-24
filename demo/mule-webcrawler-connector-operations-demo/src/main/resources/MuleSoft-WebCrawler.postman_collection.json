@@ -1,0 +1,161 @@
+{
+  "info": {
+    "name": "MuleSoft WebCrawler API",
+    "description": "API for web crawling and data extraction",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Page",
+      "request": {
+        "method": "POST",
+	    "header": [
+	      {
+	        "key": "Content-Type",
+	        "value": "application/json"
+	      }
+	    ],
+        "url": {
+          "raw": "https://{{host}}/api/page?url={{url}}&outputFormat={{outputFormat}}",
+          "host": ["{{host}}"],
+          "path": ["api", "page"],
+          "query": [
+            { "key": "url", "value": "{{url}}" },
+            { "key": "outputFormat", "value": "{{outputFormat}}" }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"javascript\": \";\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Insights",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/insights?url={{url}}",
+          "host": ["{{host}}"],
+          "path": ["api", "insights"],
+          "query": [{ "key": "url", "value": "{{url}}" }]
+        }
+      }
+    },
+    {
+      "name": "Sitemap",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/sitemap?url={{url}}",
+          "host": ["{{host}}"],
+          "path": ["api", "sitemap"],
+          "query": [
+          	{ "key": "url", "value": "{{url}}" },
+          	{ "key": "depth", "value": "{{depth}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "MetaTag",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/metatag?url={{url}}",
+          "host": ["{{host}}"],
+          "path": ["api", "metatag"],
+          "query": [{ "key": "url", "value": "{{url}}" }]
+        }
+      }
+    },
+    {
+      "name": "Image",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/image?url={{url}}&downloadLocation={{downloadLocation}}",
+          "host": ["{{host}}"],
+          "path": ["api", "image"],
+          "query": [
+            { "key": "url", "value": "{{url}}" },
+            { "key": "downloadLocation", "value": "{{downloadLocation}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Document",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/document?url={{url}}&downloadLocation={{downloadLocation}}",
+          "host": ["{{host}}"],
+          "path": ["api", "document"],
+          "query": [
+            { "key": "url", "value": "{{url}}" },
+            { "key": "downloadLocation", "value": "{{downloadLocation}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Crawl Full Scan",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/crawl-full-scan?url={{url}}&outputFormat={{outputFormat}}",
+          "host": ["{{host}}"],
+          "path": ["api", "crawl-full-scan"],
+          "query": [
+            { "key": "url", "value": "{{url}}" },
+            { "key": "outputFormat", "value": "{{outputFormat}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Crawl Streaming",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://{{host}}/api/crawl-streaming?url={{url}}&outputFormat={{outputFormat}}",
+          "host": ["{{host}}"],
+          "path": ["api", "crawl-streaming"],
+          "query": [
+            { "key": "url", "value": "{{url}}" },
+            { "key": "outputFormat", "value": "{{outputFormat}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Search",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Serper-Api-Key", "value": "{{SerperApiKey}}", "type": "text" }
+        ],
+        "url": {
+          "raw": "https://{{host}}/api/search?query={{query}}",
+          "host": ["{{host}}"],
+          "path": ["api", "search"],
+          "query": [{ "key": "query", "value": "{{query}}" }]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": "http://localhost:8081"
+    },
+    { "key": "url", "value": "http://example.com" },
+    { "key": "outputFormat", "value": "HTML" },
+    { "key": "depth", "value": "2" },
+    { "key": "downloadLocation", "value": "/tmp" },
+    { "key": "query", "value": "mulesoft" },
+    { "key": "SerperApiKey", "value": "your-api-key" }
+  ]
+}

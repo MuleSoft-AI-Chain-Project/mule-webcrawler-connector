@@ -21,11 +21,14 @@ import org.mule.runtime.extension.api.annotation.values.OfValues;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 @Alias("web-driver")
 @DisplayName("WebDriver")
@@ -103,13 +106,20 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
       options.addArguments("--blink-settings=imagesEnabled=false"); // Disable image rendering
       options.addArguments("--disable-software-rasterizer");
       options.addArguments("--disable-background-networking");
-      options.addArguments("--disable-sync");
-      options.addArguments("--disable-default-apps");
-      options.addArguments("--renderer-process-limit=1");
-    } else {
-      options.addArguments("--headless"); // NON CH only; CloudHub already uses headless chrome
+      //options.addArguments("--disable-sync");
+      //options.addArguments("--disable-default-apps");
+      //options.addArguments("--renderer-process-limit=1");
+      options.addArguments("--remote-debugging-pipe");
+
+      options.addArguments("--verbose");
+      options.addArguments("--window-size=1920,1080");
+      options.addArguments("--ignore-certificate-errors");
+      options.addArguments("--no-zygote");
+      options.addArguments("--disable-renderer-backgrounding");
     }
 
+    options.addArguments("--headless=new");
+    options.addArguments("--disable-extensions");
     options.addArguments("--disable-gpu"); // Disable GPU acceleration
     options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
     options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
@@ -117,7 +127,40 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
     if(!userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
     if(!referrer.isEmpty()) options.addArguments("--referer=" + referrer);
 
-    driver = new ChromeDriver(options);
+    if(Boolean.getBoolean("webdriver.chrome.verboseLogging")) {
+
+      LOGGER.debug("Enabling verbose logging for ChromeDriver");
+
+      // Custom OutputStream to capture ChromeDriver logs with filtering
+      OutputStream chromeLogStream = new OutputStream() {
+        private StringBuilder buffer = new StringBuilder();
+
+        @Override
+        public void write(int b) throws IOException {
+          if (b == '\n') {
+            // Print each complete line with a prefix
+            LOGGER.debug("[CHROMEDRIVER] " + buffer.toString());
+            buffer.setLength(0);
+          } else {
+            buffer.append((char) b);
+          }
+        }
+      };
+
+      PrintStream printStream = new PrintStream(chromeLogStream, true);
+
+      // Create ChromeDriverService with log redirect
+      ChromeDriverService service = new ChromeDriverService.Builder()
+          .withVerbose(true)      // enable verbose logging
+          .withSilent(false)      // ensure logs are generated
+          .withLogOutput(printStream) // redirect logs to our custom stream
+          .build();
+      driver = new ChromeDriver(service, options);
+    } else {
+
+      LOGGER.debug("Verbose logging for ChromeDriver is disabled");
+      driver = new ChromeDriver(options);
+    }
 
     String actualUserAgent = (String) ((JavascriptExecutor) driver).executeScript("return navigator.userAgent;");
     LOGGER.info("User Agent: {}", actualUserAgent);

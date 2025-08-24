@@ -26,13 +26,16 @@ public class CloudHubChromeConfigurer {
 
     public static final String LATEST_MILESTONE_VERSION_URL =
         "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone.json";
-    public static final String CHROME_CDP_VERSION = "135";
+    public static final String CHROME_CDP_VERSION = "139";
     public static final String CHROME_DEPENDENCY_RESOURCE_PATH = "/cloudhub-chrome-dependencies.zip";
     public static final String CHROME_DEPENDENCY_LIBS_PATH = "/tmp/chrome-deps-linux64";
     public static final String CHROME_PATH = "/tmp/chrome-headless-shell-linux64";
     public static final String CHROME_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
-        "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":$LD_LIBRARY_PATH\n" +
+        "export LD_LIBRARY_PATH=" + CHROME_DEPENDENCY_LIBS_PATH + ":/usr/lib64:$LD_LIBRARY_PATH\n" +
         "export FONTCONFIG_PATH=/tmp\n" +
+        "export XDG_CACHE_HOME=/tmp/chrome/cache\n" +
+        "export XDG_CONFIG_HOME=/tmp/chrome/config\n" +
+        "export HOME=" + CHROME_DEPENDENCY_LIBS_PATH + "\n" +
         "exec " + CHROME_PATH + "/chrome-headless-shell \"$@\"\n";
     public static final String CHROME_WEBDRIVER_PATH = "/tmp/chromedriver-linux64";
     public static String CHROME_WEBDRIVER_WRAPPER_SCRIPT_CONTENT = "#!/bin/bash\n" +
