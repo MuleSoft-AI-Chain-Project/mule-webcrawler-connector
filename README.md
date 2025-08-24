@@ -1,17 +1,23 @@
 # <img src="icon/icon.svg" width="6%" alt="banner"> MuleSoft  WebCrawler Connector
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector)](https://central.sonatype.com/artifact/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector/overview)
 
-## <img src="https://raw.githubusercontent.com/MuleSoft-AI-Chain-Project/.github/main/profile/assets/mulechain-project-logo.png" width="6%" alt="banner">   [MuleSoft AI Chain (MAC) Project](https://mac-project.ai/docs/)
+# <img src="https://raw.githubusercontent.com/MuleSoft-AI-Chain-Project/.github/main/profile/assets/mulechain-project-logo.png" width="6%" alt="banner">   [MuleSoft AI Chain (MAC) Project](https://mac-project.ai/docs/)
 
-### <img src="icon/icon.svg" width="6%" alt="banner"> MAC Web Crawler
+# <img src="icon/icon.svg" width="6%" alt="banner"> MAC Web Crawler
 
 **MuleSoft WebCrawler** provides web crawling capabilities to extract data from web pages subsequently based on the structure of the website.
 
-### Requirements
+## Requirements
 
-- The maximum supported version for Java SDK is JDK 17. You can use JDK 17 only for running your application.
+- The **maximum** supported version for Java SDK is **JDK 17**. 
+- You can use JDK 17 only for running your application.
 - Compilation with Java SDK must be done with JDK 11.
+
+## Configuration and Deployment
 
 ### Installation (using maven central dependency)
 
@@ -58,3 +64,34 @@ configuration in your `pom.xml`.
 
 This property will allow the installation of Chrome at runtime into your CloudHub 1.0 worker VM, 
 or your CloudHub 2.0 container, along with the necessary dependencies.
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/shumonsharif"><img src="https://avatars.githubusercontent.com/u/13334073?v=4?s=100" width="100px;" alt="Shumon Sharif"/><br /><sub><b>Shumon Sharif</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=shumonsharif" title="Code">💻</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=shumonsharif" title="Tests">⚠️</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/pulls?q=is%3Apr+reviewed-by%3Ashumonsharif" title="Reviewed Pull Requests">👀</a> <a href="#platform-shumonsharif" title="Packaging/porting to new platform">📦</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=shumonsharif" title="Documentation">📖</a></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td align="center" size="13px" colspan="7">
+        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
+          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
+        </img>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
