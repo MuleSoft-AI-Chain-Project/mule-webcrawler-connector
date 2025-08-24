@@ -1,6 +1,6 @@
 # <img src="icon/icon.svg" width="6%" alt="banner"> MuleSoft  WebCrawler Connector
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector)](https://central.sonatype.com/artifact/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector/overview)
@@ -82,6 +82,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/yogeshmudaliar"><img src="https://avatars.githubusercontent.com/u/33849871?v=4?s=100" width="100px;" alt="yogeshmudaliar"/><br /><sub><b>yogeshmudaliar</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=yogeshmudaliar" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/mboss37"><img src="https://avatars.githubusercontent.com/u/29606687?v=4?s=100" width="100px;" alt="Mihael Bosnjak"/><br /><sub><b>Mihael Bosnjak</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=mboss37" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/saicharan0610"><img src="https://avatars.githubusercontent.com/u/53638266?v=4?s=100" width="100px;" alt="saicharan0610"/><br /><sub><b>saicharan0610</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=saicharan0610" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tbolis-at-mulesoft"><img src="https://avatars.githubusercontent.com/u/95849087?v=4?s=100" width="100px;" alt="Tommaso Bolis"/><br /><sub><b>Tommaso Bolis</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=tbolis-at-mulesoft" title="Code">💻</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=tbolis-at-mulesoft" title="Tests">⚠️</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/pulls?q=is%3Apr+reviewed-by%3Atbolis-at-mulesoft" title="Reviewed Pull Requests">👀</a> <a href="#platform-tbolis-at-mulesoft" title="Packaging/porting to new platform">📦</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=tbolis-at-mulesoft" title="Documentation">📖</a></td>
     </tr>
   </tbody>
   <tfoot>
