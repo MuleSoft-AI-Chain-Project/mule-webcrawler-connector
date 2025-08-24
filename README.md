@@ -1,6 +1,6 @@
 # <img src="icon/icon.svg" width="6%" alt="banner"> MuleSoft  WebCrawler Connector
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector)](https://central.sonatype.com/artifact/io.github.mulesoft-ai-chain-project/mule4-webcrawler-connector/overview)
@@ -79,6 +79,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/amir-khan-ak/"><img src="https://avatars.githubusercontent.com/u/86777111?v=4?s=100" width="100px;" alt="Amir Khan"/><br /><sub><b>Amir Khan</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=amirkhan-ak-sf" title="Code">💻</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=amirkhan-ak-sf" title="Tests">⚠️</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/pulls?q=is%3Apr+reviewed-by%3Aamirkhan-ak-sf" title="Reviewed Pull Requests">👀</a> <a href="#platform-amirkhan-ak-sf" title="Packaging/porting to new platform">📦</a> <a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=amirkhan-ak-sf" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/codedbyyogesh"><img src="https://avatars.githubusercontent.com/u/87764828?v=4?s=100" width="100px;" alt="Yogesh Mudaliar"/><br /><sub><b>Yogesh Mudaliar</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=codedbyyogesh" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://hoegg.software/"><img src="https://avatars.githubusercontent.com/u/44559?v=4?s=100" width="100px;" alt="Ryan Hoegg"/><br /><sub><b>Ryan Hoegg</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=rhoegg" title="Code">💻</a> <a href="#platform-rhoegg" title="Packaging/porting to new platform">📦</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/yogeshmudaliar"><img src="https://avatars.githubusercontent.com/u/33849871?v=4?s=100" width="100px;" alt="yogeshmudaliar"/><br /><sub><b>yogeshmudaliar</b></sub></a><br /><a href="https://github.com/MuleSoft-AI-Chain-Project/MuleSoft-AI-Chain-Project/mule-webcrawler-connector/commits?author=yogeshmudaliar" title="Code">💻</a></td>
     </tr>
   </tbody>
   <tfoot>
