@@ -22,6 +22,19 @@
         "platform",
         "doc"
       ]
+    },
+    {
+      "login": "amirkhan-ak-sf",
+      "name": "Amir Khan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/86777111?v=4",
+      "profile": "https://www.linkedin.com/in/amir-khan-ak/",
+      "contributions": [
+        "code",
+        "test",
+        "review",
+        "platform",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
