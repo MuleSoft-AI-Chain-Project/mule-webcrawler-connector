@@ -24,39 +24,6 @@
 		</license>
 	</licenses>
 
-	<developers>
-		<developer>
-			<name>Yogesh Mudaliar</name>
-			<email>ymudaliar@salesforce.com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.salesforce.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Amir Khan</name>
-			<email>amir.khan@mulesoft.com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.mulesoft.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Tommaso Bolis</name>
-			<email>tbolis-at-salesforce-dot-com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.salesforce.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Mihael Bosnjak</name>
-			<email>mbosnjak@salesforce.com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.mulesoft.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Ryan Hoegg</name>
-			<email>ryan@hoegg.software</email>
-			<organization>Hoegg Software, Co.</organization>
-			<organizationUrl>https://hoegg.software</organizationUrl>
-		</developer>
-	</developers>
-
     <parent>
         <groupId>org.mule.extensions</groupId>
         <artifactId>mule-modules-parent</artifactId>
