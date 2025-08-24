@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mulesoft.connectors</groupId>
     <artifactId>mule4-webcrawler-connector</artifactId>
-    <version>0.3.75</version>
+    <version>0.4.0</version>
     <packaging>mule-extension</packaging>
     <name>MuleSoft WebCrawler Connector - Mule 4</name>
 	<description>The MuleSoft WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
@@ -23,39 +23,6 @@
 			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
 		</license>
 	</licenses>
-
-	<developers>
-		<developer>
-			<name>Yogesh Mudaliar</name>
-			<email>ymudaliar@salesforce.com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.salesforce.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Amir Khan</name>
-			<email>amir.khan@mulesoft.com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.mulesoft.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Tommaso Bolis</name>
-			<email>tbolis-at-salesforce-dot-com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.salesforce.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Mihael Bosnjak</name>
-			<email>mbosnjak@salesforce.com</email>
-			<organization>Salesforce</organization>
-			<organizationUrl>https://www.mulesoft.com</organizationUrl>
-		</developer>
-		<developer>
-			<name>Ryan Hoegg</name>
-			<email>ryan@hoegg.software</email>
-			<organization>Hoegg Software, Co.</organization>
-			<organizationUrl>https://hoegg.software</organizationUrl>
-		</developer>
-	</developers>
 
     <parent>
         <groupId>org.mule.extensions</groupId>
@@ -113,8 +80,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>9</source>
-					<target>9</target>
+					<source>11</source>
+					<target>11</target>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -165,7 +132,7 @@
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
-			<version>4.31.0</version>
+			<version>4.35.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
