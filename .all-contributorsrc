@@ -87,5 +87,7 @@
       ]
     }
   ],
-  "contributorsPerLine": 4
+  "contributorsPerLine": 4,
+  "skipCi": true,
+  "commitType": "docs"
 }
