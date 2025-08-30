@@ -2,21 +2,11 @@ package org.mule.extension.webcrawler.internal.connection.webdriver;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.mule.extension.webcrawler.api.CustomAuthenticator;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.helper.webdriver.CloudHubChromeConfigurer;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v139.fetch.Fetch;
-import org.openqa.selenium.devtools.v139.page.Page;
-import org.openqa.selenium.devtools.v139.runtime.Runtime;
-import org.openqa.selenium.devtools.v139.overlay.Overlay;
-import org.openqa.selenium.devtools.v139.log.Log;
-import org.openqa.selenium.devtools.v139.network.Network;
-import org.openqa.selenium.devtools.v139.network.model.Headers;
-import org.openqa.selenium.devtools.v139.performance.Performance;
-import org.openqa.selenium.devtools.v139.security.Security;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,26 +15,29 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
 
 public class WebDriverConnection implements WebCrawlerConnection {
 
     private static Logger LOGGER = LoggerFactory.getLogger(WebDriverConnection.class);
 
+    private final Map<String, CustomAuthenticator> authenticators = new HashMap<>();
+
     private WebDriver driver;
     private String userAgent;
     private String referrer;
     private WebDriverConnectionProvider connectionProvider; // Reference to the provider
-    private DevTools devTools;
 
     public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverConnectionProvider connectionProvider) {
         this.driver = driver;
         this.userAgent = userAgent;
         this.referrer = referrer;
         this.connectionProvider = connectionProvider;
+        ServiceLoader<CustomAuthenticator> loader = ServiceLoader.load(CustomAuthenticator.class);
+        for (CustomAuthenticator authenticator : loader) {
+            authenticators.put(authenticator.getId(), authenticator);
+            LOGGER.info("Discovered custom authenticator: " + authenticator.getId() + " in " + authenticator.getClass());
+        }
     }
 
     public String getUserAgent() {
@@ -70,77 +63,52 @@ public class WebDriverConnection implements WebCrawlerConnection {
         this.driver = connectionProvider.createNewWebDriver();
     }
 
-    private void configureDevTools() {
-        devTools = ((ChromeDriver) this.driver).getDevTools();
-        devTools.createSession();
-
-        // Required for setting headers
-        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
-        // Disable cache
-        devTools.send(Network.setCacheDisabled(true));
-        // Disable unnecessary domains for speed
-        devTools.send(Log.disable());
-        devTools.send(Performance.disable());
-        devTools.send(Page.disable());
-        devTools.send(Runtime.disable());
-        // devTools.send(DOM.disable());
-        devTools.send(Overlay.disable());
-        devTools.send(Security.disable());
-        devTools.send(Fetch.disable());
-    }
-
-
     @Override
-    public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
-        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
-        return CompletableFuture.supplyAsync(() -> {
+    public InputStream getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
+        LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad(),
+                pageLoadOptions.getAuthenticationMethodId()));
+        if (pageLoadOptions.getAuthenticationMethodId() != null && !pageLoadOptions.getAuthenticationMethodId().isBlank()) {
+            CustomAuthenticator authenticator = authenticators.get(pageLoadOptions.getAuthenticationMethodId());
 
-            // Set the referrer header
-            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
-            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-                try{
-                    if (devTools == null || devTools.getCdpSession() == null) {
-                        configureDevTools();
+            if (authenticator != null) {
+                if (authenticator.canHandleUrl(url)) {
+                    // Check if refresh is needed before configuring
+                    if (authenticator.needsRefresh(driver, pageLoadOptions.getAuthenticationConfiguration())) {
+                        authenticator.configureAuthentication(driver, pageLoadOptions.getAuthenticationConfiguration());
+                        LOGGER.info("Custom authenticator configuration {} invoked successfully", authenticator.getClass());
                     }
-                    Map<String, Object> headers = Map.of(
-                            "User-Agent", userAgent,
-                            "Referer", currentReferrer
-                    );
-                    devTools.send(Network.setExtraHTTPHeaders(new Headers(headers)));
-                } catch (Exception e) {
-
-                    LOGGER.debug("Error while trying to set referer for web driver");
                 }
             }
-            // Load the dynamic page
-            driver.get(url);
+        }
 
-            Long effectiveTimeout = Optional.ofNullable(pageLoadOptions.getWaitOnPageLoad())
-                        .filter(t -> t > 0) // Keep only if greater than 0
-                        .orElse(30000L);    // Default 30 seconds if waitOnPageLoad is null or 0
+        driver.get(url);
 
-            // Wait for document.readyState to be complete no matter if XPath is provided or not
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            new FluentWait<>(driver)
-                    .withTimeout(Duration.ofSeconds(effectiveTimeout))
-                    .pollingEvery(Duration.ofMillis(500))
-                    .until(d -> js.executeScript("return document.readyState").equals("complete"));
+        Long effectiveTimeout = Optional.ofNullable(pageLoadOptions.getWaitOnPageLoad())
+                    .filter(t -> t > 0) // Keep only if greater than 0
+                    .orElse(30000L);    // Default 30 seconds if waitOnPageLoad is null or 0
 
-            // Wait for given XPath to load
-            if (pageLoadOptions.getWaitForXPath() != null && pageLoadOptions.getWaitForXPath().compareTo("") != 0) {
-                waitForXPathLoad(effectiveTimeout, pageLoadOptions.getWaitForXPath());
-            }
+        // Wait for document.readyState to be complete no matter if XPath is provided or not
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        new FluentWait<>(driver)
+                .withTimeout(Duration.ofSeconds(effectiveTimeout))
+                .pollingEvery(Duration.ofMillis(500))
+                .until(d -> js.executeScript("return document.readyState").equals("complete"));
 
-            if (pageLoadOptions.getJavascript() != null && !pageLoadOptions.getJavascript().isEmpty()) {
-                LOGGER.debug(String.format("Executing javascript %s", pageLoadOptions.getJavascript()));
-                executeScript(pageLoadOptions.getJavascript());
-            }
+        // Wait for given XPath to load
+        if (pageLoadOptions.getWaitForXPath() != null && pageLoadOptions.getWaitForXPath().compareTo("") != 0) {
+            waitForXPathLoad(effectiveTimeout, pageLoadOptions.getWaitForXPath());
+        }
 
-            // Retrieve the page source
-            String pageSource = driver.getPageSource();
-            // Convert the page source to InputStream
-            return new ByteArrayInputStream(pageSource.getBytes(StandardCharsets.UTF_8));
-        });
+        if (pageLoadOptions.getJavascript() != null && !pageLoadOptions.getJavascript().isEmpty()) {
+            LOGGER.debug(String.format("Executing javascript %s", pageLoadOptions.getJavascript()));
+            executeScript(pageLoadOptions.getJavascript());
+        }
+
+        // Retrieve the page source
+        String pageSource = driver.getPageSource();
+        // Convert the page source to InputStream
+        return new ByteArrayInputStream(pageSource.getBytes(StandardCharsets.UTF_8));
+
     }
 
     private void waitForXPathLoad(Long waitOnPageLoad, String waitForXPath) {
@@ -254,31 +222,16 @@ public class WebDriverConnection implements WebCrawlerConnection {
     }
 
     @Override
-    public CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer) {
+    public Integer getUrlStatusCode(String url, String currentReferrer) {
 
         LOGGER.debug(String.format("Checking status for url %s using webdriver", url));
-        return CompletableFuture.supplyAsync(() -> {
-            // Set the referrer header
-            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
-            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-                try{
-                    if (devTools == null || devTools.getCdpSession() == null) {
-                        configureDevTools();
-                    }
-                    devTools.send(Network.setExtraHTTPHeaders(new Headers(Map.of("Referer", currentReferrer))));
-                } catch (Exception e) {
+        // Load the dynamic page
+        driver.get(url);
 
-                    LOGGER.debug("Error while trying to set referer for web driver");
-                }
-            }
-            // Load the dynamic page
-            driver.get(url);
-
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            Object status = js.executeScript("return fetch(arguments[0], { method: 'HEAD' })" +
-                                                 ".then(response => response.status)" +
-                                                 ".catch(() => 0);", url);
-            return status instanceof Long ? ((Long) status).intValue() : 500;
-        });
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        Object status = js.executeScript("return fetch(arguments[0], { method: 'HEAD' })" +
+                                             ".then(response => response.status)" +
+                                             ".catch(() => 0);", url);
+        return status instanceof Long ? ((Long) status).intValue() : 500;
     }
 }

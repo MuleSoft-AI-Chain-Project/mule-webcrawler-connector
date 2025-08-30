@@ -4,15 +4,16 @@ import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public interface WebCrawlerConnection {
 
   String getUserAgent();
   String getReferrer();
 
-  CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer);
+  Integer getUrlStatusCode(String url, String currentReferrer) throws ExecutionException, InterruptedException;
 
-  CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions);
+  InputStream getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) throws ExecutionException, InterruptedException;
 
   default void restartDriver() {}
 
