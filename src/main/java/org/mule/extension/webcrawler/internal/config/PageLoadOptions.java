@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.config;
 
+import org.mule.extension.webcrawler.api.AuthenticationMethodValueProvider;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
@@ -8,6 +9,7 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.runtime.extension.api.annotation.values.OfValues;
 
 import java.util.Map;
 
@@ -53,8 +55,9 @@ public class PageLoadOptions {
   @DisplayName("Custom Authentication Method ID")
   @Summary("Custom Authentication Method ID (not available for HTTP connection)")
   @Expression(ExpressionSupport.SUPPORTED)
-  @Example("customBasicAuth")
+  @Example("myCustomEnterpriseAuth")
   @Optional
+  @OfValues(AuthenticationMethodValueProvider.class)
   private String authenticationMethodId;
 
   @Parameter

@@ -12,14 +12,23 @@ The core of the framework is the `CustomAuthenticator` interface, which defines 
 
 To add a new authenticator, you need to follow these steps:
 
-1.  **Implement the `CustomAuthenticator` interface:** Create a new Java class that implements the `org.mule.extension.webcrawler.api.CustomAuthenticator` interface. For header-based authentication, you can extend the `org.mule.extension.webcrawler.api.HTTPHeaderBasedAuthenticator` class.
+1.  **Add the Selenium dependency:** You may need this to interact with authentication pages, or to leverage the Chrome DevTools Protocol (CDP).  Ensure that the `scope` is marked as `provided`.
+```xml
+<dependency>
+    <groupId>org.seleniumhq.selenium</groupId>
+    <artifactId>selenium-java</artifactId>
+    <version><!--Should match what's in WebCrawler pom.xml--></version>
+    <scope>provided</scope>
+</dependency>
+```
+2.  **Implement the `CustomAuthenticator` interface:** Create a new Java class that implements the `org.mule.extension.webcrawler.api.CustomAuthenticator` interface. For header-based authentication, you can extend the `org.mule.extension.webcrawler.api.HTTPHeaderBasedAuthenticator` class.
 
-2.  **Implement the required methods:**
+3.  **Implement the required methods:**
     *   `getId()`: Return a unique string identifier for your authenticator (e.g., "my-custom-auth").
     *   `configureAuthentication()`: Implement the logic to perform the authentication. This method receives a Selenium `WebDriver` instance and a map of configuration properties.
     *   For `HTTPHeaderBasedAuthenticator`, you'll need to implement `generateAuthHeaders()` to return the required HTTP headers.
 
-3.  **Register your authenticator as a service provider:** Create a file named `org.mule.extension.webcrawler.api.CustomAuthenticator` in the `src/main/resources/META-INF/services` directory of your project. In this file, add the fully qualified class name of your new authenticator class.
+4.  **Register your authenticator as a service provider:** Create a file named `org.mule.extension.webcrawler.api.CustomAuthenticator` in the `src/main/resources/META-INF/services` directory of your project. In this file, add the fully qualified class name of your new authenticator class.
 
     For example:
     ```

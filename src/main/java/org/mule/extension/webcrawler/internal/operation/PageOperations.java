@@ -1,6 +1,7 @@
 package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONArray;
+import org.mule.extension.webcrawler.api.AuthenticationMethodValueProvider;
 import org.mule.extension.webcrawler.api.metadata.PageResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
@@ -26,6 +27,7 @@ import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.runtime.extension.api.annotation.values.OfValues;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +72,7 @@ public class PageOperations {
           @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @ConfigOverride
           @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
-          @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("customBasicAuth") @Optional String authenticationMethodId,
+          @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
       @ConfigOverride
           @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
           @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
@@ -142,7 +144,7 @@ public class PageOperations {
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @ConfigOverride
               @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
-              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("customBasicAuth") @Optional String authenticationMethodId,
+              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
           @ConfigOverride
               @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
               @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
@@ -233,7 +235,7 @@ public class PageOperations {
           @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
       @ConfigOverride
           @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
-          @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("customBasicAuth") @Optional String authenticationMethodId,
+          @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
       @ConfigOverride
           @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
           @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
@@ -332,7 +334,7 @@ public class PageOperations {
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @ConfigOverride
               @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
-              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("customBasicAuth") @Optional String authenticationMethodId,
+              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
           @ConfigOverride
               @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
               @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
@@ -404,7 +406,7 @@ public class PageOperations {
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @ConfigOverride
               @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
-              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("customBasicAuth") @Optional String authenticationMethodId,
+              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
           @ConfigOverride
               @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
               @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
