@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mulesoft.connectors</groupId>
     <artifactId>mule4-webcrawler-connector</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.2</version>
     <packaging>mule-extension</packaging>
     <name>MuleSoft WebCrawler Connector - Mule 4</name>
 	<description>The MuleSoft WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
@@ -33,10 +33,25 @@
 	<properties>
         <muleJavaEeBomVersion>4.6.0</muleJavaEeBomVersion>
         <munit.extensions.maven.plugin.version>1.2.0</munit.extensions.maven.plugin.version>
+		<mule.extensions.maven.plugin.version>1.5.1</mule.extensions.maven.plugin.version>
     </properties>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
@@ -80,8 +95,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>11</source>
-					<target>11</target>
+					<source>17</source>
+					<target>17</target>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -102,7 +117,8 @@
             <groupId>org.mule.sdk</groupId>
             <artifactId>mule-sdk-api</artifactId>
             <version>0.9.0-rc1</version>
-        </dependency>    
+			<scope>provided</scope>
+		</dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>

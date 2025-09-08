@@ -56,7 +56,7 @@ public class PageHelper {
                                      PageLoadOptions pageLoadOptions) throws IOException {
 
     LOGGER.debug(String.format("Retrieving JSoup Document for url %s and referer %s", url, referrer));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, pageLoadOptions).get()) { // Blocks until complete
+    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, pageLoadOptions)) {
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       Document document = Jsoup.parse(pageSource, url);
 
@@ -82,7 +82,7 @@ public class PageHelper {
     LOGGER.debug(String.format("Retrieving status code for url %s and referer %s", url, referrer));
     try {
 
-      Integer urlStatusCode = connection.getUrlStatusCode(url, referrer).get();
+      Integer urlStatusCode = connection.getUrlStatusCode(url, referrer);
       if(urlStatusCode != 200) {
         LOGGER.debug(String.format("URL %s is not valid. Status code: %d", url, urlStatusCode));
       }
