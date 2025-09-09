@@ -90,9 +90,20 @@ public class WebDriverConnection implements WebCrawlerConnection {
         // Wait for document.readyState to be complete no matter if XPath is provided or not
         JavascriptExecutor js = (JavascriptExecutor) driver;
         new FluentWait<>(driver)
-                .withTimeout(Duration.ofSeconds(effectiveTimeout))
+                .withTimeout(Duration.ofMillis(effectiveTimeout))
                 .pollingEvery(Duration.ofMillis(500))
                 .until(d -> js.executeScript("return document.readyState").equals("complete"));
+
+        // Add fixed delay for dynamic content after document is ready
+        if (effectiveTimeout > 0) {
+            try {
+                LOGGER.debug(String.format("Waiting additional %d milliseconds for dynamic content to load", effectiveTimeout));
+                Thread.sleep(effectiveTimeout); // wait additional milliseconds 
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                LOGGER.warn("Dynamic content wait was interrupted", e);
+            }
+        }
 
         // Wait for given XPath to load
         if (pageLoadOptions.getWaitForXPath() != null && pageLoadOptions.getWaitForXPath().compareTo("") != 0) {
@@ -115,7 +126,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
         LOGGER.debug(String.format("Wait until %s for %s milliseconds", waitForXPath, waitOnPageLoad));
         try {
             new FluentWait<>(driver)
-                .withTimeout(Duration.ofSeconds(waitOnPageLoad))
+                .withTimeout(Duration.ofMillis(waitOnPageLoad))
                 .pollingEvery(Duration.ofMillis(500))
                 .until(d -> {
                     boolean finalElementPresent = false;
