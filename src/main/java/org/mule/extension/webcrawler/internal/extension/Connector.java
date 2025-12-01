@@ -22,7 +22,7 @@ import static org.mule.sdk.api.meta.JavaVersion.JAVA_17;
 @Xml(prefix = "ms-webcrawler")
 @Extension(name = "MuleSoft WebCrawler Connector")
 @Configurations({WebCrawlerConfiguration.class})
-@JavaVersionSupport({JAVA_11, JAVA_17})
+@JavaVersionSupport({JAVA_17})
 @ErrorTypes(WebCrawlerErrorType.class)
 @Export(classes = {CustomAuthenticator.class, WebDriver.class})
 public class Connector {

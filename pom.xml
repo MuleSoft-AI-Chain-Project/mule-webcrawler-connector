@@ -27,13 +27,13 @@
     <parent>
         <groupId>org.mule.extensions</groupId>
         <artifactId>mule-modules-parent</artifactId>
-		<version>1.5.1</version>
+		<version>1.9.6</version>
     </parent>
 
 	<properties>
-        <muleJavaEeBomVersion>4.6.0</muleJavaEeBomVersion>
-        <munit.extensions.maven.plugin.version>1.2.0</munit.extensions.maven.plugin.version>
-		<mule.extensions.maven.plugin.version>1.5.1</mule.extensions.maven.plugin.version>
+        <munit.extensions.maven.plugin.version>1.5.0</munit.extensions.maven.plugin.version>
+
+        <runtimeProduct>MULE_EE</runtimeProduct>
     </properties>
 
 	<build>
@@ -101,22 +101,11 @@
 			</plugin>
 		</plugins>
 	</build>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.mule</groupId>
-                <artifactId>mule-javaee-runtime-bom</artifactId>
-                <version>${muleJavaEeBomVersion}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>	
     <dependencies>
 	    <dependency>
             <groupId>org.mule.sdk</groupId>
             <artifactId>mule-sdk-api</artifactId>
-            <version>0.9.0-rc1</version>
+            <version>0.11.7</version>
 			<scope>provided</scope>
 		</dependency>
         <dependency>
