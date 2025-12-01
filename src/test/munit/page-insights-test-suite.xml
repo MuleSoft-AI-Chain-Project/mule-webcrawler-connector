@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <!-- Test Suite for Page Insights Operation -->
+    <munit:config name="page-insights-test-suite.xml" />
+
+    <!-- Test: Get Page Insights - Success Case -->
+    <munit:test name="test-page-insights-success" description="Test successful retrieval of page insights">
+        <munit:behavior>
+            <set-variable variableName="testUrl" value="https://mac-project.ai/" doc:name="Set Test URL" />
+        </munit:behavior>
+        
+        <munit:execution>
+            <ms-webcrawler:page-insights 
+                doc:name="Get page insights" 
+                config-ref="Test_HTTP_Configuration" 
+                url="#[vars.testUrl]">
+                <ms-webcrawler:tags>
+                    <ms-webcrawler:tag value="a" />
+                    <ms-webcrawler:tag value="p" />
+                </ms-webcrawler:tags>
+            </ms-webcrawler:page-insights>
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+            
+            <!-- Verify attributes contain URL -->
+            <munit-tools:assert-that 
+                doc:name="Assert attributes contain URL" 
+                expression="#[attributes.url]" 
+                is="#[MunitTools::equalTo(vars.testUrl)]" />
+            
+            <!-- Verify attributes contain title -->
+            <munit-tools:assert-that 
+                doc:name="Assert attributes contain title" 
+                expression="#[attributes.title]" 
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <!-- Test: Get Page Insights - Invalid URL -->
+    <munit:test name="test-page-insights-invalid-url" description="Test error handling for invalid URL" expectedErrorType="MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE">
+        <munit:execution>
+            <ms-webcrawler:page-insights 
+                doc:name="Get insights with invalid URL" 
+                config-ref="Test_HTTP_Configuration" 
+                url="invalid-url">
+                <ms-webcrawler:tags />
+            </ms-webcrawler:page-insights>
+        </munit:execution>
+    </munit:test>
+
+    <!-- Test: Get Page Insights - With Specific Tags -->
+    <munit:test name="test-page-insights-with-tags" description="Test page insights with specific HTML tags">
+        <munit:execution>
+            <ms-webcrawler:page-insights 
+                doc:name="Get insights for specific tags" 
+                config-ref="Test_HTTP_Configuration" 
+                url="https://mac-project.ai/">
+                <ms-webcrawler:tags>
+                    <ms-webcrawler:tag value="h1" />
+                    <ms-webcrawler:tag value="h2" />
+                    <ms-webcrawler:tag value="a" />
+                </ms-webcrawler:tags>
+            </ms-webcrawler:page-insights>
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+            
+            <!-- Verify attributes contain URL -->
+            <munit-tools:assert-that 
+                doc:name="Assert attributes contain URL" 
+                expression="#[attributes.url]" 
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <!-- Test: Get Page Insights - Without Tags -->
+    <munit:test name="test-page-insights-no-tags" description="Test page insights without specifying tags (all tags)">
+        <munit:execution>
+            <ms-webcrawler:page-insights 
+                doc:name="Get all insights" 
+                config-ref="Test_HTTP_Configuration" 
+                url="https://mac-project.ai/">
+                <ms-webcrawler:tags />
+            </ms-webcrawler:page-insights>
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <!-- Test: Get Page Insights - Verify Payload -->
+    <munit:test name="test-page-insights-payload" description="Test that page insights payload is valid">
+        <munit:execution>
+            <ms-webcrawler:page-insights 
+                doc:name="Get page insights" 
+                config-ref="Test_HTTP_Configuration" 
+                url="https://mac-project.ai/">
+                <ms-webcrawler:tags>
+                    <ms-webcrawler:tag value="a" />
+                </ms-webcrawler:tags>
+            </ms-webcrawler:page-insights>
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+            
+            <!-- Verify payload size is greater than 0 -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload has content" 
+                expression="#[sizeOf(payload)]" 
+                is="#[MunitTools::greaterThan(0)]" />
+        </munit:validation>
+    </munit:test>
+
+</mule>

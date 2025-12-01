@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <!-- Shared HTTP Connection Configuration for All Tests -->
+    <ms-webcrawler:config name="Test_HTTP_Configuration" doc:name="MuleSoft WebCrawler Test HTTP Config" enforceRobotsTxt="false" delayMillis="0">
+        <ms-webcrawler:http-connection userAgent="MUnit-Test-Agent" referrer="http://localhost" />
+    </ms-webcrawler:config>
+
+    <!-- HTTP Connection Configuration with Robots.txt Enforcement -->
+    <ms-webcrawler:config name="Test_HTTP_Configuration_With_Robots" doc:name="MuleSoft WebCrawler Test HTTP Config With Robots" enforceRobotsTxt="true" delayMillis="0">
+        <ms-webcrawler:http-connection userAgent="MUnit-Test-Agent" referrer="http://localhost" />
+    </ms-webcrawler:config>
+
+</mule>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:file="http://www.mulesoft.org/schema/mule/file"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd
+        http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+
+    <!-- Test Suite for Page Download Image Operation -->
+    <munit:config name="page-download-image-test-suite.xml" />
+
+    <!-- Test: Download Image - Success Case -->
+    <munit:test name="test-page-download-image-success" description="Test successful image download from a web page">
+        <munit:behavior>
+            <set-variable variableName="testUrl" value="https://mac-project.ai/" doc:name="Set Test URL" />
+            <set-variable variableName="downloadPath" value="/tmp/munit-test-images" doc:name="Set Download Path" />
+        </munit:behavior>
+        
+        <munit:execution>
+            <ms-webcrawler:page-download-image 
+                doc:name="Download images" 
+                config-ref="Test_HTTP_Configuration" 
+                url="#[vars.testUrl]"
+                downloadPath="#[vars.downloadPath]"
+                maxImageNumber="5" />
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+            
+            <!-- Verify attributes contain URL -->
+            <munit-tools:assert-that 
+                doc:name="Assert attributes contain URL" 
+                expression="#[attributes.url]" 
+                is="#[MunitTools::equalTo(vars.testUrl)]" />
+        </munit:validation>
+    </munit:test>
+
+    <!-- Test: Download Image - Invalid URL -->
+    <munit:test name="test-page-download-image-invalid-url" description="Test error handling for invalid URL" expectedErrorType="MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE">
+        <munit:execution>
+            <ms-webcrawler:page-download-image 
+                doc:name="Download images with invalid URL" 
+                config-ref="Test_HTTP_Configuration" 
+                url="invalid-url"
+                downloadPath="/tmp/munit-test-images"
+                maxImageNumber="5" />
+        </munit:execution>
+    </munit:test>
+
+    <!-- Test: Download Image - With Download Path -->
+    <munit:test name="test-page-download-image-with-path" description="Test downloading images with custom download path">
+        <munit:behavior>
+            <set-variable variableName="testUrl" value="https://mac-project.ai/" doc:name="Set Test URL" />
+            <set-variable variableName="customPath" value="/tmp/munit-custom-images" doc:name="Set Custom Path" />
+        </munit:behavior>
+        
+        <munit:execution>
+            <ms-webcrawler:page-download-image 
+                doc:name="Download images to custom path" 
+                config-ref="Test_HTTP_Configuration" 
+                url="#[vars.testUrl]"
+                downloadPath="#[vars.customPath]"
+                maxImageNumber="2" />
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+            
+            <!-- Verify attributes contain URL -->
+            <munit-tools:assert-that 
+                doc:name="Assert attributes contain URL" 
+                expression="#[attributes.url]" 
+                is="#[MunitTools::equalTo(vars.testUrl)]" />
+        </munit:validation>
+    </munit:test>
+
+    <!-- Test: Download Image - Max Image Limit -->
+    <munit:test name="test-page-download-image-max-limit" description="Test max image number parameter">
+        <munit:execution>
+            <ms-webcrawler:page-download-image 
+                doc:name="Download images with limit" 
+                config-ref="Test_HTTP_Configuration" 
+                url="https://mac-project.ai/"
+                downloadPath="/tmp/munit-test-images"
+                maxImageNumber="3" />
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+        </munit:validation>
+    </munit:test>
+
+    <!-- Test: Download Image - Verify Payload -->
+    <munit:test name="test-page-download-image-payload" description="Test that download image payload is valid">
+        <munit:execution>
+            <ms-webcrawler:page-download-image 
+                doc:name="Download images" 
+                config-ref="Test_HTTP_Configuration" 
+                url="https://mac-project.ai/"
+                downloadPath="/tmp/munit-test-images"
+                maxImageNumber="5" />
+        </munit:execution>
+        
+        <munit:validation>
+            <!-- Verify payload is not null -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload is not null" 
+                expression="#[payload]" 
+                is="#[MunitTools::notNullValue()]" />
+            
+            <!-- Verify payload size is greater than 0 -->
+            <munit-tools:assert-that 
+                doc:name="Assert payload has content" 
+                expression="#[sizeOf(payload)]" 
+                is="#[MunitTools::greaterThan(0)]" />
+        </munit:validation>
+    </munit:test>
+
+</mule>
