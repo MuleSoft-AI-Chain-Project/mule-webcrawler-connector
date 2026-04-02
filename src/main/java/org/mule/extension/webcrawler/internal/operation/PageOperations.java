@@ -1,6 +1,7 @@
 package org.mule.extension.webcrawler.internal.operation;
 
 import org.json.JSONArray;
+import org.mule.extension.webcrawler.api.AuthenticationMethodValueProvider;
 import org.mule.extension.webcrawler.api.metadata.PageResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
@@ -26,6 +27,7 @@ import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Placement;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.runtime.extension.api.annotation.values.OfValues;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,12 @@ public class PageOperations {
       @ConfigOverride
           @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
           @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+      @ConfigOverride
+          @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
+          @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
+      @ConfigOverride
+          @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
+          @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url) {
 
@@ -84,7 +92,8 @@ public class PageOperations {
       }
 
       Document document = PageHelper.getDocument(configuration, connection, url,
-         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
+         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                 authenticationMethodId, authenticationConfiguration, javascript));
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
@@ -133,6 +142,12 @@ public class PageOperations {
           @ConfigOverride
               @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+          @ConfigOverride
+              @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
+              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
+          @ConfigOverride
+              @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
+              @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page or image URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @Alias("maxImageNumber") @DisplayName("Max number of images")
@@ -158,7 +173,8 @@ public class PageOperations {
         }
 
         document = PageHelper.getDocument(configuration, connection, url,
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                    authenticationMethodId, authenticationConfiguration, javascript));
 
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
@@ -217,6 +233,12 @@ public class PageOperations {
       @ConfigOverride
           @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
           @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+      @ConfigOverride
+          @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
+          @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
+      @ConfigOverride
+          @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
+          @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
       @Connection WebCrawlerConnection connection,
       @DisplayName("Page or document URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
       @Alias("maxDocumentNumber") @DisplayName("Max number of documents")
@@ -247,7 +269,8 @@ public class PageOperations {
         } else {
 
           document = PageHelper.getDocument(configuration, connection, url,
-                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
+                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                                                    authenticationMethodId, authenticationConfiguration, javascript));
 
           documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
         }
@@ -309,6 +332,12 @@ public class PageOperations {
           @ConfigOverride
               @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+          @ConfigOverride
+              @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
+              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
+          @ConfigOverride
+              @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
+              @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
@@ -326,7 +355,8 @@ public class PageOperations {
       }
 
       Document document = PageHelper.getDocument(configuration, connection, url,
-          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                  authenticationMethodId, authenticationConfiguration, javascript));
 
       return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(
@@ -374,6 +404,12 @@ public class PageOperations {
           @ConfigOverride
               @Alias("shadowHostXPath") @DisplayName("Shadow Host(s) XPath") @Summary("Shadow host(s) to extract by XPath (not available for HTTP connection)")
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
+          @ConfigOverride
+              @Alias("authenticationMethodId") @DisplayName("Custom Authentication Method ID") @Summary("Custom Authentication Method ID (not available for HTTP connection)")
+              @Placement(order = 6, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("myCustomEnterpriseAuth") @Optional @OfValues(AuthenticationMethodValueProvider.class) String authenticationMethodId,
+          @ConfigOverride
+              @Alias("authenticationConfiguration") @DisplayName("Custom Authentication Configuration") @Summary("Custom Authentication Configuration (not available for HTTP connection)")
+              @Placement(order = 7, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Optional Map<String, String> authenticationConfiguration,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
           @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
@@ -394,7 +430,8 @@ public class PageOperations {
       Map<String, String> contents = new HashMap<String, String>();
 
       Document document = PageHelper.getDocument(configuration, connection, url,
-          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                  authenticationMethodId, authenticationConfiguration, javascript));
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

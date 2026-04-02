@@ -1,5 +1,6 @@
 package org.mule.extension.webcrawler.internal.config;
 
+import org.mule.extension.webcrawler.api.AuthenticationMethodValueProvider;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
@@ -8,6 +9,9 @@ import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
 import org.mule.runtime.extension.api.annotation.param.display.Summary;
+import org.mule.runtime.extension.api.annotation.values.OfValues;
+
+import java.util.Map;
 
 public class PageLoadOptions {
 
@@ -46,24 +50,48 @@ public class PageLoadOptions {
   @Optional
   private String shadowHostXPath;
 
+  @Parameter
+  @Alias("authenticationMethodId")
+  @DisplayName("Custom Authentication Method ID")
+  @Summary("Custom Authentication Method ID (not available for HTTP connection)")
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Example("myCustomEnterpriseAuth")
+  @Optional
+  @OfValues(AuthenticationMethodValueProvider.class)
+  private String authenticationMethodId;
+
+  @Parameter
+  @Alias("authenticationConfiguration")
+  @DisplayName("Custom Authentication Configuration")
+  @Summary("Custom Authentication Configuration (not available for HTTP connection)")
+  @Expression(ExpressionSupport.SUPPORTED)
+  @Optional
+  private Map<String, String> authenticationConfiguration;
+
   private String javascript;
 
   public PageLoadOptions() {
 
   }
 
-  public PageLoadOptions(Long waitOnPageLoad, String waitForXPath, boolean extractShadowDom, String shadowHostXPath) {
+  public PageLoadOptions(Long waitOnPageLoad, String waitForXPath, boolean extractShadowDom, String shadowHostXPath,
+                         String authenticationMethodId, Map<String, String> authenticationConfiguration) {
     this.waitOnPageLoad = waitOnPageLoad;
     this.waitForXPath = waitForXPath;
     this.extractShadowDom = extractShadowDom;
     this.shadowHostXPath = shadowHostXPath;
+    this.authenticationMethodId = authenticationMethodId;
+    this.authenticationConfiguration = authenticationConfiguration;
   }
 
-  public PageLoadOptions(Long waitOnPageLoad, String waitForXPath, boolean extractShadowDom, String shadowHostXPath, String javascript) {
+  public PageLoadOptions(Long waitOnPageLoad, String waitForXPath, boolean extractShadowDom, String shadowHostXPath,
+                         String authenticationMethodId, Map<String, String> authenticationConfiguration, String javascript) {
     this.waitOnPageLoad = waitOnPageLoad;
     this.waitForXPath = waitForXPath;
     this.extractShadowDom = extractShadowDom;
     this.shadowHostXPath = shadowHostXPath;
+    this.authenticationMethodId = authenticationMethodId;
+    this.authenticationConfiguration = authenticationConfiguration;
     this.javascript = javascript;
   }
 
@@ -103,6 +131,22 @@ public class PageLoadOptions {
 
   public void setJavascript(String javascript) { this.javascript = javascript; }
 
+  public String getAuthenticationMethodId() {
+    return authenticationMethodId;
+  }
+
+  public void setAuthenticationMethodId(String authenticationMethodId) {
+    this.authenticationMethodId = authenticationMethodId;
+  }
+
+  public Map<String, String> getAuthenticationConfiguration() {
+    return authenticationConfiguration;
+  }
+
+  public void setAuthenticationConfiguration(Map<String, String> authenticationConfiguration) {
+    this.authenticationConfiguration = authenticationConfiguration;
+  }
+
   @Override
   public String toString() {
     return "PageLoadOptions{" +
@@ -110,7 +154,9 @@ public class PageLoadOptions {
         ", waitForXPath='" + waitForXPath + '\'' +
         ", extractShadowDom=" + extractShadowDom +
         ", shadowHostXPath='" + shadowHostXPath + '\'' +
+        ", authenticationMethodId='" + authenticationMethodId + '\'' +
         ", javascript='" + javascript + '\'' +
         '}';
   }
+
 }

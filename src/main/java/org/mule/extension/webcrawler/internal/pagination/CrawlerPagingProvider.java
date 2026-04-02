@@ -34,6 +34,8 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
   private String waitForXPath;
   private boolean extractShadowDom;
   private String shadowHostXPath;
+  private String authenticationMethodId;
+  private Map<String, String> authenticationConfiguration;
   private String url;
   private Constants.OutputFormat outputFormat;
   private CrawlerTargetPagesParameters targetPagesParameters;
@@ -44,6 +46,8 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
                                String waitForXPath,
                                boolean extractShadowDom,
                                String shadowHostXPath,
+                               String authenticationMethodId,
+                               Map<String, String> authenticationConfiguration,
                                String url,
                                Constants.OutputFormat outputFormat,
                                CrawlerTargetPagesParameters targetPagesParameters,
@@ -54,6 +58,8 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
     this.waitForXPath = waitForXPath;
     this.extractShadowDom = extractShadowDom;
     this.shadowHostXPath = shadowHostXPath;
+    this.authenticationMethodId = authenticationMethodId;
+    this.authenticationConfiguration = authenticationConfiguration;
     this.url = url;
     this.outputFormat = outputFormat;
     this.targetPagesParameters = targetPagesParameters;
@@ -73,6 +79,8 @@ public class CrawlerPagingProvider implements PagingProvider<WebCrawlerConnectio
             .waitForXPath(waitForXPath)
             .extractShadowDom(extractShadowDom)
             .shadowHostXPath(shadowHostXPath)
+                .authenticationMethodId(authenticationMethodId)
+                .authenticationConfiguration(authenticationConfiguration)
             .connection(connection)
             .outputFormat(outputFormat)
             .rootURL(url)
