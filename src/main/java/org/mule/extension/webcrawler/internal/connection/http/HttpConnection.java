@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class HttpConnection implements WebCrawlerConnection {
 
@@ -43,7 +44,7 @@ public class HttpConnection implements WebCrawlerConnection {
   }
 
   @Override
-  public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
+  public InputStream getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) throws ExecutionException, InterruptedException {
 
     LOGGER.debug(String.format("Retrieving page source for url %s using http client (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
     if(pageLoadOptions.getWaitOnPageLoad() != null && pageLoadOptions.getWaitOnPageLoad().longValue() > 0L) {
@@ -79,11 +80,11 @@ public class HttpConnection implements WebCrawlerConnection {
         })
         .exceptionally(e -> {
           throw new RuntimeException(e);
-        });
+        }).get();
   }
 
   @Override
-  public CompletableFuture<Integer> getUrlStatusCode(String url, String currentReferrer) {
+  public Integer getUrlStatusCode(String url, String currentReferrer) throws ExecutionException, InterruptedException {
 
     LOGGER.debug(String.format("Checking url status for %s using http client", url));
 
@@ -111,6 +112,6 @@ public class HttpConnection implements WebCrawlerConnection {
         })
         .exceptionally(e -> {
           throw new RuntimeException(e);
-        });
+        }).get();
   }
 }

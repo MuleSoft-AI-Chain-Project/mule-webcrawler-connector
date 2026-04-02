@@ -106,14 +106,9 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
       options.addArguments("--blink-settings=imagesEnabled=false"); // Disable image rendering
       options.addArguments("--disable-software-rasterizer");
       options.addArguments("--disable-background-networking");
-      //options.addArguments("--disable-sync");
-      //options.addArguments("--disable-default-apps");
-      //options.addArguments("--renderer-process-limit=1");
       options.addArguments("--remote-debugging-pipe");
 
-      options.addArguments("--verbose");
       options.addArguments("--window-size=1920,1080");
-      options.addArguments("--ignore-certificate-errors");
       options.addArguments("--no-zygote");
       options.addArguments("--disable-renderer-backgrounding");
     }
@@ -124,8 +119,8 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
     options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
     options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
     options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
-    if(!userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
-    if(!referrer.isEmpty()) options.addArguments("--referer=" + referrer);
+    if(userAgent != null && !userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
+    if(referrer != null && !referrer.isEmpty()) options.addArguments("--referer=" + referrer);
 
     if(Boolean.getBoolean("webdriver.chrome.verboseLogging")) {
 

@@ -28,13 +28,14 @@ public class MuleCrawler extends Crawler {
   private static final String CRAWLED_DOCUMENTS_FOLDER = "docs/";
 
   public MuleCrawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String originalUrl, Long waitOnPageLoad,
-                     String waitForXPath, boolean extractShadowDom, String shadowHostXPath, int maxDepth, boolean restrictToPath,
+                     String waitForXPath, boolean extractShadowDom, String shadowHostXPath, String authenticationMethodId,
+                     Map<String, String> authenticationConfiguration, int maxDepth, boolean restrictToPath,
                      boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber, String downloadPath,
                      List<String> contentTags, Constants.OutputFormat outputFormat, boolean getMetaTags,
                      RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
 
     super(configuration, connection, originalUrl, waitOnPageLoad, waitForXPath,  extractShadowDom, shadowHostXPath,
-          maxDepth, restrictToPath, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath,
+          authenticationMethodId, authenticationConfiguration, maxDepth, restrictToPath, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber, downloadPath,
           contentTags, outputFormat, getMetaTags, regexUrlsFilterLogic, regexUrls);
   }
 
@@ -71,7 +72,8 @@ public class MuleCrawler extends Crawler {
         Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
         Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
-                                                   new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+                                                   new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
+                                                          authenticationMethodId, authenticationConfiguration));
 
         // Create Map to hold all data for the current page - this will be serialized to
         // JSON and saved to file
@@ -193,7 +195,7 @@ public class MuleCrawler extends Crawler {
         if (currentNode.getCurrentDepth() < maxDepth) {
 
           Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
-             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, authenticationMethodId, authenticationConfiguration));
 
           // Add as child to parent node only if valid
           SiteNode parentNode = currentNode.getParent();
@@ -346,7 +348,7 @@ public class MuleCrawler extends Crawler {
         }
 
         document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, authenticationMethodId, authenticationConfiguration));
 
         if(currentNode.getCurrentDepth() < maxDepth) {
 
