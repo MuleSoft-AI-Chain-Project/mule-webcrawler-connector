@@ -26,9 +26,9 @@ public class WebDriverConnection implements WebCrawlerConnection {
     private WebDriver driver;
     private String userAgent;
     private String referrer;
-    private WebDriverConnectionProvider connectionProvider; // Reference to the provider
+    private WebDriverProvider connectionProvider; // Reference to the provider
 
-    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverConnectionProvider connectionProvider) {
+    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverProvider connectionProvider) {
         this.driver = driver;
         this.userAgent = userAgent;
         this.referrer = referrer;

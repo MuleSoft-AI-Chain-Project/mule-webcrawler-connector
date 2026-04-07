@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+      http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+      http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+      http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd
+      http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+    <!-- HTTP Listener -->
+    <http:listener-config name="Comparison_Test_Listener" doc:name="HTTP Listener config">
+        <http:listener-connection host="0.0.0.0" port="8083"/>
+    </http:listener-config>
+
+    <!-- LOCAL WebDriver Config (Existing Setup) -->
+    <ms-webcrawler:config name="Local_WebDriver_Config"
+                           doc:name="Local WebDriver Configuration"
+                           enforceRobotsTxt="false"
+                           delayMillis="500"
+                           waitOnPageLoad="10000">
+        <ms-webcrawler:web-driver-connection
+            userAgent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"/>
+    </ms-webcrawler:config>
+
+    <!-- REMOTE WebDriver Config (POC Setup) -->
+    <ms-webcrawler:config name="Remote_WebDriver_Config"
+                           doc:name="Remote WebDriver Configuration"
+                           enforceRobotsTxt="false"
+                           delayMillis="500"
+                           waitOnPageLoad="10000">
+        <ms-webcrawler:remote-web-driver-connection
+            remoteUrl="http://localhost:4444"
+            userAgent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"/>
+    </ms-webcrawler:config>
+
+    <!-- Comparison Test Flow -->
+    <flow name="crawl-comparison-test" doc:name="Crawl Comparison Test">
+        <http:listener config-ref="Comparison_Test_Listener"
+                       path="/compare"
+                       doc:name="Listener"/>
+
+        <ee:transform doc:name="Prepare URL">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.url default "https://example.com"]]></ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="testUrl"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.url default "https://example.com"]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+
+        <logger level="INFO" message="🔬 COMPARISON TEST STARTED" doc:name="Log Start"/>
+        <logger level="INFO" message='Target URL: #[vars.testUrl]' doc:name="Log URL"/>
+
+        <!-- TEST 1: Local WebDriver -->
+        <logger level="INFO" message="=" doc:name="Separator"/>
+        <logger level="INFO" message="TEST 1: LOCAL WEBDRIVER" doc:name="Log Test 1"/>
+
+        <try doc:name="Try Local WebDriver">
+            <ms-webcrawler:crawl-website-full-scan
+                config-ref="Local_WebDriver_Config"
+                url="#[vars.testUrl]"
+                outputFormat="JSON"
+                downloadPath="/tmp"
+                doc:name="Crawl with Local WebDriver">
+                <ms-webcrawler:target-pages maxDepth="1"/>
+            </ms-webcrawler:crawl-website-full-scan>
+
+            <ee:transform doc:name="Store Local Result">
+                <ee:message/>
+                <ee:variables>
+                    <ee:set-variable variableName="localResult"><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+                    <ee:set-variable variableName="localSuccess">true</ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+
+            <logger level="INFO" message='✅ Local Result: #[sizeOf(vars.localResult)] pages' doc:name="Log Local Success"/>
+
+            <error-handler>
+                <on-error-continue type="ANY">
+                    <logger level="ERROR" message='❌ Local WebDriver failed: #[error.description]' doc:name="Log Local Error"/>
+                    <set-variable variableName="localSuccess" value="false" doc:name="Mark Local Failed"/>
+                    <set-variable variableName="localError" value="#[error.description]" doc:name="Store Local Error"/>
+                </on-error-continue>
+            </error-handler>
+        </try>
+
+        <!-- TEST 2: Remote WebDriver -->
+        <logger level="INFO" message="=" doc:name="Separator2"/>
+        <logger level="INFO" message="TEST 2: REMOTE WEBDRIVER (POC)" doc:name="Log Test 2"/>
+
+        <try doc:name="Try Remote WebDriver">
+            <ms-webcrawler:crawl-website-full-scan
+                config-ref="Remote_WebDriver_Config"
+                url="#[vars.testUrl]"
+                outputFormat="JSON"
+                downloadPath="/tmp"
+                doc:name="Crawl with Remote WebDriver">
+                <ms-webcrawler:target-pages maxDepth="1"/>
+            </ms-webcrawler:crawl-website-full-scan>
+
+            <ee:transform doc:name="Store Remote Result">
+                <ee:message/>
+                <ee:variables>
+                    <ee:set-variable variableName="remoteResult"><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+                    <ee:set-variable variableName="remoteSuccess">true</ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+
+            <logger level="INFO" message='✅ Remote Result: #[sizeOf(vars.remoteResult)] pages' doc:name="Log Remote Success"/>
+
+            <error-handler>
+                <on-error-continue type="ANY">
+                    <logger level="ERROR" message='❌ Remote WebDriver failed: #[error.description]' doc:name="Log Remote Error"/>
+                    <set-variable variableName="remoteSuccess" value="false" doc:name="Mark Remote Failed"/>
+                    <set-variable variableName="remoteError" value="#[error.description]" doc:name="Store Remote Error"/>
+                </on-error-continue>
+            </error-handler>
+        </try>
+
+        <!-- Compare Results -->
+        <logger level="INFO" message="=" doc:name="Separator3"/>
+        <logger level="INFO" message="COMPARISON RESULTS" doc:name="Log Comparison"/>
+
+        <ee:transform doc:name="Build Comparison Report">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    testUrl: vars.testUrl,
+    timestamp: now(),
+
+    local: {
+        success: vars.localSuccess default false,
+        (error: vars.localError) if (!vars.localSuccess),
+        pagesCount: if (vars.localSuccess) sizeOf(vars.localResult) else 0,
+        (firstPageUrl: vars.localResult[0].url) if (vars.localSuccess and sizeOf(vars.localResult) > 0),
+        (firstPageTitle: vars.localResult[0].title) if (vars.localSuccess and sizeOf(vars.localResult) > 0),
+        (firstPageContentLength: sizeOf(vars.localResult[0].content default "")) if (vars.localSuccess and sizeOf(vars.localResult) > 0),
+        (linksCount: sizeOf(vars.localResult[0].links default [])) if (vars.localSuccess and sizeOf(vars.localResult) > 0)
+    },
+
+    remote: {
+        success: vars.remoteSuccess default false,
+        (error: vars.remoteError) if (!vars.remoteSuccess),
+        pagesCount: if (vars.remoteSuccess) sizeOf(vars.remoteResult) else 0,
+        (firstPageUrl: vars.remoteResult[0].url) if (vars.remoteSuccess and sizeOf(vars.remoteResult) > 0),
+        (firstPageTitle: vars.remoteResult[0].title) if (vars.remoteSuccess and sizeOf(vars.remoteResult) > 0),
+        (firstPageContentLength: sizeOf(vars.remoteResult[0].content default "")) if (vars.remoteSuccess and sizeOf(vars.remoteResult) > 0),
+        (linksCount: sizeOf(vars.remoteResult[0].links default [])) if (vars.remoteSuccess and sizeOf(vars.remoteResult) > 0)
+    },
+
+    comparison: {
+        bothSucceeded: (vars.localSuccess default false) and (vars.remoteSuccess default false),
+        pageCountMatch: if ((vars.localSuccess default false) and (vars.remoteSuccess default false))
+                        (sizeOf(vars.localResult) == sizeOf(vars.remoteResult)) else false,
+        titleMatch: if ((vars.localSuccess default false) and (vars.remoteSuccess default false) and sizeOf(vars.localResult) > 0 and sizeOf(vars.remoteResult) > 0)
+                    (vars.localResult[0].title == vars.remoteResult[0].title) else false,
+        contentLengthDiff: if ((vars.localSuccess default false) and (vars.remoteSuccess default false) and sizeOf(vars.localResult) > 0 and sizeOf(vars.remoteResult) > 0)
+                           abs(sizeOf(vars.localResult[0].content default "") - sizeOf(vars.remoteResult[0].content default "")) else 0
+    },
+
+    verdict: if ((vars.localSuccess default false) and (vars.remoteSuccess default false))
+             (if (sizeOf(vars.localResult) == sizeOf(vars.remoteResult)) "✅ PASS - Both produced same number of pages"
+              else "⚠️ WARN - Different page counts")
+             else "❌ FAIL - One or both configurations failed"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+
+        <logger level="INFO" message="#[output application/json --- payload]" doc:name="Log Final Report"/>
+
+    </flow>
+
+</mule>
