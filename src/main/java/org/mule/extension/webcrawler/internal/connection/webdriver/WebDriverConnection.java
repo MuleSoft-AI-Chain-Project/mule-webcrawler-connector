@@ -26,13 +26,30 @@ public class WebDriverConnection implements WebCrawlerConnection {
     private WebDriver driver;
     private String userAgent;
     private String referrer;
-    private WebDriverConnectionProvider connectionProvider; // Reference to the provider
+    private WebDriverProvider connectionProvider; // Reference to the provider
+    /**
+     * When true, this connection's WebDriver lifecycle is owned by a
+     * {@code PoolingConnectionProvider}. In that mode {@link #restartDriver()}
+     * is deliberately a no-op: every crawl already checks out a distinct
+     * pooled driver, so quitting and recreating mid-crawl would fight the
+     * pool's bookkeeping and break concurrency isolation.
+     * <p>
+     * When false (cached-provider mode, e.g. local Chrome), the original
+     * behaviour is preserved: {@code restartDriver()} quits the shared
+     * driver and asks the provider to create a new one.
+     */
+    private final boolean pooled;
 
-    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverConnectionProvider connectionProvider) {
+    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverProvider connectionProvider) {
+        this(driver, userAgent, referrer, connectionProvider, false);
+    }
+
+    public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverProvider connectionProvider, boolean pooled) {
         this.driver = driver;
         this.userAgent = userAgent;
         this.referrer = referrer;
         this.connectionProvider = connectionProvider;
+        this.pooled = pooled;
         ServiceLoader<CustomAuthenticator> loader = ServiceLoader.load(CustomAuthenticator.class);
         for (CustomAuthenticator authenticator : loader) {
             authenticators.put(authenticator.getId(), authenticator);
@@ -48,8 +65,22 @@ public class WebDriverConnection implements WebCrawlerConnection {
         return referrer;
     }
 
-    // Method to restart the driver for each new crawl
+    /** Exposes the underlying driver for provider-side lifecycle (e.g. pool disconnect/validate). */
+    public WebDriver getDriver() {
+        return driver;
+    }
+
+    /**
+     * For the cached-provider path (local Chrome). In pooled mode this is a
+     * no-op — the pool itself supplies a fresh driver per crawl via
+     * {@code connect()}, so MuleCrawler's pre-crawl call here shouldn't
+     * tear down the pooled instance.
+     */
     public synchronized void restartDriver() {
+        if (pooled) {
+            LOGGER.debug("restartDriver() called on a pooled WebDriverConnection — no-op (pool owns the lifecycle)");
+            return;
+        }
         LOGGER.info("Restarting WebDriver for new crawl");
         try {
             if (this.driver != null) {
@@ -61,6 +92,25 @@ public class WebDriverConnection implements WebCrawlerConnection {
             this.driver = null;
         }
         this.driver = connectionProvider.createNewWebDriver();
+    }
+
+    /**
+     * Quits the underlying WebDriver, releasing the remote Chrome session.
+     * Called by {@code PoolingConnectionProvider.disconnect} so pooled
+     * connections properly release their remote-side resources when the
+     * pool evicts them. Safe to call more than once.
+     */
+    public synchronized void quitDriver() {
+        if (this.driver == null) {
+            return;
+        }
+        try {
+            this.driver.quit();
+        } catch (Exception e) {
+            LOGGER.warn("Error while quitting WebDriver during pool disconnect: {}", e.getMessage());
+        } finally {
+            this.driver = null;
+        }
     }
 
     @Override

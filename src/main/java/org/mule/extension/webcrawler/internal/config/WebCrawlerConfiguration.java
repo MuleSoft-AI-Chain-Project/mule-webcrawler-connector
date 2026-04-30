@@ -1,6 +1,7 @@
 package org.mule.extension.webcrawler.internal.config;
 
 import org.mule.extension.webcrawler.internal.connection.http.HttpConnectionProvider;
+import org.mule.extension.webcrawler.internal.connection.webdriver.RemoteWebDriverConnectionProvider;
 import org.mule.extension.webcrawler.internal.connection.webdriver.WebDriverConnectionProvider;
 import org.mule.extension.webcrawler.internal.operation.CrawlOperations;
 import org.mule.extension.webcrawler.internal.operation.PageOperations;
@@ -13,7 +14,7 @@ import org.mule.runtime.extension.api.annotation.param.ParameterGroup;
  * operations since they represent something core from the extension.
  */
 @org.mule.runtime.extension.api.annotation.Configuration(name = "config")
-@ConnectionProviders({HttpConnectionProvider.class, WebDriverConnectionProvider.class})
+@ConnectionProviders({HttpConnectionProvider.class, WebDriverConnectionProvider.class, RemoteWebDriverConnectionProvider.class})
 @org.mule.runtime.extension.api.annotation.Operations({CrawlOperations.class, PageOperations.class, SearchOperations.class})
 public class WebCrawlerConfiguration {
 

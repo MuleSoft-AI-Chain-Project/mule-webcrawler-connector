@@ -32,7 +32,7 @@ import java.io.PrintStream;
 
 @Alias("web-driver")
 @DisplayName("WebDriver")
-public class WebDriverConnectionProvider implements CachedConnectionProvider<WebDriverConnection>, Startable, Stoppable {
+public class WebDriverConnectionProvider implements CachedConnectionProvider<WebDriverConnection>, Startable, Stoppable, WebDriverProvider {
 
   private static Logger LOGGER = LoggerFactory.getLogger(WebDriverConnectionProvider.class);
 
