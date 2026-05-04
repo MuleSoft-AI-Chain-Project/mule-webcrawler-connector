@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd
+        http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+
+    <munit:config name="ConnectionProvidersTestCase.xml"/>
+
+    <!-- CP-T01: HTTP flow proves connect()+validate()+getPageSource via a real page fetch -->
+    <munit:test name="CP-T01_http_connection_flow" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-meta-tags config-ref="WebCrawler_HTTP" url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CP-T02: HTTP with TLS context (exercises createClientConfiguration TLS branch).
+         SKIPPED/IGNORED: Mule 4.6 runtime fails to initialize SSLContext from an inline
+         <tls:context> with insecure trust-store (NPE: null protocol name at
+         TlsConfiguration.getSslContext) without a classpath tls-default.conf provisioned on
+         the Mule runtime itself. Coverage of the TLS branches in
+         HttpConnectionProvider.createClientConfiguration() (both the injected-tlsContext
+         branch at line 103 and the default branch at line 105) is provided by JUnit tests
+         `createClientConfigurationUsesInjectedTlsContextWhenProvided` and
+         `createClientConfigurationUsesDefaultTlsContextWhenNotProvided` in
+         HttpConnectionProviderTest.java (reflective field-set + private-method invoke). -->
+    <munit:test name="CP-T02_http_connection_with_tls" timeOut="20000" ignore="true">
+        <munit:execution>
+            <ms-webcrawler:page-meta-tags config-ref="WebCrawler_HTTP" url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CP-T03: Remote WebDriver flow (remote-browser-tagged) -->
+    <munit:test name="CP-T03_remote_webdriver_flow" timeOut="60000" tags="remote-browser">
+        <munit:execution>
+            <ms-webcrawler:page-meta-tags config-ref="WebCrawler_Remote" url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CP-T04: Remote WebDriver wrong URL -> CONNECTIVITY error (remote-browser-tagged) -->
+    <munit:test name="CP-T04_remote_webdriver_wrong_url_connectivity" timeOut="60000" tags="remote-browser">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-meta-tags config-ref="WebCrawler_Remote_Bad" url="${test.url.static}"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::containsString('CONNECTIVITY')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CP-T05: Remote WebDriver pool concurrency (3-thread parallel-foreach, remote-browser-tagged) -->
+    <munit:test name="CP-T05_remote_webdriver_pool_concurrency" timeOut="120000" tags="remote-browser">
+        <munit:execution>
+            <set-payload value="#[[1, 2, 3]]"/>
+            <parallel-foreach collection="#[payload]">
+                <ms-webcrawler:page-meta-tags config-ref="WebCrawler_Remote" url="${test.url.static}"/>
+            </parallel-foreach>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+            <munit-tools:assert-that expression="#[sizeOf(payload)]" is="#[MunitTools::equalTo(3)]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

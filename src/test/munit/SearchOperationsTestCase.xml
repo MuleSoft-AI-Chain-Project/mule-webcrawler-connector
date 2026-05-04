@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="SearchOperationsTestCase.xml"/>
+
+    <!-- SO-T01: search-google with invalid API key -> SEARCH_OPERATIONS_FAILURE -->
+    <munit:test name="SO-T01_search-google_invalid-api-key" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:search-google query="munit test query" apiKey="definitely-not-a-valid-serper-key"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::equalTo('MS-WEBCRAWLER:SEARCH_OPERATIONS_FAILURE')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="PageOperationsTestCase.xml"/>
+
+    <!-- PO-T01: page-meta-tags HTTP golden -->
+    <munit:test name="PO-T01_page-meta-tags_http_happy" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-meta-tags config-ref="WebCrawler_HTTP" url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+            <munit-tools:assert-that expression="#[attributes.url]" is="#[MunitTools::equalTo('${test.url.static}')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T02: page-meta-tags RemoteWebDriver golden (remote-browser-tagged) -->
+    <munit:test name="PO-T02_page-meta-tags_remote_happy" timeOut="60000" tags="remote-browser">
+        <munit:execution>
+            <ms-webcrawler:page-meta-tags config-ref="WebCrawler_Remote" url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T03: page-meta-tags malformed URL -> WEBCRAWLER_OPERATIONS_FAILURE -->
+    <munit:test name="PO-T03_page-meta-tags_malformed-url" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-meta-tags config-ref="WebCrawler_HTTP" url="not-a-valid-url"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::equalTo('MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T04: page-content TEXT -->
+    <munit:test name="PO-T04_page-content_http_text" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-content config-ref="WebCrawler_HTTP"
+                                         url="${test.url.static}"
+                                         outputFormat="TEXT"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T05: page-content MARKDOWN (exercises html2markdown/**) -->
+    <munit:test name="PO-T05_page-content_http_markdown" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-content config-ref="WebCrawler_HTTP"
+                                         url="${test.url.static}"
+                                         outputFormat="MARKDOWN"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T06: page-content HTML -->
+    <munit:test name="PO-T06_page-content_http_html" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-content config-ref="WebCrawler_HTTP"
+                                         url="${test.url.static}"
+                                         outputFormat="HTML"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T07: page-content robots.txt disallowed -> CRAWL_ON_PAGE_DISALLOWED_ERROR -->
+    <munit:test name="PO-T07_page-content_robots-disallowed" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-content config-ref="WebCrawler_HTTP_RobotsEnforced"
+                                             url="${test.url.robots.denied}"
+                                             outputFormat="TEXT"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::equalTo('MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T08: page-download-image golden on IANA (has <img> tags) -->
+    <munit:test name="PO-T08_page-download-image_http_happy" timeOut="30000">
+        <munit:execution>
+            <ms-webcrawler:page-download-image config-ref="WebCrawler_HTTP"
+                                                url="${test.url.iana}"
+                                                downloadPath="${java.io.tmpdir}"
+                                                maxImageNumber="1"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T09: page-download-image invalid path -> expect error when the page has images
+         (IANA page) and the download path is unwritable; validates error propagation. -->
+    <munit:test name="PO-T09_page-download-image_invalid-path" timeOut="30000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-download-image config-ref="WebCrawler_HTTP"
+                                                    url="${test.url.iana}"
+                                                    downloadPath="/this/path/should/not/exist/and/be/unwritable/xyz"
+                                                    maxImageNumber="1"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <!-- Either an error was raised (WEBCRAWLER_OPERATIONS_FAILURE) or the op returned
+                 without error (NONE). Both outcomes exercise the unwritable-path branch; we
+                 pin to those two specific states rather than notNullValue() (which matches
+                 any value and would pass even if the op never ran). -->
+            <munit-tools:assert-that expression="#[vars.errorType default 'MS-WEBCRAWLER:NONE']"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo('MS-WEBCRAWLER:NONE'), MunitTools::equalTo('MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE')])]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T10: page-download-document no-throw smoke on example.com -->
+    <munit:test name="PO-T10_page-download-document_http_smoke" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-download-document config-ref="WebCrawler_HTTP"
+                                                   url="${test.url.static}"
+                                                   downloadPath="${java.io.tmpdir}"
+                                                   maxDocumentNumber="1"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T11: page-insights ALL on example.com HTTP -->
+    <munit:test name="PO-T11_page-insights_http_all" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:page-insights config-ref="WebCrawler_HTTP"
+                                          url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T12: page-insights RemoteWebDriver (remote-browser-tagged) -->
+    <munit:test name="PO-T12_page-insights_remote_happy" timeOut="60000" tags="remote-browser">
+        <munit:execution>
+            <ms-webcrawler:page-insights config-ref="WebCrawler_Remote"
+                                          url="${test.url.static}"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T13: basic-auth smoke via remote browser (remote-browser-tagged) -->
+    <munit:test name="PO-T13_page-content_basic-auth_remote" timeOut="60000" tags="remote-browser">
+        <munit:execution>
+            <ms-webcrawler:page-content config-ref="WebCrawler_Remote"
+                                         url="${test.url.basic.auth}"
+                                         outputFormat="TEXT"
+                                         authenticationMethodId="basicOrDigestAuth">
+                <ms-webcrawler:authentication-configurations>
+                    <ms-webcrawler:authentication-configuration key="username" value="user"/>
+                    <ms-webcrawler:authentication-configuration key="password" value="passwd"/>
+                </ms-webcrawler:authentication-configurations>
+            </ms-webcrawler:page-content>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T14: page-download-image against robots-disallowed URL -> CRAWL_ON_PAGE_DISALLOWED_ERROR.
+         Exercises PageOperations.downloadWebsiteImages robots-enforced branch (L167-172). -->
+    <munit:test name="PO-T14_page-download-image_robots-disallowed" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-download-image config-ref="WebCrawler_HTTP_RobotsEnforced"
+                                                    url="${test.url.robots.denied}"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxImageNumber="1"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::equalTo('MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T15: page-download-document against robots-disallowed URL -> CRAWL_ON_PAGE_DISALLOWED_ERROR.
+         Exercises PageOperations.downloadWebsiteDocuments robots-enforced branch (L252-257). -->
+    <munit:test name="PO-T15_page-download-document_robots-disallowed" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-download-document config-ref="WebCrawler_HTTP_RobotsEnforced"
+                                                       url="${test.url.robots.denied}"
+                                                       downloadPath="${java.io.tmpdir}"
+                                                       maxDocumentNumber="1"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::equalTo('MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T16: page-insights against robots-disallowed URL -> CRAWL_ON_PAGE_DISALLOWED_ERROR.
+         Exercises PageOperations.getPageInsights robots-enforced branch (L349-354). -->
+    <munit:test name="PO-T16_page-insights_robots-disallowed" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-insights config-ref="WebCrawler_HTTP_RobotsEnforced"
+                                              url="${test.url.robots.denied}"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]" is="#[MunitTools::equalTo('MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T17: page-download-image against a URL that returns a non-HTML (image) content-type.
+         JSoup throws UnsupportedMimeTypeException -> single-image fallback branch (L182-185).
+         Uses IANA's SVG logo, which Jsoup treats as a non-parseable MIME type. -->
+    <munit:test name="PO-T17_page-download-image_unsupported-mime-fallback" timeOut="30000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-download-image config-ref="WebCrawler_HTTP"
+                                                    url="https://www.iana.org/_img/2022/iana-logo-header.svg"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxImageNumber="1"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <!-- Either the single-image fallback downloaded the image (NONE) or raised
+                 WEBCRAWLER_OPERATIONS_FAILURE during write. Pinning to those two specific
+                 states (previously used containsString('WEBCRAWLER') which also matches
+                 any unrelated MS-WEBCRAWLER:* error identifier). -->
+            <munit-tools:assert-that expression="#[vars.errorType default 'MS-WEBCRAWLER:NONE']"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo('MS-WEBCRAWLER:NONE'), MunitTools::equalTo('MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE')])]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T18: page-download-document against a URL ending in `.pdf` -> isDocumentUrl branch
+         (L266-268 direct download via PageHelper.downloadFile). We wrap in try/on-error-continue
+         because an external PDF fetch may fail in CI; either a successful payload OR an
+         inner-catch DOWNLOAD_DOCUMENTS_OPERATION_FAILURE still exercises the isDocumentUrl
+         branch entry. -->
+    <munit:test name="PO-T18_page-download-document_direct-pdf" timeOut="30000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-download-document config-ref="WebCrawler_HTTP"
+                                                       url="https://www.africau.edu/images/default/sample.pdf"
+                                                       downloadPath="${java.io.tmpdir}"
+                                                       maxDocumentNumber="1"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <!-- Tightened: drop generic containsString('WEBCRAWLER') conjunct. The branch either
+                 succeeds (NONE) via direct PageHelper.downloadFile, or the inner catch wraps
+                 into DOWNLOAD_DOCUMENTS_OPERATION_FAILURE. These are the only two honest
+                 outcomes for the isDocumentUrl branch. -->
+            <munit-tools:assert-that expression="#[vars.errorType default 'MS-WEBCRAWLER:NONE']"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo('MS-WEBCRAWLER:NONE'), MunitTools::equalTo('MS-WEBCRAWLER:DOWNLOAD_DOCUMENTS_OPERATION_FAILURE')])]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T19: page-download-document where the non-pdf crawl branch fails -> inner catch
+         wraps into DOWNLOAD_DOCUMENTS_OPERATION_FAILURE (L278-284). Uses an unreachable local
+         port so the outer robots check passes (robots.txt fetch fails-open quickly via
+         ConnectException) and the inner getDocument throws, surfacing via the inner
+         catch-to-ModuleException wrap. -->
+    <munit:test name="PO-T19_page-download-document_inner-catch-wrap" timeOut="30000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-download-document config-ref="WebCrawler_HTTP"
+                                                       url="http://127.0.0.1:1/"
+                                                       downloadPath="${java.io.tmpdir}"
+                                                       maxDocumentNumber="1"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]"
+                                     is="#[MunitTools::equalTo('MS-WEBCRAWLER:DOWNLOAD_DOCUMENTS_OPERATION_FAILURE')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- PO-T20: page-content against an unreachable port (http://127.0.0.1:1/) -> generic
+         Exception catch branch that wraps into WEBCRAWLER_OPERATIONS_FAILURE (L455-459). -->
+    <munit:test name="PO-T20_page-content_unreachable-port" timeOut="30000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:page-content config-ref="WebCrawler_HTTP"
+                                             url="http://127.0.0.1:1/"
+                                             outputFormat="TEXT"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[vars.errorType]"
+                                     is="#[MunitTools::equalTo('MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

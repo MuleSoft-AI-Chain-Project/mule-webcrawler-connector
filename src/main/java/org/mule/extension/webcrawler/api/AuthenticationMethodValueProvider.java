@@ -12,10 +12,7 @@ public class AuthenticationMethodValueProvider implements ValueProvider {
 
     static Map<String, String> valueDisplayMap = Map.of(
             "basicOrDigestAuth", "Basic Or Digest Authentication",
-            "formCookieAuth", "Form (Cookie Based) Authentication",
-            "apiKey", "API Key Authentication",
-            "jwtAuth", "JSON Web Token (JWT) Authentication",
-            "bearerTokenAuth", "OAuth (Bearer Token) Authentication"
+            "formCookieAuth", "Form (Cookie Based) Authentication"
     );
 
     @Override

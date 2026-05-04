@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mulesoft.connectors</groupId>
     <artifactId>mule4-webcrawler-connector</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.2-2026-05-04-3</version>
     <packaging>mule-extension</packaging>
     <name>MuleSoft WebCrawler Connector - Mule 4</name>
 	<description>The MuleSoft WebCrawler Connector enables a Mule application to crawl websites and retrieve content, potentially for creating vector embeddings for structured knowledge extraction.</description>
@@ -27,13 +27,20 @@
     <parent>
         <groupId>org.mule.extensions</groupId>
         <artifactId>mule-modules-parent</artifactId>
-		<version>1.5.1</version>
+		<version>1.6.9</version>
     </parent>
 
 	<properties>
-        <muleJavaEeBomVersion>4.6.0</muleJavaEeBomVersion>
-        <munit.extensions.maven.plugin.version>1.2.0</munit.extensions.maven.plugin.version>
-		<mule.extensions.maven.plugin.version>1.5.1</mule.extensions.maven.plugin.version>
+        <runtimeVersion>4.6.28</runtimeVersion>
+        <mule.sdk.api.version>1.0.0</mule.sdk.api.version>
+        <munit.version>3.7.0</munit.version>
+        <munit.extensions.maven.plugin.version>1.7.0</munit.extensions.maven.plugin.version>
+        <mtf.tools.version>1.2.0</mtf.tools.version>
+        <maven.surefire.version>3.2.5</maven.surefire.version>
+        <jacoco.version>0.8.14</jacoco.version>
+        <junit.jupiter.version>5.10.2</junit.jupiter.version>
+        <mockito.version>5.11.0</mockito.version>
+        <wiremock.version>2.35.2</wiremock.version>
     </properties>
 
 	<build>
@@ -82,6 +89,27 @@
 				<artifactId>munit-extensions-maven-plugin</artifactId>
 				<version>${munit.extensions.maven.plugin.version}</version>
 				<extensions>true</extensions>
+				<configuration>
+					<argLines>
+						<argLine>
+							-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${session.executionRootDirectory}/target/jacoco.exec,includes=org/mule/extension/webcrawler/**
+						</argLine>
+					</argLines>
+					<minMuleVersionConfig>CONNECTOR</minMuleVersionConfig>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>${jacoco.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.mulesoft.munit</groupId>
+						<artifactId>mtf-tools</artifactId>
+						<version>${mtf.tools.version}</version>
+						<classifier>mule-plugin</classifier>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<goals>
@@ -99,25 +127,81 @@
 					<target>17</target>
 				</configuration>
 			</plugin>
+			<!--
+			  JaCoCo dual-phase wiring (Phase 5, Architect):
+			    - Surefire (JUnit, test phase): agent attached via <argLine> writing to target/jacoco.exec.
+			    - MUnit (integration-test phase): agent attached via the MUnit plugin <argLines> (above) writing to the same target/jacoco.exec (JaCoCo appends by default).
+			    - jacoco-maven-plugin: prepare-agent keeps Maven's argLine property populated; merge execution at verify combines *.exec into target/jacoco.exec; report generates target/site/jacoco/.
+			  This mirrors the agentforce sample POM and makes `mvn clean install` produce a correct aggregate coverage report without manual overrides.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven.surefire.version}</version>
+				<configuration>
+					<argLine>
+						-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar=destfile=${session.executionRootDirectory}/target/jacoco.exec,includes=org/mule/extension/webcrawler/**
+					</argLine>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>${jacoco.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<!-- No plugin-level <destFile> override: Surefire and MUnit plugins
+				     both explicitly attach the JaCoCo agent with destfile=target/jacoco.exec
+				     via their own <argLine>/<argLines>. The merge execution below then
+				     consolidates *.exec files under target/ into target/jacoco.exec for
+				     the report. Prior config set destFile=target/jacoco-java.exec here
+				     but Surefire's explicit argLine overrode Maven's prepare-agent argLine
+				     property, so that file was never written — dead config. -->
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>merge</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>merge</goal>
+						</goals>
+						<configuration>
+							<destFile>${session.executionRootDirectory}/target/jacoco.exec</destFile>
+							<fileSets>
+								<fileSet>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>*.exec</include>
+									</includes>
+								</fileSet>
+							</fileSets>
+						</configuration>
+					</execution>
+					<execution>
+						<id>jacoco-site</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.mule</groupId>
-                <artifactId>mule-javaee-runtime-bom</artifactId>
-                <version>${muleJavaEeBomVersion}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>	
     <dependencies>
 	    <dependency>
             <groupId>org.mule.sdk</groupId>
             <artifactId>mule-sdk-api</artifactId>
-            <version>0.9.0-rc1</version>
-			<scope>provided</scope>
+            <version>${mule.sdk.api.version}</version>
 		</dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
@@ -150,16 +234,36 @@
 			<artifactId>selenium-java</artifactId>
 			<version>4.35.0</version>
 		</dependency>
+		<!-- JUnit 5 + Mockito test deps (Developer / Phase 5) -->
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-compress</artifactId>
-			<version>1.24.0</version>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock-jre8-standalone</artifactId>
+			<version>${wiremock.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<repositories>
-	
-	
+
+
 		<repository>
 			<id>mule-releases</id>
 			<name>Nexus Public Releases</name>

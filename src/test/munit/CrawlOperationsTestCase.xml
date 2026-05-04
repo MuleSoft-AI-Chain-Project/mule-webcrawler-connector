@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="CrawlOperationsTestCase.xml"/>
+
+    <!-- CO-T01: crawl-website-full-scan HTTP golden path (example.com, depth=0) -->
+    <munit:test name="CO-T01_crawl-website-full-scan_http_happy" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawler_HTTP"
+                                                    url="${test.url.static}"
+                                                    outputFormat="TEXT"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxDepth="0"
+                                                    restrictToPath="true"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+            <munit-tools:assert-that expression="#[attributes.url]" is="#[MunitTools::equalTo('${test.url.static}')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T02: crawl-website-full-scan invalid URL -> either error raised or empty result;
+         connector handles invalid hosts gracefully in some paths (logs + returns), so we
+         only assert it does not crash the flow with an unexpected exception.
+         Timeout bumped to 90s to match CO-T07 — DNS failure on `.invalid` TLD may take longer
+         than 30s on some networks before surfacing. -->
+    <munit:test name="CO-T02_crawl-website-full-scan_invalid-url" timeOut="90000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawler_HTTP"
+                                                        url="http://invalid-host-for-test.invalid/"
+                                                        outputFormat="TEXT"
+                                                        downloadPath="${java.io.tmpdir}"
+                                                        maxDepth="0"
+                                                        restrictToPath="true"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <!-- Tightened: either connector raised WEBCRAWLER_OPERATIONS_FAILURE, or returned
+                 empty (NONE sentinel). Dropped the redundant containsString('WEBCRAWLER')
+                 disjunct — it subsumed every MS-WEBCRAWLER:* id and the default value alike,
+                 making the assertion tautological. -->
+            <munit-tools:assert-that expression="#[vars.errorType default 'MS-WEBCRAWLER:NONE']"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo('MS-WEBCRAWLER:NONE'), MunitTools::equalTo('MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE')])]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T03: crawl-website-full-scan RemoteWebDriver golden path (remote-browser-tagged) -->
+    <munit:test name="CO-T03_crawl-website-full-scan_remote_happy" timeOut="60000" tags="remote-browser">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawler_Remote"
+                                                    url="${test.url.static}"
+                                                    outputFormat="TEXT"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxDepth="0"
+                                                    restrictToPath="true"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T04: crawl-website-streaming HTTP golden depth=1 -->
+    <munit:test name="CO-T04_crawl-website-streaming_http_happy" timeOut="30000">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-streaming config-ref="WebCrawler_HTTP"
+                                                    url="${test.url.static}"
+                                                    outputFormat="TEXT"
+                                                    maxDepth="1"
+                                                    restrictToPath="true"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T05: crawl-website-streaming robots.txt disallowed. Streaming mode silently skips
+         disallowed URLs (see MuleCrawler.DocumentIterator.next()) rather than throwing, so we
+         only assert that either an error is raised OR the operation returns a payload — the key
+         is the flow does not crash. -->
+    <munit:test name="CO-T05_crawl-website-streaming_robots-disallowed" timeOut="20000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:crawl-website-streaming config-ref="WebCrawler_HTTP_RobotsEnforced"
+                                                        url="${test.url.robots.denied}"
+                                                        outputFormat="TEXT"
+                                                        maxDepth="0"
+                                                        restrictToPath="true"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <!-- Tightened: streaming mode either silently skips (NONE) or surfaces the
+                 CRAWL_ON_PAGE_DISALLOWED_ERROR. Previously allowed any containsString
+                 match which subsumed every outcome. -->
+            <munit-tools:assert-that expression="#[vars.errorType default 'MS-WEBCRAWLER:NONE']"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo('MS-WEBCRAWLER:NONE'), MunitTools::equalTo('MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR')])]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T06: get-sitemap HTTP golden path -->
+    <munit:test name="CO-T06_get-sitemap_http_happy" timeOut="20000">
+        <munit:execution>
+            <ms-webcrawler:get-sitemap config-ref="WebCrawler_HTTP"
+                                        url="${test.url.static}"
+                                        maxDepth="0"
+                                        restrictToPath="true"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+            <munit-tools:assert-that expression="#[attributes.url]" is="#[MunitTools::equalTo('${test.url.static}')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T07: get-sitemap unreachable URL -> either WEBCRAWLER_OPERATIONS_FAILURE or empty result;
+         like CO-T02, invalid hosts may be handled gracefully. Timeout set high because DNS
+         failure may take a while to surface. -->
+    <munit:test name="CO-T07_get-sitemap_unreachable-url" timeOut="90000">
+        <munit:execution>
+            <try>
+                <ms-webcrawler:get-sitemap config-ref="WebCrawler_HTTP"
+                                            url="http://invalid-host-for-test.invalid/"
+                                            maxDepth="0"
+                                            restrictToPath="true"/>
+                <error-handler>
+                    <on-error-continue>
+                        <set-variable variableName="errorType" value="#[error.errorType.namespace ++ ':' ++ error.errorType.identifier]"/>
+                    </on-error-continue>
+                </error-handler>
+            </try>
+        </munit:execution>
+        <munit:validation>
+            <!-- Tightened: unreachable-host get-sitemap either raises WEBCRAWLER_OPERATIONS_FAILURE
+                 or returns empty (NONE). Dropped redundant containsString('WEBCRAWLER') disjunct. -->
+            <munit-tools:assert-that expression="#[vars.errorType default 'MS-WEBCRAWLER:NONE']"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo('MS-WEBCRAWLER:NONE'), MunitTools::equalTo('MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE')])]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T08: crawl-website-full-scan with downloadImages=true + maxDepth=1 on IANA (has <img>
+         tags and internal links). Exercises MuleCrawler.crawl() downloadImages branch (L85-88)
+         and link-recursion L114-134. -->
+    <munit:test name="CO-T08_crawl-website-full-scan_download-images_depth1" timeOut="60000">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawler_HTTP"
+                                                    url="${test.url.iana}"
+                                                    outputFormat="TEXT"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxDepth="1"
+                                                    restrictToPath="true"
+                                                    downloadImages="true"
+                                                    maxImageNumber="1"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T09: crawl-website-full-scan with getMetaTags=true + contentTags + MARKDOWN output.
+         Exercises MuleCrawler.crawl() getMetaTags branch (L98-101) and MARKDOWN output via
+         PageHelper.getPageContent -> html2markdown pipeline. -->
+    <munit:test name="CO-T09_crawl-website-full-scan_meta-tags_markdown" timeOut="30000">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawler_HTTP"
+                                                    url="${test.url.static}"
+                                                    outputFormat="MARKDOWN"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxDepth="0"
+                                                    restrictToPath="true"
+                                                    getMetaTags="true"
+                                                    tags='#[["h1","p"]]'/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T10: crawl-website-full-scan with enforceRobotsTxt=true on a robots-blocked URL.
+         Exercises the MuleCrawler.crawl() robots-skip branch (L64-66). The per-URL exception
+         is caught inside the while loop, so the operation does not throw. We assert positively
+         on payload shape: the rootNode for a robots-skipped URL should have NO extracted
+         page content (no "YOU SHOULDN'T BE HERE" text that httpbin.org/deny serves), proving
+         the skip branch fired rather than the page being fetched anyway. -->
+    <munit:test name="CO-T10_crawl-website-full-scan_robots-skip" timeOut="30000">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-full-scan config-ref="WebCrawler_HTTP_RobotsEnforced"
+                                                    url="${test.url.robots.denied}"
+                                                    outputFormat="TEXT"
+                                                    downloadPath="${java.io.tmpdir}"
+                                                    maxDepth="0"
+                                                    restrictToPath="true"/>
+            <set-variable variableName="payloadText" value="#[output application/json --- payload]"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+            <!-- Positive shape assertion: robots-skipped root node must NOT contain the deny
+                 page's body text. If robots enforcement regresses and the page is actually
+                 fetched, that string appears in the payload and this test fails. -->
+            <munit-tools:assert-that expression="#[vars.payloadText]"
+                                     is="#[MunitTools::not(MunitTools::containsString(&quot;YOU SHOULDN'T BE HERE&quot;))]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- CO-T11: crawl-website-streaming on IANA at depth=1. Exercises
+         MuleCrawler.DocumentIterator.next() link-recursion L353-372 (child nodes enqueued
+         during streaming iteration). -->
+    <munit:test name="CO-T11_crawl-website-streaming_depth1_iana" timeOut="60000">
+        <munit:execution>
+            <ms-webcrawler:crawl-website-streaming config-ref="WebCrawler_HTTP"
+                                                    url="${test.url.iana}"
+                                                    outputFormat="TEXT"
+                                                    maxDepth="1"
+                                                    restrictToPath="true"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

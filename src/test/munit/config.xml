@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:ms-webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <configuration-properties file="test.properties"/>
+
+    <!-- HTTP config: robots.txt OFF by default; used for most HTTP-only smokes. -->
+    <ms-webcrawler:config name="WebCrawler_HTTP" enforceRobotsTxt="false" delayMillis="0">
+        <ms-webcrawler:http-connection userAgent="Mozilla/5.0 (compatible; Googlebot/2.1)" timeout="30000"/>
+    </ms-webcrawler:config>
+
+    <!-- HTTP config: robots.txt ON for CO-T05 / PO-T07 robots-disallowed tests.
+         userAgent "*" matches the wildcard User-agent stanza in robots.txt exactly,
+         which is how the connector's parser (PageHelper#canCrawl) works. -->
+    <ms-webcrawler:config name="WebCrawler_HTTP_RobotsEnforced" enforceRobotsTxt="true" delayMillis="0">
+        <ms-webcrawler:http-connection userAgent="*" timeout="30000"/>
+    </ms-webcrawler:config>
+
+    <!-- Remote WebDriver config pointing at the live remote browser endpoint. -->
+    <ms-webcrawler:config name="WebCrawler_Remote" enforceRobotsTxt="false" delayMillis="0" waitOnPageLoad="5000">
+        <ms-webcrawler:remote-web-driver-connection remoteUrl="${remote.browser.url}"
+                                                    userAgent="Mozilla/5.0 (compatible; Googlebot/2.1)"/>
+    </ms-webcrawler:config>
+
+    <!-- Bad remote config for CP-T04: expects CONNECTIVITY error. -->
+    <ms-webcrawler:config name="WebCrawler_Remote_Bad" enforceRobotsTxt="false" delayMillis="0">
+        <ms-webcrawler:remote-web-driver-connection remoteUrl="http://invalid-host-for-test.invalid:9999"/>
+    </ms-webcrawler:config>
+
+</mule>
