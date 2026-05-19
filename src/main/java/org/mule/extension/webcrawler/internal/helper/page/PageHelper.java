@@ -9,9 +9,12 @@ import org.jsoup.select.Elements;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.connection.webdriver.WebDriverConnection;
-import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.internal.connection.RemoteWebDriverConnection;
+import org.mule.extension.webcrawler.api.OutputFormat;
+import org.mule.extension.webcrawler.api.PageInsightType;
+import org.mule.extension.webcrawler.api.RegexUrlsFilterLogic;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
+import org.mule.extension.webcrawler.internal.service.LinkExtractor;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.mule.runtime.extension.api.exception.ModuleException;
@@ -31,13 +34,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
-import static org.mule.extension.webcrawler.internal.constant.Constants.OutputFormat.TEXT;
+import static org.mule.extension.webcrawler.api.OutputFormat.TEXT;
 
 public class PageHelper {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PageHelper.class);
 
-  private static final Map<String, String> robotsTxtCache = new ConcurrentHashMap<>();
+  private static final int ROBOTS_TXT_CACHE_MAX_ENTRIES = 256;
+  private static final Map<String, String> robotsTxtCache = java.util.Collections.synchronizedMap(
+      new java.util.LinkedHashMap<String, String>(ROBOTS_TXT_CACHE_MAX_ENTRIES, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+          return size() > ROBOTS_TXT_CACHE_MAX_ENTRIES;
+        }
+      });
 
   private static final Map<String, Pattern> COMPILED_PATTERN_CACHE = new ConcurrentHashMap<>();
 
@@ -61,8 +71,8 @@ public class PageHelper {
       Document document = Jsoup.parse(pageSource, url);
 
       // Apply page load options to WebDriver connections
-      if (connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
-        ((WebDriverConnection) connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
+      if (connection instanceof RemoteWebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
+        ((RemoteWebDriverConnection) connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
       }
 
       return document;
@@ -131,7 +141,7 @@ public class PageHelper {
   public static HashMap<String, Object> getPageInsights(
       Document document,
       List<String> tags,
-      Constants.PageInsightType insight) {
+      PageInsightType insight) {
 
     return getPageInsights(document, tags, insight, null, null);
   }
@@ -139,8 +149,8 @@ public class PageHelper {
   public static HashMap<String, Object> getPageInsights(
       Document document,
       List<String> tags,
-      Constants.PageInsightType insight,
-      Constants.RegexUrlsFilterLogic regexUrlsFilterLogic,
+      PageInsightType insight,
+      RegexUrlsFilterLogic regexUrlsFilterLogic,
       List<String> regexUrls) {
 
     // Map to store page analysis
@@ -163,7 +173,7 @@ public class PageHelper {
       Set<String> imageLinks = new HashSet<>();
 
       // All links Map
-      HashMap<String, Set> linksMap = new HashMap<>();
+      HashMap<String, Set<String>> linksMap = new HashMap<>();
 
       // Map to store the element counts
       Map<String, Integer> elementCounts = new HashMap<>();
@@ -172,11 +182,11 @@ public class PageHelper {
       String baseUrl = document.baseUri();
 
 
-      if (insight == Constants.PageInsightType.ALL ||
-          insight == Constants.PageInsightType.DOCUMENTLINKS ||
-          insight == Constants.PageInsightType.INTERNALLINKS ||
-          insight == Constants.PageInsightType.REFERENCELINKS ||
-          insight == Constants.PageInsightType.EXTERNALLINKS) {
+      if (insight == PageInsightType.ALL ||
+          insight == PageInsightType.DOCUMENTLINKS ||
+          insight == PageInsightType.INTERNALLINKS ||
+          insight == PageInsightType.REFERENCELINKS ||
+          insight == PageInsightType.EXTERNALLINKS) {
 
         // Select all anchor tags with href attributes
         Elements linkElements = document.select("a[href]");
@@ -189,28 +199,31 @@ public class PageHelper {
 
           if(URLUtils.isDocumentUrl(link)) {
             documentLinks.add(link);
-          } else if (URLUtils.isExternalLink(baseUrl, link)) {
+          } else if (LinkExtractor.isExternalLink(baseUrl, link)) {
+            // Delegated to LinkExtractor for proper URI host-equality check.
+            // URLUtils.isExternalLink used substring matching that misclassified
+            // evil-example.com as internal to example.com.
             externalLinks.add(link);
-          } else if (URLUtils.isReferenceLink(baseUrl, link)) {
+          } else if (LinkExtractor.isReferenceLink(baseUrl, link)) {
             referenceLinks.add(link);
           } else {
             internalLinks.add(link);
           }
         }
 
-        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.DOCUMENTLINKS)
+        if (insight == PageInsightType.ALL || insight == PageInsightType.DOCUMENTLINKS)
           linksMap.put("documents", documentLinks);
-        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.INTERNALLINKS)
+        if (insight == PageInsightType.ALL || insight == PageInsightType.INTERNALLINKS)
           linksMap.put("internal", internalLinks);
-        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.EXTERNALLINKS)
+        if (insight == PageInsightType.ALL || insight == PageInsightType.EXTERNALLINKS)
           linksMap.put("external", externalLinks);
-        if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.REFERENCELINKS)
+        if (insight == PageInsightType.ALL || insight == PageInsightType.REFERENCELINKS)
           linksMap.put("reference", referenceLinks);
       }
 
       // Handle iframe
-      if (insight == Constants.PageInsightType.ALL ||
-          insight == Constants.PageInsightType.IFRAMELINKS) {
+      if (insight == PageInsightType.ALL ||
+          insight == PageInsightType.IFRAMELINKS) {
 
         // Select all iframe tags with src attributes
         Elements linkElements = document.select("iframe[src]");
@@ -228,7 +241,7 @@ public class PageHelper {
       }
 
       // Handle images
-      if (insight == Constants.PageInsightType.ALL || insight == Constants.PageInsightType.IMAGELINKS) {
+      if (insight == PageInsightType.ALL || insight == PageInsightType.IMAGELINKS) {
 
         // Select all img tags with src attributes
         Elements images = document.select("img[src]");
@@ -245,8 +258,8 @@ public class PageHelper {
 
       }
 
-      if (insight == Constants.PageInsightType.ALL ||
-          insight == Constants.PageInsightType.ELEMENTCOUNTSTATS) {
+      if (insight == PageInsightType.ALL ||
+          insight == PageInsightType.ELEMENTCOUNTSTATS) {
 
         String[] elementsToCount = {"div", "p", "h1", "h2", "h3", "h4", "h5"}; // default list of elements to retrieve stats for. Used if no specific tags provided
 
@@ -275,13 +288,13 @@ public class PageHelper {
     pageInsightData.put("title", document.title());
 
     // only add links if any of the types in condition has been requested
-    if (insight == Constants.PageInsightType.ALL ||
-        insight == Constants.PageInsightType.DOCUMENTLINKS ||
-        insight == Constants.PageInsightType.INTERNALLINKS ||
-        insight == Constants.PageInsightType.REFERENCELINKS ||
-        insight == Constants.PageInsightType.EXTERNALLINKS ||
-        insight == Constants.PageInsightType.IFRAMELINKS ||
-        insight == Constants.PageInsightType.IMAGELINKS)
+    if (insight == PageInsightType.ALL ||
+        insight == PageInsightType.DOCUMENTLINKS ||
+        insight == PageInsightType.INTERNALLINKS ||
+        insight == PageInsightType.REFERENCELINKS ||
+        insight == PageInsightType.EXTERNALLINKS ||
+        insight == PageInsightType.IFRAMELINKS ||
+        insight == PageInsightType.IMAGELINKS)
 
       pageInsightData.put("links", linksMap);
 
@@ -304,14 +317,14 @@ public class PageHelper {
    * @param regexUrls            A list of regex patterns to match against the URL.
    * @return {@code true} if the URL should be skipped according to the filter logic, {@code false} otherwise.
    */
-  private static boolean skipUrl(String url, Constants.RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
+  public static boolean skipUrl(String url, RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
     if (regexUrlsFilterLogic != null && regexUrls != null && !regexUrls.isEmpty()) {
       boolean matchesPattern = regexUrls.stream().anyMatch(patternStr -> {
         Pattern pattern = COMPILED_PATTERN_CACHE.computeIfAbsent(patternStr, Pattern::compile);
         return pattern.matcher(url).matches();
       });
-      if ((regexUrlsFilterLogic == Constants.RegexUrlsFilterLogic.INCLUDE && !matchesPattern) ||
-          (regexUrlsFilterLogic == Constants.RegexUrlsFilterLogic.EXCLUDE && matchesPattern)) {
+      if ((regexUrlsFilterLogic == RegexUrlsFilterLogic.INCLUDE && !matchesPattern) ||
+          (regexUrlsFilterLogic == RegexUrlsFilterLogic.EXCLUDE && matchesPattern)) {
         return true;
       }
     }
@@ -321,7 +334,7 @@ public class PageHelper {
   public static String getPageContent(
       Document document,
       List<String> tags,
-      Constants.OutputFormat outputFormat) {
+      OutputFormat outputFormat) {
 
     switch(outputFormat) {
       case TEXT:
@@ -465,7 +478,7 @@ public class PageHelper {
     // List to store image URLs
     Set<String> imageUrls = new HashSet<>();
     Map<String, Object> linksMap = (Map<String, Object>) PageHelper
-        .getPageInsights(document, null, Constants.PageInsightType.IMAGELINKS).get("links");
+        .getPageInsights(document, null, PageInsightType.IMAGELINKS).get("links");
     if (linksMap != null) {
       imageUrls = (Set<String>) linksMap.get("images"); // Cast to Set<String>
     }
@@ -601,7 +614,7 @@ public class PageHelper {
 
     Map<String, String> linkFileMap = new HashMap<>();
     Map<String, Object> linksMap = (Map<String, Object>) PageHelper
-        .getPageInsights(document, null, Constants.PageInsightType.DOCUMENTLINKS).get("links");
+        .getPageInsights(document, null, PageInsightType.DOCUMENTLINKS).get("links");
     if (linksMap != null) {
       documentURLs = (Set<String>) linksMap.get("documents"); // Cast to Set<String>
     }
@@ -774,7 +787,6 @@ public class PageHelper {
       }
 
       String robotsTxtUrl = baseUrlString + "/robots.txt";
-      Document document = Jsoup.connect(robotsTxtUrl).get();
       String robotsTxtContent = Jsoup.connect(robotsTxtUrl)
           .ignoreContentType(true) // Ensures it handles plain text
           .execute()

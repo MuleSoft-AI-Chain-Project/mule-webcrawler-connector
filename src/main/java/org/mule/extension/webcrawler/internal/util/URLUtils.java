@@ -1,6 +1,6 @@
 package org.mule.extension.webcrawler.internal.util;
 
-import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.api.DocumentExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ public class URLUtils {
 
   static {
     Set<String> extensions = new HashSet<>();
-    for (Constants.DocumentExtension ext : Constants.DocumentExtension.values()) {
+    for (DocumentExtension ext : DocumentExtension.values()) {
       extensions.add(ext.name().toLowerCase(Locale.ENGLISH));
     }
     VALID_EXTENSIONS = Collections.unmodifiableSet(extensions);
@@ -111,35 +111,9 @@ public class URLUtils {
     }
   }
 
-  // Method to determine if a link is a reference link to the same page
-  // baseUrl: "https://docs.mulesoft.com/cloudhub-2/ch2-architecture"
-  // linkToCheck: "https://docs.mulesoft.com/cloudhub-2/ch2-architecture#cluster-nodes"
-  // If current page has a reference link to another page, this link will not be considered as a reference link
-  public static boolean isReferenceLink(String baseUrl, String linkToCheck) {
-    try {
-      URI baseUri = URI.create(baseUrl);
-      URI linkUri = URI.create(linkToCheck);
-
-      // Check if the scheme, host, and path are the same, and the link has a fragment
-      return baseUri.getScheme().equals(linkUri.getScheme()) &&
-              baseUri.getHost().equals(linkUri.getHost()) &&
-              baseUri.getPath().equals(linkUri.getPath()) &&
-              linkUri.getFragment() != null;
-
-    } catch (IllegalArgumentException e) {
-      LOGGER.error("Invalid URL: {}", e.getMessage());
-      return false;
-    }
-  }
-
-  public static boolean isExternalLink(String baseUrl, String linkToCheck) throws MalformedURLException {
-    // Extract the base domain from the base URI
-    URL parsedUrl = new URL(baseUrl);
-    String baseDomain = parsedUrl.getHost();
-
-    return !linkToCheck.contains(baseDomain);
-
-  }
+  // isReferenceLink and isExternalLink were deleted — substring host-matching
+  // ('evil-example.com'.contains('example.com')) misclassified attacker-controlled
+  // hosts as internal. Callers now use LinkExtractor's URI-host-equality versions.
 
   /*
           "https://wp.salesforce.com/en-ap/wp-content/uploads/sites/14/2024/02/php-marquee-starter-lg-bg.jpg?w=1024",

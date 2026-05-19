@@ -1,6 +1,6 @@
 package org.mule.extension.webcrawler.internal.helper.parameter;
 
-import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.api.RegexUrlsFilterLogic;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
@@ -39,7 +39,7 @@ public class CrawlerTargetPagesParameters {
   @DisplayName("Regex URLs filter logic")
   @Placement(order = 3)
   @Optional
-  private Constants.RegexUrlsFilterLogic regexUrlsFilterLogic;
+  private RegexUrlsFilterLogic regexUrlsFilterLogic;
 
   @Parameter
   @Alias("regexUrls")
@@ -48,7 +48,8 @@ public class CrawlerTargetPagesParameters {
   @Placement(order = 4)
   @Expression(ExpressionSupport.SUPPORTED)
   @Example("https://www\\.googletagmanager\\.com/.*")
-  @Optional(defaultValue = "#[[\"https://www\\.googletagmanager\\.com/.*\"]]")
+  @Optional
+  @org.mule.runtime.extension.api.annotation.param.NullSafe
   private List<String> regexUrls;
 
   public boolean isRestrictToPath() {
@@ -67,9 +68,9 @@ public class CrawlerTargetPagesParameters {
     this.maxDepth = maxDepth;
   }
 
-  public Constants.RegexUrlsFilterLogic getRegexUrlsFilterLogic() { return regexUrlsFilterLogic; }
+  public RegexUrlsFilterLogic getRegexUrlsFilterLogic() { return regexUrlsFilterLogic; }
 
-  public void setRegexUrlsFilterLogic(Constants.RegexUrlsFilterLogic regexUrlsFilterLogic) { this.regexUrlsFilterLogic = regexUrlsFilterLogic; }
+  public void setRegexUrlsFilterLogic(RegexUrlsFilterLogic regexUrlsFilterLogic) { this.regexUrlsFilterLogic = regexUrlsFilterLogic; }
 
   public List<String> getRegexUrls() { return regexUrls; }
 

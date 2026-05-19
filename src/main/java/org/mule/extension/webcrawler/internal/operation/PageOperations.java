@@ -5,7 +5,8 @@ import org.mule.extension.webcrawler.api.metadata.PageResponseAttributes;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.constant.Constants;
+import org.mule.extension.webcrawler.api.OutputFormat;
+import org.mule.extension.webcrawler.api.PageInsightType;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.error.provider.WebCrawlerErrorTypeProvider;
 import org.mule.extension.webcrawler.internal.helper.ResponseHelper;
@@ -330,7 +331,7 @@ public class PageOperations {
 
       return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(
-              PageHelper.getPageInsights(document, targetContentParameters.getTags(), Constants.PageInsightType.ALL)
+              PageHelper.getPageInsights(document, targetContentParameters.getTags(), PageInsightType.ALL)
           ),
           new HashMap<String, Object>() {{
             put("url", url);
@@ -376,7 +377,7 @@ public class PageOperations {
               @Placement(order = 5, tab = "Page Load Options (WebDriver)") @Expression(ExpressionSupport.SUPPORTED) @Example("//results") @Optional String shadowHostXPath,
           @Connection WebCrawlerConnection connection,
           @DisplayName("Page URL") @Placement(order = 1) @Example("https://mac-project.ai/docs") String url,
-          @DisplayName("Output format") @Placement(order = 2) Constants.OutputFormat outputFormat,
+          @DisplayName("Output format") @Placement(order = 2) OutputFormat outputFormat,
           @ParameterGroup(name="Target Content") PageTargetContentParameters targetContentParameters) {
 
     try {

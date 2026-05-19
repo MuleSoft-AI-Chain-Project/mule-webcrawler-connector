@@ -1,6 +1,7 @@
 package org.mule.extension.webcrawler.internal.helper.parameter;
 
 import org.mule.runtime.extension.api.annotation.Alias;
+import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
@@ -18,6 +19,7 @@ public class PageTargetContentParameters {
   @Summary("List of html tags for which content must be retrieved.")
   @Placement(order = 1)
   @Optional
+  @NullSafe
   private List<String> tags;
 
   public List<String> getTags() {

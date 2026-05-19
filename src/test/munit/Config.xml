@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <configuration-properties file="test.properties"/>
+
+    <!-- Each <webcrawler:config> seeds its own queue at startup with the configured URL. queueName
+         must be unique across configs in the same app so they don't cross-feed each other's
+         URLs. -->
+
+    <!-- HTTP-fetch crawl of a stable public page. depth=0 means seed-only. -->
+    <webcrawler:config name="httpStaticConfig" url="${test.url.static}"
+                       queueName="munit-http-static-queue">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <!-- HTTP-fetch crawl of httpbin's /links/3/0 page. -->
+    <webcrawler:config name="httpDepthLimitConfig" url="${test.url.links}"
+                       queueName="munit-http-depth-queue">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <!-- HTTP-fetch crawl with acceptedMimeTypes filter. Only text/html events emit. -->
+    <webcrawler:config name="httpMimeFilterConfig" url="${test.url.static}"
+                       queueName="munit-http-mime-queue"
+                       acceptedMimeTypes="#[['text/html']]">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <!-- HTTP-fetch crawl seeded for the get-sitemap operation. -->
+    <webcrawler:config name="httpSitemapConfig" url="${test.url.links}"
+                       queueName="munit-http-sitemap-queue">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <!-- Remote WebDriver fetch — gated on remote.browser.url being set. -->
+    <webcrawler:config name="remoteStaticConfig" url="${test.url.static}"
+                       queueName="munit-remote-static-queue"
+                       waitOnPageLoad="30000">
+        <webcrawler:remote-webdriver-connection remoteUrl="${remote.browser.url}"
+                                     userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <webcrawler:config name="remoteDepthLimitConfig" url="${test.url.links}"
+                       queueName="munit-remote-depth-queue"
+                       waitOnPageLoad="30000">
+        <webcrawler:remote-webdriver-connection remoteUrl="${remote.browser.url}"
+                                     userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <!-- Generic per-page operation config. Seed URL is omitted because page-* and search-google
+         take their URL/query per-call and never consult the queue. queueName is also omitted to
+         prove the synthesized 'webcrawler-{configName}-queue' default works for ops-only configs. -->
+    <webcrawler:config name="httpOperationsConfig">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+</mule>

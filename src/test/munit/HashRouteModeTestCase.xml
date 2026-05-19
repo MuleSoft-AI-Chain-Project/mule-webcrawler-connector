@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="HashRouteModeTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <!-- IGNORE mode (default) — fragments stripped from extracted URLs. PRESERVE mode — fragments kept.
+         Both validated by JUnit (LinkExtractorTest); this MUnit suite asserts the config-level
+         hashRouteMode parameter is wired through end-to-end without parse errors. -->
+    <webcrawler:config name="hashRouteIgnoreConfig" url="${test.url.static}"
+                       queueName="munit-hashroute-ignore-queue"
+                       hashRouteMode="IGNORE">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <webcrawler:config name="hashRoutePreserveConfig" url="${test.url.static}"
+                       queueName="munit-hashroute-preserve-queue"
+                       hashRouteMode="PRESERVE">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <os:object-store name="hashRouteStore" persistent="false"/>
+
+    <flow name="hashRouteIgnoreFlow" maxConcurrency="1">
+        <webcrawler:crawl-website-source config-ref="hashRouteIgnoreConfig"
+                                         outputFormat="TEXT"
+                                         maxDepth="0"
+                                         restrictToPath="false"
+                                         objectStore="hashRouteStore"/>
+        <munit-tools:queue queueName="hashRouteEvents">
+            <munit-tools:value>#[output application/java --- {url: attributes.url}]</munit-tools:value>
+        </munit-tools:queue>
+    </flow>
+
+    <!-- hashRouteMode=IGNORE accepted as a config attribute, source emits successfully. -->
+    <munit:test name="hashroute_mode_ignore_wired" timeOut="60000">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="hashRouteIgnoreFlow"/>
+        </munit:enable-flow-sources>
+        <munit:validation>
+            <until-successful maxRetries="60" millisBetweenRetries="1000">
+                <munit-tools:dequeue queueName="hashRouteEvents"/>
+            </until-successful>
+            <munit-tools:assert-that expression="#[payload.url]"
+                                     is="#[MunitTools::containsString('example.com')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

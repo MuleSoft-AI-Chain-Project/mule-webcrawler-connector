@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="GetSitemapTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <flow name="getSitemapFlow">
+        <webcrawler:get-sitemap config-ref="httpSitemapConfig"
+                                url="${test.url.links}"
+                                maxDepth="1"
+                                restrictToPath="false"/>
+    </flow>
+
+    <!-- get-sitemap returns an XML sitemap document with a urlset root and at least one url entry.
+         Operation kept untouched in the refactor; this regression test guards against accidental drift. -->
+    <munit:test name="get_sitemap_returns_urlset" timeOut="60000">
+        <munit:execution>
+            <flow-ref name="getSitemapFlow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.url]"
+                                     is="#[MunitTools::containsString('httpbin.org')]"/>
+            <munit-tools:assert-that expression="#[attributes.depth]"
+                                     is="#[MunitTools::equalTo(1)]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

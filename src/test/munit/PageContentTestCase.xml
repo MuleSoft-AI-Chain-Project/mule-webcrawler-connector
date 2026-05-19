@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="PageContentTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <flow name="pageContentHtmlFlow">
+        <webcrawler:page-content config-ref="httpOperationsConfig"
+                                 url="${test.url.static}"
+                                 outputFormat="HTML"/>
+    </flow>
+
+    <flow name="pageContentTextFlow">
+        <webcrawler:page-content config-ref="httpOperationsConfig"
+                                 url="${test.url.static}"
+                                 outputFormat="TEXT"/>
+    </flow>
+
+    <flow name="pageContentMarkdownFlow">
+        <webcrawler:page-content config-ref="httpOperationsConfig"
+                                 url="${test.url.static}"
+                                 outputFormat="MARKDOWN"/>
+    </flow>
+
+    <!-- page-content HTML output preserves raw markup. -->
+    <munit:test name="page_content_html_output" timeOut="60000">
+        <munit:execution>
+            <flow-ref name="pageContentHtmlFlow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.url]"
+                                     is="#[MunitTools::containsString('example.com')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- page-content TEXT output strips tags. -->
+    <munit:test name="page_content_text_output" timeOut="60000">
+        <munit:execution>
+            <flow-ref name="pageContentTextFlow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.url]"
+                                     is="#[MunitTools::containsString('example.com')]"/>
+        </munit:validation>
+    </munit:test>
+
+    <!-- page-content MARKDOWN output via CopyDown. -->
+    <munit:test name="page_content_markdown_output" timeOut="60000">
+        <munit:execution>
+            <flow-ref name="pageContentMarkdownFlow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.url]"
+                                     is="#[MunitTools::containsString('example.com')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>
