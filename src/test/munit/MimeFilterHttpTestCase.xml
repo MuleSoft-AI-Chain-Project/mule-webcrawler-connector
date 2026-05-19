@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="MimeFilterHttpTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <os:object-store name="mimeFilterStore" persistent="false"/>
+
+    <flow name="mimeFilterFlow" maxConcurrency="1">
+        <webcrawler:crawl-website-source config-ref="httpMimeFilterConfig"
+                                         outputFormat="TEXT"
+                                         maxDepth="0"
+                                         restrictToPath="false"
+                                         objectStore="mimeFilterStore"/>
+        <munit-tools:queue queueName="mimeFiltered">
+            <munit-tools:value>
+                #[output application/java --- {url: attributes.url, contentType: attributes.contentType}]
+            </munit-tools:value>
+        </munit-tools:queue>
+    </flow>
+
+    <!-- acceptedMimeTypes=['text/html'] only emits text/html responses.
+         example.com is text/html so the seed-only crawl produces exactly one event. -->
+    <munit:test name="mime_filter_emits_only_html" timeOut="60000">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="mimeFilterFlow"/>
+        </munit:enable-flow-sources>
+        <munit:validation>
+            <until-successful maxRetries="60" millisBetweenRetries="1000">
+                <munit-tools:dequeue queueName="mimeFiltered"/>
+            </until-successful>
+            <munit-tools:assert-that expression="#[payload.contentType]"
+                                     is="#[MunitTools::containsString('text/html')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

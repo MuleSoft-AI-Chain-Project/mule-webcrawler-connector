@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="NegativeTestsTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <!-- Config with robots.txt enforcement on. Ops-only — queueName omitted on purpose to exercise
+         the synthesized default. -->
+    <webcrawler:config name="robotsEnforcedConfig"
+                       enforceRobotsTxt="true">
+        <webcrawler:http-connection userAgent="MUnitWebcrawlerSuite/1.0"/>
+    </webcrawler:config>
+
+    <flow name="robotsBlockedFlow">
+        <!-- httpbin.org/robots.txt has `User-agent: *` + `Disallow: /deny` — simple single-block
+             format. page-meta-tags is the right operation to test against — page-content does not
+             enforce robots.txt. -->
+        <webcrawler:page-meta-tags config-ref="robotsEnforcedConfig"
+                                   url="https://httpbin.org/deny"/>
+    </flow>
+
+    <flow name="malformedUrlFlow">
+        <webcrawler:page-content config-ref="httpOperationsConfig"
+                                 url="not-a-url"
+                                 outputFormat="HTML"/>
+    </flow>
+
+    <flow name="searchGoogleNoKeyFlow">
+        <!-- Pass an obviously-invalid Serper API key. Serper rejects with HTTP 403 → IOException →
+             the connector wraps it into WEBCRAWLER_OPERATIONS_FAILURE. -->
+        <webcrawler:search-google query="mulesoft" apiKey="munit-invalid-key"/>
+    </flow>
+
+    <!-- page-content against a robots.txt-disallowed URL with enforceRobotsTxt=true
+         raises CRAWL_ON_PAGE_DISALLOWED_ERROR. -->
+    <munit:test name="robots_txt_disallowed_url_raises_disallowed_error"
+                timeOut="60000"
+                expectedErrorType="MS-WEBCRAWLER:CRAWL_ON_PAGE_DISALLOWED_ERROR">
+        <munit:execution>
+            <flow-ref name="robotsBlockedFlow"/>
+        </munit:execution>
+    </munit:test>
+
+    <!-- page-content with a malformed URL raises a connector-mapped operations failure
+         (not a raw runtime exception). -->
+    <munit:test name="malformed_url_raises_operations_failure"
+                timeOut="60000"
+                expectedErrorType="MS-WEBCRAWLER:WEBCRAWLER_OPERATIONS_FAILURE">
+        <munit:execution>
+            <flow-ref name="malformedUrlFlow"/>
+        </munit:execution>
+    </munit:test>
+
+    <!-- search-google with an invalid API key. Serper rejects with HTTP 403; the connector
+         wraps the failure into SEARCH_OPERATIONS_FAILURE rather than letting an IOException propagate. -->
+    <munit:test name="search_with_invalid_api_key_raises_search_failure"
+                timeOut="60000"
+                expectedErrorType="MS-WEBCRAWLER:SEARCH_OPERATIONS_FAILURE">
+        <munit:execution>
+            <flow-ref name="searchGoogleNoKeyFlow"/>
+        </munit:execution>
+    </munit:test>
+
+</mule>

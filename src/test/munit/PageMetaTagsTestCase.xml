@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="PageMetaTagsTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <flow name="pageMetaTagsFlow">
+        <webcrawler:page-meta-tags config-ref="httpOperationsConfig"
+                                   url="${test.url.static}"/>
+    </flow>
+
+    <!-- page-meta-tags returns metadata. example.com has at least one meta tag. -->
+    <munit:test name="page_meta_tags_returns_array" timeOut="60000">
+        <munit:execution>
+            <flow-ref name="pageMetaTagsFlow"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[attributes.url]"
+                                     is="#[MunitTools::containsString('example.com')]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

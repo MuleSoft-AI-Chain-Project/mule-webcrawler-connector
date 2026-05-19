@@ -9,13 +9,101 @@
 
 # <img src="icon/icon.svg" width="6%" alt="banner"> MAC Web Crawler
 
-**MuleSoft WebCrawler** provides web crawling capabilities to extract data from web pages subsequently based on the structure of the website.
+**MuleSoft WebCrawler** provides web crawling capabilities to extract data from web pages based on the structure of the website. From `1.0.0` it ships a queue-driven, ObjectStore-backed Source (`crawl-website-source`) that emits one Mule event per fetched page, plus per-page operations for metadata / insight / sitemap / image / document / search use cases.
 
 ## Requirements
 
-- The **maximum** supported version for Java SDK is **JDK 17**. 
-- You can use JDK 17 only for running your application.
-- Compilation with Java SDK must be done with JDK 11.
+- **JDK 11 or 17** for both compilation and runtime.
+- **Mule runtime 4.6.0** or newer.
+- For the Remote WebDriver fetch path, a reachable W3C WebDriver endpoint (Selenium Grid 4, standalone ChromeDriver, BrowserStack, or a CloudHub-hosted remote-browser app). The connector itself does not bundle a browser — embedded Chrome support was removed in `1.0.0`.
+
+## What's in the connector
+
+- **`crawl-website-source` (Source)** — listens on a Mule VM queue, fetches each URL, emits the page content, enqueues discovered links up to the configured depth. Backed by an ObjectStore for visited-URL deduplication.
+- **`get-sitemap` (Operation)** — synchronous batch crawl that returns an XML sitemap document.
+- **`page-content`, `page-meta-tags`, `page-insights`, `page-download-image`, `page-download-document` (Operations)** — single-URL utilities. Take a URL per call; do not consult the queue.
+- **`search-google` (Operation)** — Google search via the Serper.dev API. Requires a Serper API key from the caller.
+
+The connector exposes two connection providers:
+
+| Connection | DSL element | When to use |
+|---|---|---|
+| HTTP | `<ms-webcrawler:http-connection .../>` | Server-rendered pages (most documentation sites, static HTML, sitemaps). Fastest, FIPS-compatible, no external infra. |
+| Remote WebDriver | `<ms-webcrawler:remote-webdriver-connection remoteUrl="..."/>` | JS-heavy / SPA / shadow-DOM sites. Drives a remote Chromium-family browser via the W3C WebDriver protocol. |
+
+## Configuration and Deployment
+
+### Maven dependency
+
+```xml
+<dependency>
+    <groupId>com.mulesoft.connectors</groupId>
+    <artifactId>mule4-webcrawler-connector</artifactId>
+    <version>{version}</version>
+    <classifier>mule-plugin</classifier>
+</dependency>
+```
+
+### Minimal example
+
+```xml
+<ms-webcrawler:config name="crawlConfig"
+                   url="https://docs.example.com"
+                   queueName="my-crawl-queue">
+    <ms-webcrawler:http-connection userAgent="MyApp/1.0"/>
+</ms-webcrawler:config>
+
+<flow name="crawlFlow">
+    <ms-webcrawler:crawl-website-source config-ref="crawlConfig"
+                                     outputFormat="HTML"
+                                     maxDepth="2"
+                                     restrictToPath="true"/>
+    <!-- one event per fetched page lands here; pipe to S3, Data Cloud, etc. -->
+    <logger level="INFO" message='#["fetched: " ++ attributes.url]'/>
+</flow>
+```
+
+The config seeds its `url` onto `queueName` at startup; the Source drains the queue, fetches each page, extracts links, enqueues internal links up to `maxDepth`. `restrictToPath=true` keeps the crawl under the seed URL's path.
+
+### Switching to Remote WebDriver
+
+```xml
+<ms-webcrawler:config name="crawlConfig"
+                   url="https://docs.example.com"
+                   queueName="my-crawl-queue">
+    <ms-webcrawler:remote-webdriver-connection
+        remoteUrl="https://my-remote-browser.example.com"
+        userAgent="MyApp/1.0"/>
+</ms-webcrawler:config>
+```
+
+The Remote WebDriver path supports `waitOnPageLoad`, `waitForXPath`, `extractShadowDom`, and `shadowHostXPath` page-load options. It also accepts a `blockedUrls` list (Chrome URL-pattern globs sent to the worker via the `sfRemote:blockedUrls` capability) — used by the CloudHub remote-browser worker to drop ad / tracker network requests at the wire layer.
+
+## Debugging
+
+Logging is via SLF4J. Tune via `log4j2.xml`:
+
+```xml
+<!-- Connector-internal events (queue activity, per-page fetch outcomes, session recovery) -->
+<AsyncLogger name="org.mule.extension.webcrawler" level="DEBUG"/>
+
+<!-- Full HTTP wire traffic for the HTTP fetch path. The Mule HttpService dumps request lines,
+     headers, and bodies at DEBUG. Selenium W3C protocol traffic on the Remote WebDriver path is
+     not surfaced through this logger; use the connector-internal logger above. -->
+<AsyncLogger name="org.mule.service.http.impl.service.HttpMessageLogger" level="DEBUG"/>
+```
+
+## Migration from `0.x`
+
+`1.0.0` reshaped the connector around streaming + remote browser:
+
+- Embedded Chrome path **removed**. `<ms-webcrawler:webdriver-connection .../>` (in-process Chrome) replaced by `<ms-webcrawler:remote-webdriver-connection remoteUrl="..."/>`.
+- `crawl-website-full-scan` and `crawl-website-streaming` operations **removed**. Migrate to `crawl-website-source` and pipe events into your downstream sink.
+- `<ms-webcrawler:config>` requires `url` only when using `crawl-website-source` (operations-only configs can omit it). `queueName` is optional and defaults to `webcrawler-{configName}-queue` when not set.
+- XML namespace prefix is `ms-webcrawler` (unchanged from master).
+- `cloudhub.deployment` property no longer needed.
+
+The `0.x` line will receive **security-only fixes for 6 months** after `1.0.0` ships. New features land on `1.x` only. Plan your migration.
 
 ## Configuration and Deployment
 
@@ -56,14 +144,9 @@ Then, follow the MuleSoft [documentation](https://docs.mulesoft.com/exchange/to-
 
 ### Deploying to CloudHub
 
-In order for dynamic content retrieval to work in CloudHub based deployments, you will need
-to set the `cloudhub.deployment` property to `true`.  
+The connector deploys cleanly to CloudHub 2.0 with no special properties.
 
-This can be done either via an application property in Runtime Manager, or in your CloudHub deployment
-configuration in your `pom.xml`.
-
-This property will allow the installation of Chrome at runtime into your CloudHub 1.0 worker VM, 
-or your CloudHub 2.0 container, along with the necessary dependencies.
+For the **Remote WebDriver** fetch path, point `<ms-webcrawler:remote-webdriver-connection remoteUrl="..."/>` at any reachable W3C WebDriver endpoint — a Selenium Grid 4 deployment, a hosted vendor (BrowserStack / Sauce Labs), or a CloudHub-hosted remote-browser app provisioned for your workspace.
 
 ## Contributors ✨
 

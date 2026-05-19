@@ -5,13 +5,9 @@ public class Constants {
   private Constants() {
   }
 
-  public enum PageInsightType {ALL, DOCUMENTLINKS, INTERNALLINKS, EXTERNALLINKS, REFERENCELINKS, IFRAMELINKS, IMAGELINKS, ELEMENTCOUNTSTATS}
-
-  public enum DocumentExtension {PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, RAR}
-
-  public enum RegexUrlsFilterLogic { INCLUDE, EXCLUDE}
-
-  public enum OutputFormat { TEXT, HTML, MARKDOWN }
+  // User-facing enums (PageInsightType, DocumentExtension, RegexUrlsFilterLogic, OutputFormat)
+  // were moved to org.mule.extension.webcrawler.api so the connector does not export
+  // user-facing types from an internal package.
 
   // Google Chrome User-Agents
   public static final String USER_AGENT_CHROME_WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36";

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="MaxDepthRemoteTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <os:object-store name="remoteDepthStore" persistent="false"/>
+
+    <flow name="remoteDepthFlow" maxConcurrency="1">
+        <webcrawler:crawl-website-source config-ref="remoteDepthLimitConfig"
+                                         outputFormat="TEXT"
+                                         maxDepth="1"
+                                         restrictToPath="false"
+                                         objectStore="remoteDepthStore"/>
+        <!-- Capture the body length too so the depth>=1 path actually validates that bytes were
+             emitted. Without this assertion a regression that empties the body (e.g. a double-read
+             of the response InputStream on the Remote WebDriver path) would slip through silently. -->
+        <set-variable variableName="bodyLen" value="#[sizeOf(payload as String default '')]"/>
+        <munit-tools:queue queueName="remoteDepthCrawled">
+            <munit-tools:value>
+                #[output application/java --- {url: attributes.url, depth: attributes.depth, bodyLen: vars.bodyLen}]
+            </munit-tools:value>
+        </munit-tools:queue>
+    </flow>
+
+    <!-- depth=1 via Remote WebDriver fetch path. Gated on -Dremote.browser.url. -->
+    <munit:test name="depth_one_emits_seed_plus_first_level_links" timeOut="180000">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="remoteDepthFlow"/>
+        </munit:enable-flow-sources>
+        <munit:validation>
+            <until-successful maxRetries="180" millisBetweenRetries="1000">
+                <munit-tools:dequeue queueName="remoteDepthCrawled"/>
+            </until-successful>
+            <munit-tools:assert-that expression="#[payload.url]"
+                                     is="#[MunitTools::containsString('httpbin.org')]"/>
+            <munit-tools:assert-that expression="#[payload.depth]"
+                                     is="#[MunitTools::lessThanOrEqualTo(1)]"/>
+            <!-- Guards against the body double-read regression — emitted body must be non-empty. -->
+            <munit-tools:assert-that expression="#[payload.bodyLen]"
+                                     is="#[MunitTools::greaterThan(0)]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

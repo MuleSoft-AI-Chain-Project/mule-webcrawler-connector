@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+      xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+      xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+      xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:webcrawler="http://www.mulesoft.org/schema/mule/ms-webcrawler"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+        http://www.mulesoft.org/schema/mule/munit-tools http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+        http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+        http://www.mulesoft.org/schema/mule/ms-webcrawler http://www.mulesoft.org/schema/mule/ms-webcrawler/current/mule-ms-webcrawler.xsd">
+
+    <munit:config name="CrawlSourceRemoteTestCase.xml"/>
+
+    <import file="Config.xml"/>
+
+    <os:object-store name="remoteCrawlStore" persistent="false"/>
+
+    <flow name="remoteCrawlFlow" maxConcurrency="1">
+        <webcrawler:crawl-website-source config-ref="remoteStaticConfig"
+                                         outputFormat="TEXT"
+                                         maxDepth="0"
+                                         restrictToPath="false"
+                                         objectStore="remoteCrawlStore"/>
+        <munit-tools:queue queueName="remoteCrawled">
+            <munit-tools:value>
+                #[output application/java --- {url: attributes.url, statusCode: attributes.statusCode, contentType: attributes.contentType, depth: attributes.depth}]
+            </munit-tools:value>
+        </munit-tools:queue>
+    </flow>
+
+    <!-- Source crawls the seed URL via Remote WebDriver and emits one event at depth 0.
+         Gated on -Dremote.browser.url being a real reachable endpoint. -->
+    <munit:test name="source_crawls_seed_url_via_remote_webdriver" timeOut="120000">
+        <munit:enable-flow-sources>
+            <munit:enable-flow-source value="remoteCrawlFlow"/>
+        </munit:enable-flow-sources>
+        <munit:validation>
+            <until-successful maxRetries="120" millisBetweenRetries="1000">
+                <munit-tools:dequeue queueName="remoteCrawled"/>
+            </until-successful>
+            <munit-tools:assert-that expression="#[payload.url]"
+                                     is="#[MunitTools::containsString('example.com')]"/>
+            <!-- Remote WebDriver path returns the real HTTP status when the Performance API
+                 surfaces it (Chromium 109+), and a -1 sentinel otherwise. Either is a
+                 contractually-valid value; both contentTypes are valid under the same contract. -->
+            <munit-tools:assert-that expression="#[payload.statusCode]"
+                                     is="#[MunitTools::anyOf([MunitTools::equalTo(200), MunitTools::equalTo(-1)])]"/>
+            <munit-tools:assert-that expression="#[payload.depth]"
+                                     is="#[MunitTools::equalTo(0)]"/>
+        </munit:validation>
+    </munit:test>
+
+</mule>

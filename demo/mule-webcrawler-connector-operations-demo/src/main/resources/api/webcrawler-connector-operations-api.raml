@@ -1,6 +1,9 @@
 #%RAML 1.0
 title: MuleSoft WebCrawler API
-description: API for web crawling and data extraction
+description: |
+  HTTP demo of the MuleSoft WebCrawler connector. Exposes the page-* utilities, get-sitemap, and search-google
+  operations behind a small REST surface. The new crawl-website-source Source is wired in a separate flow
+  (`crawlerSourceFlow`) — it does not sit behind APIKit because Sources are flow-start components.
 version: 1.0.0
 
 baseUri: http://localhost:{port}
@@ -22,7 +25,7 @@ types:
         items:
           type: Node
     additionalProperties: false
-    
+
 /page:
   post:
     queryParameters:
@@ -37,6 +40,9 @@ types:
         type: string
         default: http
         required: false
+        description: |
+          `http` (default) routes through the HTTP connection provider.
+          `webdriver` routes through the Remote WebDriver connection provider.
       tag:
         type: string
         required: false
@@ -170,55 +176,6 @@ types:
     responses:
       200:
         description: Documents downloaded successfully
-
-/crawl-full-scan:
-  get:
-    queryParameters:
-      url:
-        type: string
-        required: true
-      outputFormat:
-        type: string
-        enum: [HTML, TEXT, MARKDOWN]
-        required: true
-      depth:
-        type: integer
-      downloadLocation:
-        type: string
-      connection:
-        type: string
-        default: http
-        required: false
-      waitOnPageLoad:
-        type: number
-        required: false
-    responses:
-      200:
-        description: Website crawled successfully
-        
-/crawl-streaming:
-  get:
-    queryParameters:
-      url:
-        type: string
-        required: true
-      outputFormat:
-        type: string
-        enum: [HTML, TEXT, MARKDOWN]
-        required: true
-      depth:
-        type: integer
-      connection:
-        type: string
-        default: http
-        required: false
-      waitOnPageLoad:
-        type: number
-        required: false
-    responses:
-      200:
-        description: Website crawled successfully
-        
 
 /search:
   get:

@@ -37,7 +37,7 @@ public class ResponseHelper {
       Map<String, Object> pageAttributes) {
 
     return Result.<InputStream, PageResponseAttributes>builder()
-        .attributes(new PageResponseAttributes((HashMap<String, Object>) pageAttributes))
+        .attributes(new PageResponseAttributes(new HashMap<>(pageAttributes)))
         .attributesMediaType(MediaType.APPLICATION_JAVA)
         .output(toInputStream(output, StandardCharsets.UTF_8))
         .mediaType(MediaType.APPLICATION_JSON)
@@ -49,7 +49,7 @@ public class ResponseHelper {
       Map<String, Object> sitemapAttributes) {
 
     return Result.<InputStream, SitemapResponseAttributes>builder()
-        .attributes(new SitemapResponseAttributes((HashMap<String, Object>) sitemapAttributes))
+        .attributes(new SitemapResponseAttributes(new HashMap<>(sitemapAttributes)))
         .attributesMediaType(MediaType.APPLICATION_JAVA)
         .output(toInputStream(output, StandardCharsets.UTF_8))
         .mediaType(MediaType.APPLICATION_XML)
@@ -61,7 +61,7 @@ public class ResponseHelper {
       Map<String, Object> searchAttributes) {
 
     return Result.<InputStream, SearchResponseAttributes>builder()
-        .attributes(new SearchResponseAttributes((HashMap<String, Object>) searchAttributes))
+        .attributes(new SearchResponseAttributes(new HashMap<>(searchAttributes)))
         .attributesMediaType(MediaType.APPLICATION_JAVA)
         .output(toInputStream(output, StandardCharsets.UTF_8))
         .mediaType(MediaType.APPLICATION_JSON)
