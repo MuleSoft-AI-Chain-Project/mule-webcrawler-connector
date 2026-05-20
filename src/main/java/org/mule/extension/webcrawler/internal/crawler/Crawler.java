@@ -28,8 +28,6 @@ public abstract class Crawler {
   protected String waitForXPath;
   protected boolean extractShadowDom;
   protected String shadowHostXPath;
-  protected String authenticationMethodId;
-  protected Map<String, String> authenticationConfiguration;
   protected int maxDepth;
   protected boolean restrictToPath;
   protected boolean downloadImages;
@@ -44,8 +42,7 @@ public abstract class Crawler {
   protected List<String> regexUrls;
 
   public Crawler(WebCrawlerConfiguration configuration, WebCrawlerConnection connection, String rootURL, Long waitOnPageLoad,
-                 String waitForXPath, boolean extractShadowDom, String shadowHostXPath, String authenticationMethodId,
-                 Map<String, String> authenticationConfiguration, int maxDepth, boolean restrictToPath,
+                 String waitForXPath, boolean extractShadowDom, String shadowHostXPath, int maxDepth, boolean restrictToPath,
                  boolean downloadImages, int maxImageNumber, boolean downloadDocuments, int maxDocumentNumber, String downloadPath,
                  List<String> contentTags, Constants.OutputFormat outputFormat, boolean getMetaTags,
                  RegexUrlsFilterLogic regexUrlsFilterLogic, List<String> regexUrls) {
@@ -57,8 +54,6 @@ public abstract class Crawler {
     this.waitForXPath = waitForXPath;
     this.extractShadowDom = extractShadowDom;
     this.shadowHostXPath = shadowHostXPath;
-    this.authenticationMethodId = authenticationMethodId;
-    this.authenticationConfiguration = authenticationConfiguration;
     this.maxDepth = maxDepth;
     this.restrictToPath = restrictToPath;
     this.downloadImages = downloadImages;
@@ -94,7 +89,6 @@ public abstract class Crawler {
         ", waitForXPath='" + waitForXPath + '\'' +
         ", extractShadowDom=" + extractShadowDom +
         ", shadowHostXPath='" + shadowHostXPath + '\'' +
-        ", authenticationMethodId='" + authenticationMethodId + '\'' +
         ", maxDepth=" + maxDepth +
         ", restrictToPath=" + restrictToPath +
         ", downloadImages=" + downloadImages +
@@ -119,8 +113,6 @@ public abstract class Crawler {
     private String waitForXPath;
     private boolean extractShadowDom;
     private String shadowHostXPath;
-    protected String authenticationMethodId;
-    protected Map<String, String> authenticationConfiguration;
     private int maxDepth;
     private boolean restrictToPath = false;
     private boolean downloadImages;
@@ -166,16 +158,6 @@ public abstract class Crawler {
 
     public Crawler.Builder shadowHostXPath(String shadowHostXPath) {
       this.shadowHostXPath = shadowHostXPath;
-      return this;
-    }
-
-    public Crawler.Builder authenticationMethodId(String authenticationMethodId) {
-      this.authenticationMethodId = authenticationMethodId;
-      return this;
-    }
-
-    public Crawler.Builder authenticationConfiguration(Map<String, String> authenticationConfiguration) {
-      this.authenticationConfiguration = authenticationConfiguration;
       return this;
     }
 
@@ -246,7 +228,6 @@ public abstract class Crawler {
       try {
 
         crawler = new MuleCrawler(configuration, connection, rootURL, waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
-                                  authenticationMethodId, authenticationConfiguration,
                                   maxDepth, restrictToPath, downloadImages, maxImageNumber, downloadDocuments, maxDocumentNumber,
                                   downloadPath, contentTags, outputFormat, getMetaTags, regexUrlsFilterLogic, regexUrls);
 

@@ -15,6 +15,4 @@ public interface WebCrawlerConnection {
 
   InputStream getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) throws ExecutionException, InterruptedException;
 
-  default void restartDriver() {}
-
 }
