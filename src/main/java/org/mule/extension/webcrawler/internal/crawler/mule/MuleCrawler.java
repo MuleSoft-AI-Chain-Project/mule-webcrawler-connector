@@ -11,6 +11,7 @@ import org.mule.extension.webcrawler.internal.constant.Constants.RegexUrlsFilter
 import org.mule.extension.webcrawler.internal.crawler.Crawler;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
+import org.mule.extension.webcrawler.internal.service.factory.PageFetchServiceFactory;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.extension.webcrawler.internal.util.Utils;
 import org.mule.runtime.extension.api.exception.ModuleException;
@@ -66,8 +67,9 @@ public class MuleCrawler extends Crawler {
         // add delay
         Utils.addDelay(configuration.getCrawlerOptions().getDelayMillis());
 
-        Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
-                                                   new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+        Document document = PageFetchServiceFactory.getService(connection).getPageSource(currentNode.getUrl(),
+            currentNode.getReferrer(),
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
         // Create Map to hold all data for the current page - this will be serialized to
         // JSON and saved to file
@@ -149,7 +151,7 @@ public class MuleCrawler extends Crawler {
 
     if(maxDepth == 0) {
 
-      if (!PageHelper.isURLValid(configuration, connection, rootNode.getUrl(), rootNode.getReferrer())) {
+      if (!PageFetchServiceFactory.getService(connection).isURLValid(rootNode.getUrl(), rootNode.getReferrer())) {
 
         return null;
       }
@@ -174,7 +176,7 @@ public class MuleCrawler extends Crawler {
 
         if(currentNode.getCurrentDepth() == maxDepth) {
 
-          if(PageHelper.isURLValid(configuration, connection, currentNode.getUrl(), currentNode.getReferrer())) {
+          if(PageFetchServiceFactory.getService(connection).isURLValid(currentNode.getUrl(), currentNode.getReferrer())) {
 
             // Add as child to parent node only if valid
             SiteNode parentNode = currentNode.getParent();
@@ -188,8 +190,9 @@ public class MuleCrawler extends Crawler {
         // If not at max depth, find and crawl the links on the page
         if (currentNode.getCurrentDepth() < maxDepth) {
 
-          Document document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
-             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
+          Document document = PageFetchServiceFactory.getService(connection).getPageSource(currentNode.getUrl(),
+              currentNode.getReferrer(),
+              new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
           // Add as child to parent node only if valid
           SiteNode parentNode = currentNode.getParent();
@@ -341,7 +344,8 @@ public class MuleCrawler extends Crawler {
           return null;
         }
 
-        document = PageHelper.getDocument(configuration, connection, currentNode.getUrl(), currentNode.getReferrer(),
+        document = PageFetchServiceFactory.getService(connection).getPageSource(currentNode.getUrl(),
+            currentNode.getReferrer(),
             new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath));
 
         if(currentNode.getCurrentDepth() < maxDepth) {
@@ -365,7 +369,7 @@ public class MuleCrawler extends Crawler {
             }
           }
         }
-      } catch (IOException e) {
+      } catch (IOException | java.util.concurrent.ExecutionException | InterruptedException e) {
         throw new RuntimeException(e);
       }
 
