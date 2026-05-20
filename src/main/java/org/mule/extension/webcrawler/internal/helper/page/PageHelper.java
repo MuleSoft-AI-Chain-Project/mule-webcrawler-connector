@@ -9,7 +9,6 @@ import org.jsoup.select.Elements;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.connection.webdriver.WebDriverConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
@@ -59,11 +58,6 @@ public class PageHelper {
     try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, pageLoadOptions)) {
       String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
       Document document = Jsoup.parse(pageSource, url);
-
-      // Apply page load options to WebDriver connections
-      if (connection instanceof WebDriverConnection && pageLoadOptions.isExtractShadowDom()) {
-        ((WebDriverConnection) connection).injectAllShadowDOMs(document, pageLoadOptions.getShadowHostXPath());
-      }
 
       return document;
     } catch (ModuleException me) {
