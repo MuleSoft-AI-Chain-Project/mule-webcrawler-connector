@@ -4,6 +4,7 @@ import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.runtime.api.meta.ExpressionSupport;
 import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.Expression;
+import org.mule.runtime.extension.api.annotation.param.NullSafe;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
@@ -48,7 +49,10 @@ public class CrawlerTargetPagesParameters {
   @Placement(order = 4)
   @Expression(ExpressionSupport.SUPPORTED)
   @Example("https://www\\.googletagmanager\\.com/.*")
-  @Optional(defaultValue = "#[[\"https://www\\.googletagmanager\\.com/.*\"]]")
+  // @NullSafe so a missing/null list resolves to an empty list (no filtering). The SDK rejects a DataWeave-expression
+  // default when this parameter group is used by a Source's @ParameterGroup, so we can't supply one as a defaultValue.
+  @Optional
+  @NullSafe
   private List<String> regexUrls;
 
   public boolean isRestrictToPath() {
