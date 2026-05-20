@@ -13,6 +13,7 @@ import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 import org.mule.extension.webcrawler.internal.helper.page.PageHelper;
 import org.mule.extension.webcrawler.internal.helper.parameter.PageTargetContentParameters;
+import org.mule.extension.webcrawler.internal.service.factory.PageFetchServiceFactory;
 import org.mule.extension.webcrawler.internal.util.JSONUtils;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
 import org.mule.runtime.api.meta.ExpressionSupport;
@@ -83,9 +84,8 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(configuration, connection, url,
-         new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
-                 javascript));
+      Document document = PageFetchServiceFactory.getService(connection).getPageSource(url, connection.getReferrer(),
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
       LOGGER.debug(String.format("Returning page meta tags for url %s", url));
 
@@ -158,10 +158,8 @@ public class PageOperations {
               WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
         }
 
-        document = PageHelper.getDocument(configuration, connection, url,
-            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
-                    javascript));
-
+        document = PageFetchServiceFactory.getService(connection).getPageSource(url, connection.getReferrer(),
+            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
         imagesJSONArray = PageHelper.downloadWebsiteImages(document, downloadPath, maxImageNumber);
 
@@ -248,9 +246,8 @@ public class PageOperations {
           documentsJSONArray.put(PageHelper.downloadFile(url, downloadPath));
         } else {
 
-          document = PageHelper.getDocument(configuration, connection, url,
-                                            new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
-                                                    javascript));
+          document = PageFetchServiceFactory.getService(connection).getPageSource(url, connection.getReferrer(),
+              new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
           documentsJSONArray = PageHelper.downloadFiles(document, downloadPath, maxDocumentNumber);
         }
@@ -328,9 +325,8 @@ public class PageOperations {
             WebCrawlerErrorType.CRAWL_ON_PAGE_DISALLOWED_ERROR);
       }
 
-      Document document = PageHelper.getDocument(configuration, connection, url,
-          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
-                  javascript));
+      Document document = PageFetchServiceFactory.getService(connection).getPageSource(url, connection.getReferrer(),
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
       return ResponseHelper.createPageResponse(
           JSONUtils.convertToJSON(
@@ -397,9 +393,8 @@ public class PageOperations {
 
       Map<String, String> contents = new HashMap<String, String>();
 
-      Document document = PageHelper.getDocument(configuration, connection, url,
-          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath,
-                  javascript));
+      Document document = PageFetchServiceFactory.getService(connection).getPageSource(url, connection.getReferrer(),
+          new PageLoadOptions(waitOnPageLoad, waitForXPath, extractShadowDom, shadowHostXPath, javascript));
 
       String content = PageHelper.getPageContent(document,
                                                  targetContentParameters.getTags(),

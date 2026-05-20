@@ -6,9 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.config.WebCrawlerConfiguration;
-import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
 import org.mule.extension.webcrawler.internal.constant.Constants;
 import org.mule.extension.webcrawler.internal.error.WebCrawlerErrorType;
 import org.mule.extension.webcrawler.internal.util.URLUtils;
@@ -27,7 +25,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 import static org.mule.extension.webcrawler.internal.constant.Constants.OutputFormat.TEXT;
@@ -39,54 +36,6 @@ public class PageHelper {
   private static final Map<String, String> robotsTxtCache = new ConcurrentHashMap<>();
 
   private static final Map<String, Pattern> COMPILED_PATTERN_CACHE = new ConcurrentHashMap<>();
-
-  public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
-                                     WebCrawlerConnection connection,
-                                     String url,
-                                     PageLoadOptions pageLoadOptions) throws IOException {
-
-    return getDocument(webCrawlerConfiguration, connection, url, connection.getReferrer(), pageLoadOptions);
-  }
-
-  public static Document getDocument(WebCrawlerConfiguration webCrawlerConfiguration,
-                                     WebCrawlerConnection connection,
-                                     String url,
-                                     String referrer,
-                                     PageLoadOptions pageLoadOptions) throws IOException {
-
-    LOGGER.debug(String.format("Retrieving JSoup Document for url %s and referer %s", url, referrer));
-    try (InputStream pageSourceInputStream = connection.getPageSource(url, referrer, pageLoadOptions)) {
-      String pageSource = new String(pageSourceInputStream.readAllBytes(), StandardCharsets.UTF_8);
-      Document document = Jsoup.parse(pageSource, url);
-
-      return document;
-    } catch (ModuleException me) {
-      throw me;
-
-    } catch (InterruptedException | ExecutionException e) {
-      throw new IOException(String.format("Error fetching page source for %s", url), e);
-    }
-  }
-
-  public static boolean isURLValid(WebCrawlerConfiguration webCrawlerConfiguration,
-                                   WebCrawlerConnection connection,
-                                   String url,
-                                   String referrer){
-
-    LOGGER.debug(String.format("Retrieving status code for url %s and referer %s", url, referrer));
-    try {
-
-      Integer urlStatusCode = connection.getUrlStatusCode(url, referrer);
-      if(urlStatusCode != 200) {
-        LOGGER.debug(String.format("URL %s is not valid. Status code: %d", url, urlStatusCode));
-      }
-      return urlStatusCode == 200;
-
-    } catch (InterruptedException | ExecutionException e) {
-      LOGGER.error(String.format("Error while checking statur for url %s", url), e);
-      return false;
-    }
-  }
 
   public static JSONArray getPageMetaTags(Document document) {
     // Create a JSONArray to hold the structured meta tags
