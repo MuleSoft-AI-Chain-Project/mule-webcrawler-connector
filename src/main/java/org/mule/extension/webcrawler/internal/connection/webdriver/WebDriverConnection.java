@@ -4,19 +4,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.mule.extension.webcrawler.internal.config.PageLoadOptions;
 import org.mule.extension.webcrawler.internal.connection.WebCrawlerConnection;
-import org.mule.extension.webcrawler.internal.helper.webdriver.CloudHubChromeConfigurer;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v139.fetch.Fetch;
-import org.openqa.selenium.devtools.v139.page.Page;
-import org.openqa.selenium.devtools.v139.runtime.Runtime;
-import org.openqa.selenium.devtools.v139.overlay.Overlay;
-import org.openqa.selenium.devtools.v139.log.Log;
-import org.openqa.selenium.devtools.v139.network.Network;
-import org.openqa.selenium.devtools.v139.network.model.Headers;
-import org.openqa.selenium.devtools.v139.performance.Performance;
-import org.openqa.selenium.devtools.v139.security.Security;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +14,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,7 +25,6 @@ public class WebDriverConnection implements WebCrawlerConnection {
     private String userAgent;
     private String referrer;
     private WebDriverConnectionProvider connectionProvider; // Reference to the provider
-    private DevTools devTools;
 
     public WebDriverConnection(WebDriver driver, String userAgent, String referrer, WebDriverConnectionProvider connectionProvider) {
         this.driver = driver;
@@ -70,49 +56,16 @@ public class WebDriverConnection implements WebCrawlerConnection {
         this.driver = connectionProvider.createNewWebDriver();
     }
 
-    private void configureDevTools() {
-        devTools = ((ChromeDriver) this.driver).getDevTools();
-        devTools.createSession();
-
-        // Required for setting headers
-        devTools.send(Network.enable(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
-        // Disable cache
-        devTools.send(Network.setCacheDisabled(true));
-        // Disable unnecessary domains for speed
-        devTools.send(Log.disable());
-        devTools.send(Performance.disable());
-        devTools.send(Page.disable());
-        devTools.send(Runtime.disable());
-        // devTools.send(DOM.disable());
-        devTools.send(Overlay.disable());
-        devTools.send(Security.disable());
-        devTools.send(Fetch.disable());
-    }
-
-
     @Override
     public CompletableFuture<InputStream> getPageSource(String url, String currentReferrer, PageLoadOptions pageLoadOptions) {
         LOGGER.debug(String.format("Retrieving page source for url %s using webdrive (wait %s millisec)", url, pageLoadOptions.getWaitOnPageLoad()));
         return CompletableFuture.supplyAsync(() -> {
 
-            // Set the referrer header
-            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
-            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-                try{
-                    if (devTools == null || devTools.getCdpSession() == null) {
-                        configureDevTools();
-                    }
-                    Map<String, Object> headers = Map.of(
-                            "User-Agent", userAgent,
-                            "Referer", currentReferrer
-                    );
-                    devTools.send(Network.setExtraHTTPHeaders(new Headers(headers)));
-                } catch (Exception e) {
+            // Per-request referrer override via CDP was dropped when the in-process ChromeDriver
+            // was replaced with a remote chromedriver hosted by remote-browser-server-plugin.
+            // The base referrer is still passed via ChromeOptions (--referer=...). For per-page
+            // referrer changes, recreate the driver or extend the plugin to support them.
 
-                    LOGGER.debug("Error while trying to set referer for web driver");
-                }
-            }
-            // Load the dynamic page
             driver.get(url);
 
             Long effectiveTimeout = Optional.ofNullable(pageLoadOptions.getWaitOnPageLoad())
@@ -258,20 +211,7 @@ public class WebDriverConnection implements WebCrawlerConnection {
 
         LOGGER.debug(String.format("Checking status for url %s using webdriver", url));
         return CompletableFuture.supplyAsync(() -> {
-            // Set the referrer header
-            // These CDP calls are very expensive when running in CH2 containers; so skipping as needed (should really be a configuration option)
-            if (!CloudHubChromeConfigurer.isCloudHubDeployment() && currentReferrer != null && !currentReferrer.isEmpty() && !currentReferrer.equalsIgnoreCase(referrer)) {
-                try{
-                    if (devTools == null || devTools.getCdpSession() == null) {
-                        configureDevTools();
-                    }
-                    devTools.send(Network.setExtraHTTPHeaders(new Headers(Map.of("Referer", currentReferrer))));
-                } catch (Exception e) {
-
-                    LOGGER.debug("Error while trying to set referer for web driver");
-                }
-            }
-            // Load the dynamic page
+            // Per-request referrer override via CDP was dropped — see getPageSource() for context.
             driver.get(url);
 
             JavascriptExecutor js = (JavascriptExecutor) driver;
