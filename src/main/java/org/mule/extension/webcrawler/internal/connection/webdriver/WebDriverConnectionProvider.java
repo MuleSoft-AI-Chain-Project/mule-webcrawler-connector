@@ -1,7 +1,6 @@
-package org.mule.extension.webcrawler.internal.connection.webdriver;
+ package org.mule.extension.webcrawler.internal.connection.webdriver;
 
 import org.mule.extension.webcrawler.internal.helper.provider.UserAgentNameProvider;
-import org.mule.extension.webcrawler.internal.helper.webdriver.CloudHubChromeConfigurer;
 import org.mule.runtime.api.connection.CachedConnectionProvider;
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.connection.ConnectionValidationResult;
@@ -20,15 +19,15 @@ import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.annotation.values.OfValues;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.CommandExecutor;
+import org.openqa.selenium.remote.HttpCommandExecutor;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 @Alias("web-driver")
 @DisplayName("WebDriver")
@@ -95,75 +94,61 @@ public class WebDriverConnectionProvider implements CachedConnectionProvider<Web
     }
   }
 
+  // Default chromedriver endpoint exposed by remote-browser-server-plugin on the same worker.
+  // Override with -Dremote.browser.url=http://host:port for non-Mule-server tests.
+  private static final String DEFAULT_REMOTE_URL = "http://localhost:38301";
+
   public WebDriver createNewWebDriver() {
 
+    /*
+     * In-process ChromeDriver path is intentionally removed on this branch.
+     * All driver construction MUST go through the remote chromedriver hosted
+     * by remote-browser-server-plugin. If the plugin isn't running on the
+     * worker, the RemoteWebDriver constructor below will fail to connect —
+     * that's the desired behaviour, it makes a misconfiguration loud.
+     *
+     * Anything that imports org.openqa.selenium.chrome.ChromeDriver in this
+     * branch is wrong; only ChromeOptions remains because it's serialized
+     * into the W3C newSession capability payload and not a local driver.
+     */
+
     ChromeOptions options = new ChromeOptions();
-
-    if (CloudHubChromeConfigurer.isCloudHubDeployment()) {
-      CloudHubChromeConfigurer.setup();
-      options.setBinary(CloudHubChromeConfigurer.CHROME_LIB_WRAPPER_SCRIPT);
-      // Additional arguments to reduce containerized Chrome memory usage
-      options.addArguments("--blink-settings=imagesEnabled=false"); // Disable image rendering
-      options.addArguments("--disable-software-rasterizer");
-      options.addArguments("--disable-background-networking");
-      //options.addArguments("--disable-sync");
-      //options.addArguments("--disable-default-apps");
-      //options.addArguments("--renderer-process-limit=1");
-      options.addArguments("--remote-debugging-pipe");
-
-      options.addArguments("--verbose");
-      options.addArguments("--window-size=1920,1080");
-      options.addArguments("--ignore-certificate-errors");
-      options.addArguments("--no-zygote");
-      options.addArguments("--disable-renderer-backgrounding");
-    }
-
     options.addArguments("--headless=new");
     options.addArguments("--disable-extensions");
-    options.addArguments("--disable-gpu"); // Disable GPU acceleration
-    options.addArguments("--no-sandbox"); // Recommended for headless mode in Docker or CI environments
-    options.addArguments("--disable-dev-shm-usage"); // Recommended for limited resources
-    options.addArguments("--allow-running-insecure-content"); // Allow HTTP content on HTTPS pages
-    if(!userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
-    if(!referrer.isEmpty()) options.addArguments("--referer=" + referrer);
+    options.addArguments("--disable-gpu");
+    options.addArguments("--no-sandbox");
+    options.addArguments("--disable-dev-shm-usage");
+    options.addArguments("--allow-running-insecure-content");
+    options.addArguments("--blink-settings=imagesEnabled=false");
+    options.addArguments("--disable-software-rasterizer");
+    options.addArguments("--disable-background-networking");
+    options.addArguments("--window-size=1920,1080");
+    options.addArguments("--ignore-certificate-errors");
+    options.addArguments("--disable-renderer-backgrounding");
+    if (userAgent != null && !userAgent.isEmpty()) options.addArguments("--user-agent=" + userAgent);
+    if (referrer != null && !referrer.isEmpty()) options.addArguments("--referer=" + referrer);
 
-    if(Boolean.getBoolean("webdriver.chrome.verboseLogging")) {
-
-      LOGGER.debug("Enabling verbose logging for ChromeDriver");
-
-      // Custom OutputStream to capture ChromeDriver logs with filtering
-      OutputStream chromeLogStream = new OutputStream() {
-        private StringBuilder buffer = new StringBuilder();
-
-        @Override
-        public void write(int b) throws IOException {
-          if (b == '\n') {
-            // Print each complete line with a prefix
-            LOGGER.debug("[CHROMEDRIVER] " + buffer.toString());
-            buffer.setLength(0);
-          } else {
-            buffer.append((char) b);
-          }
-        }
-      };
-
-      PrintStream printStream = new PrintStream(chromeLogStream, true);
-
-      // Create ChromeDriverService with log redirect
-      ChromeDriverService service = new ChromeDriverService.Builder()
-          .withVerbose(true)      // enable verbose logging
-          .withSilent(false)      // ensure logs are generated
-          .withLogOutput(printStream) // redirect logs to our custom stream
-          .build();
-      driver = new ChromeDriver(service, options);
-    } else {
-
-      LOGGER.debug("Verbose logging for ChromeDriver is disabled");
-      driver = new ChromeDriver(options);
+    String remoteUrl = System.getProperty("remote.browser.url", DEFAULT_REMOTE_URL);
+    URL endpoint;
+    try {
+      endpoint = new URL(remoteUrl);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException("Invalid remote.browser.url: " + remoteUrl, e);
     }
+    LOGGER.info("[REMOTE-DRIVER] Connecting to remote chromedriver at {}", endpoint);
+    RemoteWebDriver remote = new RemoteWebDriver(endpoint, options);
+    driver = remote;
+
+    // Log the actual session id and the executor's addressable URL — this is
+    // unforgeable proof we're talking to the remote endpoint, not an in-process driver.
+    CommandExecutor executor = remote.getCommandExecutor();
+    String executorAddr = (executor instanceof HttpCommandExecutor)
+        ? ((HttpCommandExecutor) executor).getAddressOfRemoteServer().toString()
+        : executor.getClass().getName();
+    LOGGER.info("[REMOTE-DRIVER] Session id={} executor={}", remote.getSessionId(), executorAddr);
 
     String actualUserAgent = (String) ((JavascriptExecutor) driver).executeScript("return navigator.userAgent;");
-    LOGGER.info("User Agent: {}", actualUserAgent);
+    LOGGER.info("[REMOTE-DRIVER] User Agent: {}", actualUserAgent);
 
     return driver;
   }
